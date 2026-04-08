@@ -1,0 +1,197 @@
+import { createClient } from "@/lib/supabase/server";
+import type { Post, ContentType } from "@/types/content";
+import { POSTS_PER_PAGE } from "@/lib/constants";
+
+export async function getPublishedPosts(
+  contentType?: ContentType,
+  page = 1,
+  limit = POSTS_PER_PAGE,
+  tag?: string
+): Promise<{ posts: Post[]; total: number }> {
+  const supabase = await createClient();
+  const offset = (page - 1) * limit;
+
+  let query = supabase
+    .from("posts")
+    .select("*, category:categories(*)", { count: "exact" })
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (contentType) {
+    query = query.eq("content_type", contentType);
+  }
+
+  if (tag) {
+    query = query.contains("tags", [tag]);
+  }
+
+  const { data, count, error } = await query;
+  if (error) return { posts: [], total: 0 };
+
+  return { posts: (data as Post[]) || [], total: count || 0 };
+}
+
+export async function getAllTags(contentType?: ContentType): Promise<string[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("posts")
+    .select("tags")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString());
+
+  if (contentType) query = query.eq("content_type", contentType);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+
+  const tagSet = new Set<string>();
+  for (const row of data) {
+    if (Array.isArray(row.tags)) {
+      for (const t of row.tags) tagSet.add(t);
+    }
+  }
+  return Array.from(tagSet).sort();
+}
+
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .single();
+
+  if (error) return null;
+  return data as Post;
+}
+
+export async function getHeroPost(): Promise<Post | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("is_hero", true)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) return null;
+  return data as Post;
+}
+
+export async function getFeaturedPosts(limit = 3): Promise<Post[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("is_featured", true)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) return [];
+  return (data as Post[]) || [];
+}
+
+export async function getLatestPosts(limit = 6): Promise<Post[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) return [];
+  return (data as Post[]) || [];
+}
+
+export async function getRelatedPosts(
+  postId: string,
+  categoryId: string | null,
+  limit = 3
+): Promise<Post[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .neq("id", postId)
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (categoryId) {
+    query = query.eq("category_id", categoryId);
+  }
+
+  const { data, error } = await query;
+  if (error) return [];
+  return (data as Post[]) || [];
+}
+
+export async function getLatestByContentType(
+  contentType: ContentType,
+  limit = 4
+): Promise<Post[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("status", "published")
+    .eq("content_type", contentType)
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) return [];
+  return (data as Post[]) || [];
+}
+
+export async function searchPosts(query: string): Promise<Post[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .or(`title.ilike.%${query}%,excerpt.ilike.%${query}%`)
+    .order("published_at", { ascending: false })
+    .limit(20);
+
+  if (error) return [];
+  return (data as Post[]) || [];
+}
+
+export async function getTrendingPosts(limit = 5): Promise<Post[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .order("view_count", { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return (data as Post[]) || [];
+}
+
+export async function getPostsBySlugs(slugs: string[]): Promise<Post[]> {
+  if (slugs.length === 0) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*, category:categories(*)")
+    .eq("status", "published")
+    .in("slug", slugs);
+  if (error) return [];
+  return (data as Post[]) || [];
+}

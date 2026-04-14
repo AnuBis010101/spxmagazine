@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL } from "@/lib/constants";
+import { buildOgImageUrl } from "@/lib/utils/og-url";
 import SmoothScroll from "@/components/layout/SmoothScroll";
 import Preloader from "@/components/layout/Preloader";
 import "./globals.css";
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: SITE_NAME,
     type: "website",
-    images: ["/og-default.svg"],
+    images: [{ url: buildOgImageUrl({ title: "SPX Magazine", subtitle: "The Voice of SPX6900" }), width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",

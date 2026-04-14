@@ -35,9 +35,8 @@ export default function ArticleDetailSkeleton() {
       </div>
 
       {/* Body + TOC */}
-      <div className="mt-10 flex gap-8 max-w-4xl mx-auto lg:max-w-7xl">
-        {/* Body */}
-        <div className="flex-1 max-w-4xl">
+      <div className="mt-10 relative">
+        <div className="max-w-4xl mx-auto">
           <div className="rounded-2xl border border-mag-border/50 p-6 md:p-10 space-y-4">
             <div className="h-4 w-full rounded animate-shimmer" />
             <div className="h-4 w-11/12 rounded animate-shimmer" />
@@ -52,7 +51,7 @@ export default function ArticleDetailSkeleton() {
         </div>
 
         {/* TOC sidebar */}
-        <aside className="hidden lg:block w-64 shrink-0 space-y-3">
+        <aside className="hidden xl:block absolute top-0 right-0 w-64 space-y-3">
           <div className="h-5 w-36 rounded animate-shimmer" />
           <div className="h-3 w-full rounded animate-shimmer" />
           <div className="h-3 w-3/4 rounded animate-shimmer" />

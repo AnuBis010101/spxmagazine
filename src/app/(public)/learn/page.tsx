@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SITE_NAME, POSTS_PER_PAGE } from "@/lib/constants";
+import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPublishedPosts, getAllTags } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
 import Pagination from "@/components/content/Pagination";
@@ -11,6 +12,9 @@ export function generateMetadata(): Metadata {
   return {
     title: `Learn | ${SITE_NAME}`,
     description: "Guides and educational resources for the SPX6900 community.",
+    openGraph: {
+      images: [{ url: buildOgImageUrl({ title: "Learn", subtitle: "Guides and educational resources" }), width: 1200, height: 630 }],
+    },
   };
 }
 

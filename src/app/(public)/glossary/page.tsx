@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/constants";
+import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getGlossaryTerms } from "@/lib/queries/glossary";
 import GlossarySearch from "@/components/content/GlossarySearch";
 import ScrollReveal from "@/components/animations/ScrollReveal";
@@ -9,6 +10,9 @@ export function generateMetadata(): Metadata {
     title: `SPX6900 Glossary | ${SITE_NAME}`,
     description:
       "Your guide to the movement's terminology. Explore key terms, concepts, and lore from the SPX6900 community.",
+    openGraph: {
+      images: [{ url: buildOgImageUrl({ title: "SPX6900 Glossary", subtitle: "Your guide to the movement's terminology" }), width: 1200, height: 630 }],
+    },
   };
 }
 

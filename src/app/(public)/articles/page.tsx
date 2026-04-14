@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SITE_NAME, POSTS_PER_PAGE } from "@/lib/constants";
+import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPublishedPosts, getAllTags } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
 import Pagination from "@/components/content/Pagination";
@@ -11,6 +12,9 @@ export function generateMetadata(): Metadata {
   return {
     title: `Articles | ${SITE_NAME}`,
     description: "In-depth analysis and editorial pieces from SPX Magazine.",
+    openGraph: {
+      images: [{ url: buildOgImageUrl({ title: "Articles", subtitle: "In-depth analysis and editorial pieces" }), width: 1200, height: 630 }],
+    },
   };
 }
 

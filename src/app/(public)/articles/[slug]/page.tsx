@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPostBySlug, getRelatedPosts } from "@/lib/queries/articles";
 import { formatDate } from "@/lib/utils/format-date";
 import { estimateReadingTime } from "@/lib/utils/slugify";
@@ -16,6 +17,7 @@ import TableOfContents from "@/components/content/TableOfContents";
 import ReactionBar from "@/components/content/ReactionBar";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 import GlossaryHighlighter from "@/components/content/GlossaryHighlighter";
+import AudioPlayer from "@/components/content/AudioPlayer";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -35,7 +37,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: post.meta_title || post.title,
       description: post.meta_description || post.excerpt || undefined,
-      images: post.og_image || post.cover_image ? [{ url: post.og_image || post.cover_image! }] : undefined,
+      images: [
+          {
+            url: post.og_image || buildOgImageUrl({
+              title: post.meta_title || post.title,
+              author: post.author_name,
+              category: post.category?.name,
+              type: post.content_type,
+            }),
+            width: 1200,
+            height: 630,
+          },
+        ],
     },
   };
 }
@@ -122,11 +135,18 @@ export default async function ArticleDetailPage({ params }: PageProps) {
           </div>
         </div>
         </ScrollReveal>
+
+        {/* Audio Player */}
+        {post.body_html && (
+          <div className="mt-6">
+            <AudioPlayer slug={post.slug} title={post.title} estimatedMinutes={readingTime ?? undefined} />
+          </div>
+        )}
       </div>
 
       {/* Article body with optional TOC sidebar */}
-      <div className="mt-10 flex gap-8 max-w-4xl mx-auto lg:max-w-7xl">
-        <div className="flex-1 max-w-4xl">
+      <div className="mt-10 relative">
+        <div className="max-w-4xl mx-auto">
           <div className="rounded-2xl bg-[#111] border border-mag-border/50 p-6 md:p-10">
             <GlossaryHighlighter>
               <div
@@ -146,9 +166,11 @@ export default async function ArticleDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Table of Contents sidebar */}
-        <aside className="hidden lg:block w-64 shrink-0">
-          <TableOfContents />
+        {/* Table of Contents sidebar — floats to the right of centered content */}
+        <aside className="hidden xl:block absolute top-0 right-0 w-64">
+          <div className="sticky top-24">
+            <TableOfContents />
+          </div>
         </aside>
       </div>
 

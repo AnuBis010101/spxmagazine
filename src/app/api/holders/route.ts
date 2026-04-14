@@ -270,7 +270,7 @@ async function fetchBaseTokenPrice(): Promise<number | null> {
 
 async function fetchHoldersPage(
   cursor?: BlockScoutPageParams
-): Promise<{ items: BlockScoutHolder[]; next: BlockScoutPageParams | null }> {
+): Promise<{ items: BlockScoutHolder[]; next: BlockScoutPageParams | null; failed: boolean }> {
   let url = `${BLOCKSCOUT_BASE_URL}/tokens/${BASE_ADDR}/holders`;
   if (cursor) {
     const params = new URLSearchParams({
@@ -281,13 +281,23 @@ async function fetchHoldersPage(
     url += `?${params}`;
   }
 
-  const data = await safeFetch(url, {}, "blockscout-holders", 10_000);
-  if (!data) return { items: [], next: null };
+  // Retry up to 3 times on failure (rate limiting, timeouts)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const data = await safeFetch(url, {}, "blockscout-holders", 15_000);
+    if (data) {
+      return {
+        items: (data as any).items ?? [],
+        next: (data as any).next_page_params ?? null,
+        failed: false,
+      };
+    }
+    if (attempt < 3) {
+      console.warn(`[holders] Base page fetch failed, retry ${attempt}/3`);
+      await new Promise((r) => setTimeout(r, 2000 * attempt));
+    }
+  }
 
-  return {
-    items: (data as any).items ?? [],
-    next: (data as any).next_page_params ?? null,
-  };
+  return { items: [], next: null, failed: true };
 }
 
 async function fetchBaseHolders(): Promise<ChainResult> {
@@ -320,23 +330,46 @@ async function fetchBaseHolders(): Promise<ChainResult> {
   let qualifiedCount = 0;
   let cursor: BlockScoutPageParams | undefined = undefined;
   let pagesFetched = 0;
-  let done = false;
+  let completedNormally = false; // true only if we found the threshold boundary
 
-  while (!done && pagesFetched < MAX_PAGES) {
-    const { items, next } = await fetchHoldersPage(cursor);
-    if (items.length === 0) break;
+  while (pagesFetched < MAX_PAGES) {
+    const { items, next, failed } = await fetchHoldersPage(cursor);
 
+    if (failed) {
+      console.error(
+        `[holders] Base: page fetch failed after retries at page ${pagesFetched + 1}, aborting`
+      );
+      break;
+    }
+
+    if (items.length === 0) {
+      // Legitimate end of data (all holders are above threshold)
+      completedNormally = true;
+      break;
+    }
+
+    let foundBoundary = false;
     for (const holder of items) {
       if (BigInt(holder.value) >= minRaw) {
         qualifiedCount++;
       } else {
-        done = true;
+        foundBoundary = true;
         break;
       }
     }
 
     pagesFetched++;
-    if (!next || done) break;
+
+    if (foundBoundary) {
+      completedNormally = true;
+      break;
+    }
+
+    if (!next) {
+      completedNormally = true;
+      break;
+    }
+
     cursor = next;
 
     if (pagesFetched % 100 === 0) {
@@ -347,12 +380,16 @@ async function fetchBaseHolders(): Promise<ChainResult> {
   }
 
   console.log(
-    `[holders] Base: ${qualifiedCount} holders above $${MIN_HOLDING_USD} (${pagesFetched} pages scanned)`
+    `[holders] Base: ${qualifiedCount} holders above $${MIN_HOLDING_USD} (${pagesFetched} pages, ${completedNormally ? "complete" : "INTERRUPTED"})`
   );
 
-  if (qualifiedCount > 0) return { ...base, holders: qualifiedCount };
+  if (completedNormally && qualifiedCount > 0) {
+    return { ...base, holders: qualifiedCount };
+  }
 
-  console.error("[holders] Base: filtering returned 0, falling back");
+  if (!completedNormally) {
+    console.error("[holders] Base: pagination interrupted, returning N/A to preserve previous data");
+  }
   return base;
 }
 
@@ -379,9 +416,31 @@ async function refreshHolders(): Promise<void> {
       fetchBaseHolders(),
     ]);
 
+    // Merge with previous data: keep old values for any chain that returned "N/A"
+    const previous = getMemoryCache();
+    const freshResults = [ethereum, solana, base];
+    let hasNewData = false;
+    const merged = freshResults.map((result) => {
+      if (result.holders !== "N/A") {
+        hasNewData = true;
+        return result;
+      }
+      const prev = previous?.holders.find((h) => h.chain === result.chain);
+      if (prev && prev.holders !== "N/A") {
+        console.log(
+          `[holders] ${result.chain}: keeping previous value ${prev.holders} (refresh returned N/A)`
+        );
+        return { ...result, holders: prev.holders };
+      }
+      return result;
+    });
+
+    // Only update the timestamp when at least one chain got fresh data
     const payload: HoldersPayload = {
-      holders: [ethereum, solana, base],
-      lastUpdated: new Date().toISOString(),
+      holders: merged,
+      lastUpdated: hasNewData
+        ? new Date().toISOString()
+        : previous?.lastUpdated ?? new Date().toISOString(),
     };
 
     // Write to memory (instant reads)
@@ -393,7 +452,7 @@ async function refreshHolders(): Promise<void> {
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     console.log(
       `[holders] Background refresh complete in ${elapsed}s — ` +
-        `ETH: ${ethereum.holders}, SOL: ${solana.holders}, BASE: ${base.holders}`
+        `ETH: ${merged[0].holders}, SOL: ${merged[1].holders}, BASE: ${merged[2].holders}`
     );
   } catch (error) {
     console.error("[holders] Background refresh failed:", error);

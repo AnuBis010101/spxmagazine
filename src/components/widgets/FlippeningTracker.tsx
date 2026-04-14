@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useSpring, useTransform } from "framer-motion";
+import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { usePrice } from "@/hooks/usePrice";
+import { ChevronDown } from "lucide-react";
 
 const TIERS = [
   { label: "$1B", value: 1_000_000_000 },
@@ -28,16 +30,13 @@ function formatMultiplier(value: number): string {
   return value.toFixed(1);
 }
 
-/** Find which tier we're currently in and the progress within it */
 function getTierProgress(marketCap: number) {
-  // Find current tier index: the first tier whose value we haven't reached yet
   let currentTierIdx = 0;
   for (let i = 0; i < TIERS.length; i++) {
     if (marketCap < TIERS[i].value) {
       currentTierIdx = i;
       break;
     }
-    // If we've passed all tiers
     if (i === TIERS.length - 1) {
       currentTierIdx = TIERS.length - 1;
     }
@@ -97,7 +96,8 @@ function TierBar({
   const isCurrent = tierIdx === currentTierIdx;
   const isLocked = tierIdx > currentTierIdx;
 
-  const springValue = useSpring(0, { stiffness: 60, damping: 25 });
+  // Faster spring for snappier bar animation
+  const springValue = useSpring(0, { stiffness: 120, damping: 30 });
   const barWidth = useTransform(springValue, (v) => `${v}%`);
 
   if (isCurrent && progressInTier > 0) {
@@ -111,7 +111,6 @@ function TierBar({
       {/* Tier label row */}
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          {/* Status indicator */}
           <div
             className={`w-2 h-2 rounded-full shrink-0 ${
               isCompleted
@@ -167,9 +166,7 @@ function TierBar({
             className="h-full rounded-full relative overflow-hidden"
             style={{ width: barWidth }}
           >
-            {/* Base gold gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-gold-300 via-gold-500 to-gold-300" />
-            {/* Fluid wave overlay */}
             <div
               className="absolute inset-0"
               style={{
@@ -179,7 +176,6 @@ function TierBar({
                 animation: "fluidWave 3s ease-in-out infinite",
               }}
             />
-            {/* Secondary slower wave for depth */}
             <div
               className="absolute inset-0"
               style={{
@@ -189,7 +185,6 @@ function TierBar({
                 animation: "fluidWave 5s ease-in-out infinite reverse",
               }}
             />
-            {/* Highlight bubble traveling across */}
             <div
               className="absolute inset-y-0 w-[30%]"
               style={{
@@ -201,7 +196,6 @@ function TierBar({
           </motion.div>
         ) : null}
 
-        {/* Lock pattern for locked tiers */}
         {isLocked && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex gap-1 opacity-30">
@@ -219,6 +213,7 @@ function TierBar({
 export default function FlippeningTracker() {
   const router = useRouter();
   const { marketCap, sp500MarketCap, loading, error } = usePrice();
+  const [showLocked, setShowLocked] = useState(false);
 
   const percentage =
     sp500MarketCap > 0 ? (marketCap / sp500MarketCap) * 100 : 0;
@@ -228,9 +223,15 @@ export default function FlippeningTracker() {
   const { currentTierIdx, progressInTier, currentTierLabel, previousTierLabel } =
     getTierProgress(marketCap);
 
+  const lockedCount = TIERS.length - currentTierIdx - 1;
+
   return (
     <div
-      onClick={() => router.push("/data")}
+      onClick={(e) => {
+        // Don't navigate if clicking the accordion toggle
+        if ((e.target as HTMLElement).closest("[data-accordion]")) return;
+        router.push("/data");
+      }}
       className="cursor-pointer bg-[rgba(20,20,20,0.6)] backdrop-blur-xl border border-gold-400/20 rounded-2xl p-4 sm:p-6 md:p-8 transition-all duration-300 hover:border-gold-400/40 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
     >
       {loading ? (
@@ -261,10 +262,17 @@ export default function FlippeningTracker() {
             </div>
           </div>
 
-          {/* Current tier highlight */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold-400/5 border border-gold-400/15">
+          {/* Current milestone — clickable to toggle locked tiers */}
+          <button
+            data-accordion
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowLocked((v) => !v);
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-gold-400/5 border border-gold-400/15 hover:bg-gold-400/10 transition-colors"
+          >
             <span className="text-gold-400 text-sm">▸</span>
-            <p className="text-xs sm:text-sm text-mag-muted font-body">
+            <p className="text-xs sm:text-sm text-mag-muted font-body flex-1 text-left">
               Current milestone:{" "}
               <span className="text-gold-400 font-semibold font-display">
                 {previousTierLabel} → {currentTierLabel}
@@ -273,11 +281,24 @@ export default function FlippeningTracker() {
                 ({progressInTier.toFixed(1)}% complete)
               </span>
             </p>
-          </div>
+            {lockedCount > 0 && (
+              <div className="flex items-center gap-1 text-mag-muted">
+                <span className="text-[10px] sm:text-xs">
+                  {lockedCount} more
+                </span>
+                <motion.div
+                  animate={{ rotate: showLocked ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </motion.div>
+              </div>
+            )}
+          </button>
 
-          {/* Tiered progress bars */}
+          {/* Completed + Current tier bars (always visible) */}
           <div className="space-y-3 sm:space-y-4">
-            {TIERS.map((tier, idx) => (
+            {TIERS.slice(0, currentTierIdx + 1).map((tier, idx) => (
               <TierBar
                 key={tier.label}
                 tierIdx={idx}
@@ -288,6 +309,35 @@ export default function FlippeningTracker() {
               />
             ))}
           </div>
+
+          {/* Locked tier bars (accordion) */}
+          <AnimatePresence>
+            {showLocked && lockedCount > 0 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-3 sm:space-y-4 pt-1">
+                  {TIERS.slice(currentTierIdx + 1).map((tier, i) => {
+                    const idx = currentTierIdx + 1 + i;
+                    return (
+                      <TierBar
+                        key={tier.label}
+                        tierIdx={idx}
+                        currentTierIdx={currentTierIdx}
+                        progressInTier={progressInTier}
+                        label={tier.label}
+                        previousLabel={TIERS[idx - 1].label}
+                      />
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Stats row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">

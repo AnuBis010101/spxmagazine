@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// ── Cache ─────────────────────────────────────────────────────────────────────
-const CACHE_DURATION = 8 * 60 * 60 * 1000; // 8 hours — 3× per day
+// ── Types ────────────────────────────────────────────────────────────────────
 
 interface ChainResult {
   chain: string;
@@ -10,23 +9,63 @@ interface ChainResult {
   explorer: string;
 }
 
-interface CacheEntry {
-  data: { holders: ChainResult[]; lastUpdated: string };
-  timestamp: number;
+interface HoldersPayload {
+  holders: ChainResult[];
+  lastUpdated: string;
 }
 
-let cache: CacheEntry | null = null;
+// ── In-memory cache (hot path — sub-ms reads) ───────────────────────────────
+
+let memoryCache: HoldersPayload | null = null;
+
+function getMemoryCache(): HoldersPayload | null {
+  return memoryCache;
+}
+
+// ── Database persistence (Supabase site_settings) ────────────────────────────
+//
+// Stores holder counts in the `site_settings` table under key "holder_counts".
+// This survives server restarts, deployments, and cold starts.
+// The background refresh writes here; the GET handler reads from memory first,
+// then falls back to DB on cold start.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function loadFromDatabase(): Promise<HoldersPayload | null> {
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "holder_counts")
+      .single();
+
+    if (error || !data?.value) return null;
+    return data.value as HoldersPayload;
+  } catch {
+    return null;
+  }
+}
+
+async function saveToDatabase(payload: HoldersPayload): Promise<void> {
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminClient();
+    await supabase
+      .from("site_settings")
+      .upsert(
+        { key: "holder_counts", value: payload, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+  } catch (e) {
+    console.error("[holders] Failed to save to database:", e);
+  }
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/**
- * Parse any holder-count value into a positive integer.
- * Handles: number, "49345", "49,345", "49 345", null, undefined, 0, NaN.
- * Returns null for anything that isn't a real positive integer.
- */
 function extractCount(raw: unknown): number | null {
   if (raw === null || raw === undefined) return null;
-
   let n: number;
   if (typeof raw === "number") {
     n = Math.trunc(raw);
@@ -37,13 +76,9 @@ function extractCount(raw: unknown): number | null {
   } else {
     return null;
   }
-
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-/**
- * Fetch JSON with timeout. Returns null on any failure.
- */
 async function safeFetch(
   url: string,
   options: RequestInit = {},
@@ -92,33 +127,19 @@ async function fetchEthereumHolders(): Promise<ChainResult> {
     explorer: `https://etherscan.io/token/${ETH_ADDR}`,
   };
 
-  // Source 1: BlockScout (free, no key)
   const bs = await safeFetch(
     `https://eth.blockscout.com/api/v2/tokens/${ETH_ADDR}`,
     {},
     "blockscout-eth"
   );
   const bsCount = extractCount((bs as any)?.holders_count);
-  if (bsCount !== null) {
-    return { ...base, holders: bsCount };
-  }
+  if (bsCount !== null) return { ...base, holders: bsCount };
 
   console.error("[holders] Ethereum: all sources failed");
   return base;
 }
 
 // ── Solana ────────────────────────────────────────────────────────────────────
-//
-// Strategy: Use Solana RPC `getProgramAccounts` directly on the blockchain.
-// This is the exact same method block explorers (Solscan, etc.) use internally.
-// - FREE: public RPC, no API key needed
-// - ACCURATE: counts actual non-zero balance token accounts
-// - RELIABLE: multiple RPC fallbacks, the blockchain is always available
-//
-// The call fetches only the 8-byte `amount` field from each SPL Token account
-// matching the SPX6900 mint, then counts how many have a non-zero balance.
-// Response is ~39 MB for ~165K accounts — fine for a function running 3× per day.
-// ─────────────────────────────────────────────────────────────────────────────
 
 const SOL_MINT = "J3NKxxXZcnNiMjKw9hYb2K4LUxgwB6t1FtPtQVsv3KFr";
 
@@ -127,19 +148,18 @@ const SOLANA_RPCS = [
   "https://rpc.ankr.com/solana",
 ];
 
-// Pre-built RPC request body (same for every call)
 const SOL_RPC_BODY = JSON.stringify({
   jsonrpc: "2.0",
   id: 1,
   method: "getProgramAccounts",
   params: [
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", // SPL Token Program
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
     {
       encoding: "base64",
-      dataSlice: { offset: 64, length: 8 }, // only the uint64 `amount` field
+      dataSlice: { offset: 64, length: 8 },
       filters: [
-        { dataSize: 165 }, // standard SPL token account size
-        { memcmp: { offset: 0, bytes: SOL_MINT } }, // filter by mint
+        { dataSize: 165 },
+        { memcmp: { offset: 0, bytes: SOL_MINT } },
       ],
     },
   ],
@@ -157,7 +177,7 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
     const host = new URL(rpc).hostname;
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 45_000); // generous timeout
+      const timer = setTimeout(() => controller.abort(), 45_000);
 
       const res = await fetch(rpc, {
         method: "POST",
@@ -190,12 +210,10 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
         continue;
       }
 
-      // Count accounts whose 8-byte amount is non-zero
       let active = 0;
       for (const acc of accounts) {
         const b64 = acc.account.data[0];
         const bytes = Buffer.from(b64, "base64");
-        // Any non-zero byte ⇒ balance > 0
         for (let i = 0; i < bytes.length; i++) {
           if (bytes[i] !== 0) {
             active++;
@@ -204,9 +222,7 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
         }
       }
 
-      if (active > 0) {
-        return { ...fallback, holders: active };
-      }
+      if (active > 0) return { ...fallback, holders: active };
     } catch (err: any) {
       const reason =
         err?.name === "AbortError"
@@ -220,9 +236,59 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
   return fallback;
 }
 
-// ── Base ──────────────────────────────────────────────────────────────────────
+// ── Base (filtered: $2 minimum) ──────────────────────────────────────────────
 
 const BASE_ADDR = "0x50dA645f148798F68EF2d7dB7C1CB22A6819bb2C";
+const BASE_DECIMALS = 8;
+const MIN_HOLDING_USD = 2;
+const BLOCKSCOUT_BASE_URL = "https://base.blockscout.com/api/v2";
+const MAX_PAGES = 5000;
+
+interface BlockScoutHolder {
+  address: { hash: string };
+  value: string;
+}
+
+interface BlockScoutPageParams {
+  value: string;
+  address_hash: string;
+  items_count: number;
+}
+
+async function fetchBaseTokenPrice(): Promise<number | null> {
+  const data = await safeFetch(
+    `https://api.dexscreener.com/latest/dex/tokens/${BASE_ADDR}`,
+    {},
+    "dexscreener-base",
+    10_000
+  );
+  const pairs = (data as any)?.pairs;
+  if (!Array.isArray(pairs) || pairs.length === 0) return null;
+  const price = parseFloat(pairs[0].priceUsd);
+  return Number.isFinite(price) && price > 0 ? price : null;
+}
+
+async function fetchHoldersPage(
+  cursor?: BlockScoutPageParams
+): Promise<{ items: BlockScoutHolder[]; next: BlockScoutPageParams | null }> {
+  let url = `${BLOCKSCOUT_BASE_URL}/tokens/${BASE_ADDR}/holders`;
+  if (cursor) {
+    const params = new URLSearchParams({
+      value: cursor.value,
+      address_hash: cursor.address_hash,
+      items_count: String(cursor.items_count),
+    });
+    url += `?${params}`;
+  }
+
+  const data = await safeFetch(url, {}, "blockscout-holders", 10_000);
+  if (!data) return { items: [], next: null };
+
+  return {
+    items: (data as any).items ?? [],
+    next: (data as any).next_page_params ?? null,
+  };
+}
 
 async function fetchBaseHolders(): Promise<ChainResult> {
   const base: ChainResult = {
@@ -232,44 +298,156 @@ async function fetchBaseHolders(): Promise<ChainResult> {
     explorer: `https://basescan.org/token/${BASE_ADDR}`,
   };
 
-  // Source 1: BlockScout Base (free, no key)
-  const bs = await safeFetch(
-    `https://base.blockscout.com/api/v2/tokens/${BASE_ADDR}`,
-    {},
-    "blockscout-base"
-  );
-  const bsCount = extractCount((bs as any)?.holders_count);
-  if (bsCount !== null) {
-    return { ...base, holders: bsCount };
+  const price = await fetchBaseTokenPrice();
+  if (!price) {
+    console.warn("[holders] Base: no price, falling back to total count");
+    const bs = await safeFetch(
+      `${BLOCKSCOUT_BASE_URL}/tokens/${BASE_ADDR}`,
+      {},
+      "blockscout-base"
+    );
+    const bsCount = extractCount((bs as any)?.holders_count);
+    if (bsCount !== null) return { ...base, holders: bsCount };
+    return base;
   }
 
-  console.error("[holders] Base: all sources failed");
+  const minTokens = MIN_HOLDING_USD / price;
+  const minRaw = BigInt(Math.ceil(minTokens * 10 ** BASE_DECIMALS));
+  console.log(
+    `[holders] Base: price=$${price}, min $${MIN_HOLDING_USD} = ${minTokens.toFixed(2)} tokens (raw: ${minRaw})`
+  );
+
+  let qualifiedCount = 0;
+  let cursor: BlockScoutPageParams | undefined = undefined;
+  let pagesFetched = 0;
+  let done = false;
+
+  while (!done && pagesFetched < MAX_PAGES) {
+    const { items, next } = await fetchHoldersPage(cursor);
+    if (items.length === 0) break;
+
+    for (const holder of items) {
+      if (BigInt(holder.value) >= minRaw) {
+        qualifiedCount++;
+      } else {
+        done = true;
+        break;
+      }
+    }
+
+    pagesFetched++;
+    if (!next || done) break;
+    cursor = next;
+
+    if (pagesFetched % 100 === 0) {
+      console.log(
+        `[holders] Base: ${pagesFetched} pages, ${qualifiedCount} qualified so far`
+      );
+    }
+  }
+
+  console.log(
+    `[holders] Base: ${qualifiedCount} holders above $${MIN_HOLDING_USD} (${pagesFetched} pages scanned)`
+  );
+
+  if (qualifiedCount > 0) return { ...base, holders: qualifiedCount };
+
+  console.error("[holders] Base: filtering returned 0, falling back");
   return base;
 }
 
-// ── Route handler ─────────────────────────────────────────────────────────────
+// ── Background refresh (runs every 8h, writes to DB + memory) ────────────────
 
-export async function GET(request: NextRequest) {
+const REFRESH_INTERVAL = 8 * 60 * 60 * 1000; // 8 hours
+
+let isRefreshing = false;
+
+async function refreshHolders(): Promise<void> {
+  if (isRefreshing) {
+    console.log("[holders] Refresh already in progress, skipping");
+    return;
+  }
+
+  isRefreshing = true;
+  const start = Date.now();
+  console.log("[holders] Background refresh started");
+
   try {
-    const force = request.nextUrl.searchParams.get("force") === "1";
-
-    if (!force && cache && Date.now() - cache.timestamp < CACHE_DURATION) {
-      return NextResponse.json(cache.data);
-    }
-
     const [ethereum, solana, base] = await Promise.all([
       fetchEthereumHolders(),
       fetchSolanaHolders(),
       fetchBaseHolders(),
     ]);
 
-    const result = {
+    const payload: HoldersPayload = {
       holders: [ethereum, solana, base],
       lastUpdated: new Date().toISOString(),
     };
 
-    cache = { data: result, timestamp: Date.now() };
-    return NextResponse.json(result);
+    // Write to memory (instant reads)
+    memoryCache = payload;
+
+    // Write to database (survives restarts/deploys)
+    await saveToDatabase(payload);
+
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+    console.log(
+      `[holders] Background refresh complete in ${elapsed}s — ` +
+        `ETH: ${ethereum.holders}, SOL: ${solana.holders}, BASE: ${base.holders}`
+    );
+  } catch (error) {
+    console.error("[holders] Background refresh failed:", error);
+  } finally {
+    isRefreshing = false;
+  }
+}
+
+// On module load: hydrate memory from DB, then start background refresh cycle
+(async () => {
+  // 1. Hydrate memory from DB immediately (instant cold-start reads)
+  const dbData = await loadFromDatabase();
+  if (dbData) {
+    memoryCache = dbData;
+    console.log(
+      `[holders] Hydrated from DB (last updated: ${dbData.lastUpdated})`
+    );
+  }
+
+  // 2. Fire first background refresh (non-blocking)
+  refreshHolders();
+
+  // 3. Schedule recurring refreshes every 8 hours
+  setInterval(refreshHolders, REFRESH_INTERVAL);
+})();
+
+// ── Route handler (always instant) ───────────────────────────────────────────
+
+export async function GET(request: NextRequest) {
+  try {
+    const force = request.nextUrl.searchParams.get("force") === "1";
+
+    if (force) {
+      refreshHolders(); // fire-and-forget
+    }
+
+    // 1. Serve from memory (sub-ms)
+    const cached = getMemoryCache();
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
+    // 2. Memory empty (cold start) — try DB directly
+    const dbData = await loadFromDatabase();
+    if (dbData) {
+      memoryCache = dbData;
+      return NextResponse.json(dbData);
+    }
+
+    // 3. Absolute first deploy — no data anywhere yet
+    return NextResponse.json(
+      { error: "Holder data not yet available, please retry shortly" },
+      { status: 503 }
+    );
   } catch (error) {
     console.error("[holders] Fatal error:", error);
     return NextResponse.json(

@@ -138,8 +138,10 @@ export default async function NewsArticlePage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="mt-10 relative">
-        <div className="max-w-4xl mx-auto">
+      <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[1fr_minmax(0,56rem)_16rem] xl:gap-8 xl:px-8">
+        <div className="hidden xl:block" />
+
+        <div>
           <div className="rounded-2xl bg-[#111] border border-mag-border/50 p-6 md:p-10">
             <GlossaryHighlighter>
               <div
@@ -157,7 +159,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
           </div>
         </div>
 
-        <aside className="hidden xl:block absolute top-0 right-0 w-64">
+        <aside className="hidden xl:block">
           <div className="sticky top-24">
             <TableOfContents />
           </div>

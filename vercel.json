@@ -11,6 +11,10 @@
     {
       "path": "/api/holders?refresh=1&wait=1",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/counter-culture?refresh=1&wait=1",
+      "schedule": "0 3 1 * *"
     }
   ]
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/constants";
 import FlippeningTracker from "@/components/widgets/FlippeningTracker";
 import HoldersTracker from "@/components/widgets/HoldersTracker";
+import CounterCulture from "@/components/widgets/CounterCulture";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export const metadata: Metadata = {
@@ -49,6 +50,23 @@ export default function DataPage() {
               updated regularly to reflect current distribution.
             </p>
             <HoldersTracker />
+          </div>
+        </ScrollReveal>
+
+        {/* State of the World — counter-culture metrics */}
+        <ScrollReveal direction="up" scale blur duration={0.7}>
+          <div className="mt-20">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white">
+              State of the World
+            </h2>
+            <div className="w-16 h-0.5 bg-gold-400 mt-3 mb-6" />
+            <p className="text-mag-muted mb-10 max-w-3xl text-lg">
+              Why the movement matters. Indicators of a society in crisis:
+              loneliness, doomerism, nihilism, AI anxiety, collapsing trust,
+              and deaths of despair. Sourced from published reports,
+              refreshed monthly.
+            </p>
+            <CounterCulture />
           </div>
         </ScrollReveal>
 

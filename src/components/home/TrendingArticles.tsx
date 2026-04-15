@@ -70,6 +70,11 @@ export default function TrendingArticles({ posts }: TrendingArticlesProps) {
                     {post.title}
                   </h3>
                   <div className="flex items-center gap-3 mt-1.5">
+                    {post.author_name && (
+                      <span className="text-xs text-gold-400/70 font-medium">
+                        {post.author_name}
+                      </span>
+                    )}
                     {post.category && (
                       <CategoryBadge name={post.category.name} />
                     )}

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Menu } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
 export default function AdminLayout({
@@ -10,6 +11,12 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Login page gets a clean layout — no sidebar, no chrome
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex min-h-screen bg-mag-black">

@@ -62,11 +62,15 @@ export default function ArticleCard({
           <h3 className="font-display font-semibold text-sm text-white line-clamp-2 group-hover:text-gold-400 transition-colors">
             {post.title}
           </h3>
-          {post.published_at && (
-            <p className="text-xs text-mag-muted mt-1">
-              {formatDate(post.published_at)}
-            </p>
-          )}
+          <div className="flex items-center gap-1.5 text-xs text-mag-muted mt-1">
+            {post.author_name && (
+              <span className="text-gold-400/70">{post.author_name}</span>
+            )}
+            {post.author_name && post.published_at && <span>&middot;</span>}
+            {post.published_at && (
+              <span>{formatDate(post.published_at)}</span>
+            )}
+          </div>
         </div>
       </Link>
     );
@@ -109,7 +113,12 @@ export default function ArticleCard({
               {post.excerpt}
             </p>
           )}
-          <div className="mt-3 flex items-center gap-2 text-xs text-mag-muted">
+          {post.author_name && (
+            <p className="text-xs text-gold-400/80 font-medium mt-2">
+              By {post.author_name}
+            </p>
+          )}
+          <div className="mt-2 flex items-center gap-2 text-xs text-mag-muted">
             {post.published_at && (
               <span>{formatDate(post.published_at)}</span>
             )}

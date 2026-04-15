@@ -252,6 +252,11 @@ export default function HoldersTracker() {
                     holder.holders
                   )}
                 </p>
+                {holder.chain === "Base" && count > 0 && (
+                  <p className="mt-2 text-[10px] text-gold-400/70 font-body italic">
+                    Excludes wallets holding less than $2
+                  </p>
+                )}
               </div>
 
               {/* Contract address */}

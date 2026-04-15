@@ -503,7 +503,6 @@ function GodRays() {
             <motion.div
               style={{
                 width: "100%",
-                height: "100%",
                 clipPath: `polygon(0% 50%, 100% ${50 - r.widthEnd / 2}%, 100% ${50 + r.widthEnd / 2}%)`,
                 background: `linear-gradient(90deg, rgba(212,175,55,${r.peakOpacity * 2}) 0%, rgba(225,200,120,${r.peakOpacity}) 40%, rgba(255,240,200,${r.peakOpacity * 0.3}) 70%, transparent 100%)`,
                 filter: "blur(3px)",

@@ -1,7 +1,67 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SVG FILTERS — Organic noise texture for premium light effects
+   These create the difference between "CSS gradient" and "real light".
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function NoiseFilters() {
+  return (
+    <svg className="absolute" width="0" height="0" aria-hidden="true">
+      <defs>
+        {/* Organic displacement for nebulae — makes blobs feel gaseous */}
+        <filter id="nebula-warp" x="-50%" y="-50%" width="200%" height="200%">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.012"
+            numOctaves={4}
+            seed={42}
+            result="noise"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="noise"
+            scale={80}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+
+        {/* Finer noise for aurora bands */}
+        <filter id="aurora-warp" x="-20%" y="-50%" width="140%" height="200%">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.008 0.003"
+            numOctaves={3}
+            seed={7}
+            result="noise"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="noise"
+            scale={50}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+
+        {/* Soft grain overlay — adds film-like texture */}
+        <filter id="grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.65"
+            numOctaves={1}
+            stitchTiles="stitch"
+          />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LAYER 1 — Orbiting glossary terms (existing)
@@ -56,7 +116,7 @@ function OrbitTerm({ term, radius, duration, startAngle, size, reverse, showRing
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 2 — Concentric pulsing rings (existing, enhanced)
+   LAYER 2 — Concentric pulsing rings (existing)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function ConcentricRings() {
@@ -96,57 +156,78 @@ function ConcentricRings() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 3 — Floating particle field (stardust)
+   LAYER 3 — Particle constellation
+   Two classes: dim background dust + bright foreground embers
    ═══════════════════════════════════════════════════════════════════════════ */
 
-interface Particle {
-  x: number; y: number; size: number;
-  driftX: number; driftY: number;
-  duration: number; delay: number; opacity: number;
+interface Mote {
+  x: number; y: number; r: number;
+  dx: number; dy: number;
+  dur: number; del: number;
+  peak: number; bright: boolean;
 }
 
-function ParticleField() {
-  const particles = useMemo<Particle[]>(() => {
-    const count = 45;
-    return Array.from({ length: count }, (_, i) => ({
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: 1 + Math.random() * 2.5,
-      driftX: (Math.random() - 0.5) * 30,
-      driftY: (Math.random() - 0.5) * 30,
-      duration: 8 + Math.random() * 12,
-      delay: Math.random() * 8,
-      opacity: 0.15 + Math.random() * 0.35,
-    }));
+function Particles() {
+  const motes = useMemo<Mote[]>(() => {
+    const out: Mote[] = [];
+    // Background dust — many, tiny, dim
+    for (let i = 0; i < 35; i++) {
+      out.push({
+        x: Math.random() * 100, y: Math.random() * 100,
+        r: 0.5 + Math.random() * 1,
+        dx: (Math.random() - 0.5) * 20,
+        dy: (Math.random() - 0.5) * 20,
+        dur: 12 + Math.random() * 18,
+        del: Math.random() * 10,
+        peak: 0.12 + Math.random() * 0.15,
+        bright: false,
+      });
+    }
+    // Foreground embers — few, larger, glow
+    for (let i = 0; i < 8; i++) {
+      out.push({
+        x: 15 + Math.random() * 70, y: 15 + Math.random() * 70,
+        r: 1.5 + Math.random() * 2,
+        dx: (Math.random() - 0.5) * 40,
+        dy: (Math.random() - 0.5) * 40,
+        dur: 15 + Math.random() * 10,
+        del: Math.random() * 6,
+        peak: 0.35 + Math.random() * 0.3,
+        bright: true,
+      });
+    }
+    return out;
   }, []);
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p, i) => (
+      {motes.map((m, i) => (
         <motion.div
-          key={`particle-${i}`}
+          key={i}
           className="absolute rounded-full"
           style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            background: `radial-gradient(circle, rgba(212,175,55,${p.opacity}) 0%, transparent 70%)`,
-            boxShadow: p.size > 2
-              ? `0 0 ${p.size * 3}px rgba(212,175,55,${p.opacity * 0.5})`
+            left: `${m.x}%`,
+            top: `${m.y}%`,
+            width: m.r * 2,
+            height: m.r * 2,
+            background: m.bright
+              ? `radial-gradient(circle, rgba(255,235,180,${m.peak}) 0%, rgba(212,175,55,${m.peak * 0.4}) 50%, transparent 100%)`
+              : `rgba(212,175,55,${m.peak})`,
+            boxShadow: m.bright
+              ? `0 0 ${m.r * 6}px ${m.r * 2}px rgba(212,175,55,${m.peak * 0.3})`
               : "none",
           }}
           animate={{
-            x: [0, p.driftX, -p.driftX * 0.5, 0],
-            y: [0, p.driftY, -p.driftY * 0.3, 0],
-            opacity: [0, p.opacity, p.opacity, 0],
-            scale: [0.5, 1, 1, 0.5],
+            x: [0, m.dx * 0.6, m.dx, m.dx * 0.3, 0],
+            y: [0, m.dy * 0.4, m.dy, m.dy * 0.7, 0],
+            opacity: [0, m.peak * 0.6, m.peak, m.peak * 0.4, 0],
           }}
           transition={{
-            duration: p.duration,
-            delay: p.delay,
+            duration: m.dur,
+            delay: m.del,
             repeat: Infinity,
             ease: "easeInOut",
+            times: [0, 0.25, 0.5, 0.75, 1],
           }}
         />
       ))}
@@ -155,90 +236,186 @@ function ParticleField() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 4 — Aurora light bands
+   LAYER 4 — Atmospheric nebulae (SVG noise-warped)
+   Multiple overlapping organic blobs with colour variation
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function AuroraBands() {
+function Atmosphere() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Primary gold aurora */}
+      {/* Primary nebula — warm gold, upper zone */}
       <motion.div
-        className="absolute w-[150%] h-[300px]"
         style={{
-          top: "20%",
-          left: "-25%",
-          background: "linear-gradient(180deg, transparent 0%, rgba(212,175,55,0.03) 30%, rgba(212,175,55,0.06) 50%, rgba(212,175,55,0.03) 70%, transparent 100%)",
-          filter: "blur(60px)",
-          transformOrigin: "center center",
+          position: "absolute",
+          width: "110vw",
+          height: "60vh",
+          top: "-5%",
+          left: "-5%",
+          background:
+            "radial-gradient(ellipse 80% 50% at 40% 50%, rgba(212,175,55,0.035) 0%, rgba(180,140,30,0.015) 40%, transparent 70%)",
+          filter: "url(#nebula-warp) blur(80px)",
         }}
         animate={{
-          rotate: [0, 3, -2, 1, 0],
-          scaleY: [1, 1.3, 0.8, 1.1, 1],
-          y: [0, -20, 10, -5, 0],
+          x: [0, 40, -20, 30, 0],
+          y: [0, -15, 20, -10, 0],
+          scale: [1, 1.08, 0.96, 1.04, 1],
         }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 40, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Secondary warm aurora */}
+      {/* Secondary nebula — champagne, lower zone */}
       <motion.div
-        className="absolute w-[130%] h-[200px]"
         style={{
-          top: "55%",
-          left: "-15%",
-          background: "linear-gradient(180deg, transparent 0%, rgba(191,155,48,0.025) 30%, rgba(191,155,48,0.05) 50%, rgba(191,155,48,0.025) 70%, transparent 100%)",
-          filter: "blur(80px)",
-          transformOrigin: "center center",
+          position: "absolute",
+          width: "90vw",
+          height: "50vh",
+          bottom: "-8%",
+          right: "-5%",
+          background:
+            "radial-gradient(ellipse 70% 60% at 60% 50%, rgba(225,200,120,0.025) 0%, rgba(200,170,60,0.01) 45%, transparent 70%)",
+          filter: "url(#nebula-warp) blur(90px)",
         }}
         animate={{
-          rotate: [0, -2, 3, -1, 0],
-          scaleY: [1, 0.9, 1.2, 0.95, 1],
-          y: [0, 15, -10, 5, 0],
+          x: [0, -30, 20, -15, 0],
+          y: [0, 20, -15, 8, 0],
+          scale: [1, 1.05, 1.1, 0.97, 1],
         }}
-        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+        transition={{ duration: 50, repeat: Infinity, ease: "easeInOut", delay: 8 }}
       />
 
-      {/* Subtle amber accent */}
+      {/* Deep bronze accent — mid-left */}
       <motion.div
-        className="absolute w-[80%] h-[150px]"
         style={{
-          top: "35%",
-          left: "10%",
-          background: "linear-gradient(180deg, transparent 0%, rgba(225,200,114,0.02) 40%, rgba(225,200,114,0.04) 50%, rgba(225,200,114,0.02) 60%, transparent 100%)",
-          filter: "blur(50px)",
-          transformOrigin: "center center",
+          position: "absolute",
+          width: "50vw",
+          height: "40vh",
+          top: "30%",
+          left: "-8%",
+          background:
+            "radial-gradient(ellipse 60% 80% at 50% 50%, rgba(140,111,34,0.03) 0%, rgba(100,80,20,0.01) 50%, transparent 75%)",
+          filter: "url(#nebula-warp) blur(70px)",
         }}
         animate={{
-          rotate: [0, 1.5, -2.5, 0.5, 0],
-          scaleX: [1, 1.1, 0.95, 1.05, 1],
-          opacity: [0.6, 1, 0.7, 0.9, 0.6],
+          x: [0, 25, -10, 15, 0],
+          y: [0, -20, 30, -5, 0],
+          opacity: [0.7, 1, 0.6, 0.9, 0.7],
         }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 7 }}
+        transition={{ duration: 35, repeat: Infinity, ease: "easeInOut", delay: 15 }}
+      />
+
+      {/* Central core glow — layered */}
+      <motion.div
+        className="absolute left-1/2 top-1/2"
+        style={{
+          width: 600,
+          height: 600,
+          x: "-50%",
+          y: "-50%",
+          background:
+            "radial-gradient(circle, rgba(212,175,55,0.06) 0%, rgba(212,175,55,0.02) 30%, rgba(180,140,30,0.008) 50%, transparent 65%)",
+          filter: "blur(40px)",
+        }}
+        animate={{
+          scale: [1, 1.12, 1.04, 1.08, 1],
+          opacity: [0.6, 0.85, 0.7, 0.9, 0.6],
+        }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 5 — Sacred geometry (hexagonal + Flower of Life)
+   LAYER 5 — Aurora veils (noise-warped, multi-band)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function Aurora() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Band 1 — broad, slow, upper */}
+      <motion.div
+        style={{
+          position: "absolute",
+          width: "160%",
+          height: 400,
+          top: "12%",
+          left: "-30%",
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(212,175,55,0.012) 15%, rgba(225,200,120,0.03) 35%, rgba(212,175,55,0.04) 50%, rgba(200,165,40,0.025) 65%, rgba(212,175,55,0.01) 80%, transparent 100%)",
+          filter: "url(#aurora-warp) blur(30px)",
+          transformOrigin: "50% 50%",
+        }}
+        animate={{
+          rotate: [0, 1.5, -0.8, 0.5, 0],
+          y: [0, -25, 15, -8, 0],
+          scaleY: [1, 1.15, 0.9, 1.05, 1],
+        }}
+        transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Band 2 — narrower, faster, mid */}
+      <motion.div
+        style={{
+          position: "absolute",
+          width: "140%",
+          height: 250,
+          top: "42%",
+          left: "-20%",
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(180,150,50,0.008) 20%, rgba(212,175,55,0.025) 40%, rgba(255,235,180,0.03) 50%, rgba(212,175,55,0.02) 60%, rgba(180,150,50,0.008) 80%, transparent 100%)",
+          filter: "url(#aurora-warp) blur(25px)",
+          transformOrigin: "50% 50%",
+        }}
+        animate={{
+          rotate: [0, -1, 1.2, -0.5, 0],
+          y: [0, 20, -12, 8, 0],
+          scaleY: [1, 0.85, 1.1, 0.95, 1],
+          opacity: [0.5, 0.9, 0.6, 0.8, 0.5],
+        }}
+        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 5 }}
+      />
+
+      {/* Band 3 — whisper-thin accent */}
+      <motion.div
+        style={{
+          position: "absolute",
+          width: "120%",
+          height: 120,
+          top: "65%",
+          left: "-10%",
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(225,200,120,0.015) 30%, rgba(255,240,200,0.025) 50%, rgba(225,200,120,0.015) 70%, transparent 100%)",
+          filter: "url(#aurora-warp) blur(20px)",
+          transformOrigin: "50% 50%",
+        }}
+        animate={{
+          rotate: [0, 0.8, -1.2, 0.3, 0],
+          y: [0, -15, 10, -5, 0],
+          opacity: [0.4, 0.7, 0.3, 0.6, 0.4],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 12 }}
+      />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 6 — Sacred geometry
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function SacredGeometry() {
-  // Flower-of-life petal positions around center
-  const petalOffsets = useMemo(() => {
+  const petals = useMemo(() => {
     const r = 60;
     return Array.from({ length: 6 }, (_, i) => {
-      const angle = (i * 60 * Math.PI) / 180;
-      return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
+      const a = (i * 60 * Math.PI) / 180;
+      return { x: Math.cos(a) * r, y: Math.sin(a) * r };
     });
   }, []);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {/* Outer rotating hexagon */}
       <motion.svg
-        width="260"
-        height="260"
-        viewBox="-130 -130 260 260"
+        width="260" height="260" viewBox="-130 -130 260 260"
         className="absolute"
         style={{ opacity: 0.06 }}
         animate={{ rotate: 360 }}
@@ -246,17 +423,12 @@ function SacredGeometry() {
       >
         <polygon
           points="0,-120 104,-60 104,60 0,120 -104,60 -104,-60"
-          fill="none"
-          stroke="rgba(212,175,55,1)"
-          strokeWidth="0.5"
+          fill="none" stroke="rgba(212,175,55,1)" strokeWidth="0.5"
         />
       </motion.svg>
 
-      {/* Inner counter-rotating hexagon */}
       <motion.svg
-        width="180"
-        height="180"
-        viewBox="-90 -90 180 180"
+        width="180" height="180" viewBox="-90 -90 180 180"
         className="absolute"
         style={{ opacity: 0.05 }}
         animate={{ rotate: -360 }}
@@ -264,32 +436,19 @@ function SacredGeometry() {
       >
         <polygon
           points="0,-80 69,-40 69,40 0,80 -69,40 -69,-40"
-          fill="none"
-          stroke="rgba(212,175,55,1)"
-          strokeWidth="0.5"
+          fill="none" stroke="rgba(212,175,55,1)" strokeWidth="0.5"
         />
       </motion.svg>
 
-      {/* Flower of Life — 6 petals (circles around center) */}
       <motion.svg
-        width="200"
-        height="200"
-        viewBox="-100 -100 200 200"
+        width="200" height="200" viewBox="-100 -100 200 200"
         className="absolute"
         animate={{ opacity: [0.03, 0.07, 0.03] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       >
-        {/* Center circle */}
         <circle cx="0" cy="0" r="60" fill="none" stroke="rgba(212,175,55,0.8)" strokeWidth="0.4" />
-        {/* Petals */}
-        {petalOffsets.map((p, i) => (
-          <circle
-            key={`petal-${i}`}
-            cx={p.x} cy={p.y} r="60"
-            fill="none"
-            stroke="rgba(212,175,55,0.8)"
-            strokeWidth="0.4"
-          />
+        {petals.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="60" fill="none" stroke="rgba(212,175,55,0.8)" strokeWidth="0.4" />
         ))}
       </motion.svg>
     </div>
@@ -297,227 +456,215 @@ function SacredGeometry() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 6 — Shooting stars (occasional streaks of light)
+   LAYER 7 — Volumetric god rays
+   Tapered cones fanning from centre with organic width variation
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function ShootingStars() {
-  const stars = useMemo(() =>
-    Array.from({ length: 4 }, (_, i) => ({
-      startX: 10 + Math.random() * 40,
-      startY: 5 + Math.random() * 30,
-      angle: 25 + Math.random() * 20,
-      length: 80 + Math.random() * 120,
-      duration: 1 + Math.random() * 0.6,
-      delay: 4 + i * 7 + Math.random() * 5,
-      total: 12 + i * 7 + Math.random() * 5,
-    })), []);
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {stars.map((s, i) => (
-        <motion.div
-          key={`star-${i}`}
-          className="absolute"
-          style={{
-            left: `${s.startX}%`,
-            top: `${s.startY}%`,
-            width: s.length,
-            height: 1,
-            background: `linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.6) 40%, rgba(255,255,255,0.9) 100%)`,
-            borderRadius: 1,
-            transformOrigin: "left center",
-            transform: `rotate(${s.angle}deg)`,
-            filter: "blur(0.3px)",
-          }}
-          animate={{
-            opacity: [0, 0, 1, 1, 0, 0],
-            scaleX: [0, 0, 0.3, 1, 1, 0],
-            x: [0, 0, 0, s.length * 0.5, s.length, s.length],
-          }}
-          transition={{
-            duration: s.total,
-            times: [0, s.delay / s.total, (s.delay + 0.1) / s.total, (s.delay + s.duration * 0.4) / s.total, (s.delay + s.duration) / s.total, 1],
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 7 — Nebula clouds (soft volumetric fog)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-function NebulaClouds() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Deep nebula — upper left */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: 600,
-          height: 600,
-          top: "-10%",
-          left: "-10%",
-          background: "radial-gradient(ellipse at center, rgba(212,175,55,0.025) 0%, rgba(140,111,34,0.01) 40%, transparent 70%)",
-          filter: "blur(40px)",
-        }}
-        animate={{
-          scale: [1, 1.15, 1.05, 1.2, 1],
-          x: [0, 30, -10, 20, 0],
-          y: [0, 15, -20, 5, 0],
-        }}
-        transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Warm nebula — lower right */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: 500,
-          height: 500,
-          bottom: "-5%",
-          right: "-5%",
-          background: "radial-gradient(ellipse at center, rgba(191,155,48,0.02) 0%, rgba(166,133,41,0.008) 40%, transparent 70%)",
-          filter: "blur(50px)",
-        }}
-        animate={{
-          scale: [1, 1.1, 0.95, 1.15, 1],
-          x: [0, -20, 15, -10, 0],
-          y: [0, -15, 10, -5, 0],
-        }}
-        transition={{ duration: 35, repeat: Infinity, ease: "easeInOut", delay: 5 }}
-      />
-
-      {/* Centre haze — breathes with the rings */}
-      <motion.div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{
-          width: 400,
-          height: 400,
-          background: "radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 60%)",
-          filter: "blur(30px)",
-        }}
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.5, 0.8, 0.5],
-        }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      />
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 8 — Light rays emanating from center
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-function LightRays() {
+function GodRays() {
   const rays = useMemo(
     () =>
-      Array.from({ length: 8 }, (_, i) => ({
-        angle: i * 45,
-        length: 350 + (i % 3) * 100,
-        width: 1 + (i % 2),
-        opacity: 0.03 + (i % 3) * 0.01,
-        delay: i * 0.5,
-      })),
+      Array.from({ length: 12 }, (_, i) => {
+        const angle = (i * 30) + (i % 3) * 5 - 7;
+        const length = 300 + (i % 4) * 80 + (i % 3) * 50;
+        return {
+          angle,
+          length,
+          widthEnd: 6 + (i % 5) * 4,
+          peakOpacity: 0.015 + (i % 3) * 0.008,
+          dur: 7 + (i % 4) * 2.5,
+          del: (i % 5) * 1.3,
+        };
+      }),
     []
   );
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {rays.map((r, i) => (
-        <motion.div
-          key={`ray-${i}`}
-          className="absolute"
-          style={{
-            width: r.length,
-            height: r.width,
-            background: `linear-gradient(90deg, rgba(212,175,55,${r.opacity * 3}) 0%, rgba(212,175,55,${r.opacity}) 40%, transparent 100%)`,
-            transformOrigin: "left center",
-            transform: `rotate(${r.angle}deg)`,
-            filter: "blur(1px)",
-          }}
-          animate={{
-            opacity: [r.opacity, r.opacity * 2.5, r.opacity],
-            scaleX: [0.9, 1, 0.9],
-          }}
-          transition={{
-            duration: 5 + i * 0.7,
-            delay: r.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+      <motion.div
+        className="relative"
+        style={{ width: 0, height: 0 }}
+        animate={{ rotate: [0, 8, -4, 6, 0] }}
+        transition={{ duration: 60, repeat: Infinity, ease: "easeInOut" }}
+      >
+        {rays.map((r, i) => (
+          <motion.div
+            key={i}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: -0.5,
+              width: r.length,
+              height: 1,
+              transformOrigin: "left center",
+              transform: `rotate(${r.angle}deg)`,
+            }}
+          >
+            {/* The cone: a div that widens from 1px to widthEnd */}
+            <motion.div
+              style={{
+                width: "100%",
+                height: "100%",
+                clipPath: `polygon(0% 50%, 100% ${50 - r.widthEnd / 2}%, 100% ${50 + r.widthEnd / 2}%)`,
+                background: `linear-gradient(90deg, rgba(212,175,55,${r.peakOpacity * 2}) 0%, rgba(225,200,120,${r.peakOpacity}) 40%, rgba(255,240,200,${r.peakOpacity * 0.3}) 70%, transparent 100%)`,
+                filter: "blur(3px)",
+                height: r.widthEnd * 2,
+                marginTop: -r.widthEnd,
+              }}
+              animate={{
+                opacity: [r.peakOpacity * 8, r.peakOpacity * 20, r.peakOpacity * 8],
+              }}
+              transition={{
+                duration: r.dur,
+                delay: r.del,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 9 — Parallax mouse-tracking glow
+   LAYER 8 — Shooting stars (rare, elegant)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function ShootingStars() {
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 3 }, (_, i) => ({
+        x: 5 + i * 30 + Math.random() * 15,
+        y: 3 + Math.random() * 25,
+        angle: 20 + Math.random() * 25,
+        travel: 200 + Math.random() * 150,
+        dur: 0.8 + Math.random() * 0.5,
+        gap: 18 + i * 12,
+      })),
+    []
+  );
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {stars.map((s, i) => {
+        const cycle = s.gap + s.dur;
+        const t1 = s.gap / cycle;
+        const t2 = (s.gap + s.dur * 0.1) / cycle;
+        const t3 = (s.gap + s.dur * 0.5) / cycle;
+        const t4 = (s.gap + s.dur) / cycle;
+
+        return (
+          <motion.div
+            key={i}
+            style={{
+              position: "absolute",
+              left: `${s.x}%`,
+              top: `${s.y}%`,
+              width: s.travel * 0.6,
+              height: 1,
+              transformOrigin: "left center",
+              transform: `rotate(${s.angle}deg)`,
+              background: `linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.15) 10%, rgba(225,210,150,0.5) 40%, rgba(255,252,240,0.9) 85%, white 100%)`,
+              borderRadius: 2,
+              filter: "blur(0.4px)",
+            }}
+            animate={{
+              opacity: [0, 0, 0.9, 0.9, 0],
+              scaleX: [0, 0, 0.4, 1, 0],
+              x: [0, 0, 0, s.travel, s.travel],
+            }}
+            transition={{
+              duration: cycle,
+              times: [0, t1, t2, t3, t4],
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 9 — Mouse-tracking glow (layered halos)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function MouseGlow() {
-  const mouseX = useMotionValue(0.5);
-  const mouseY = useMotionValue(0.5);
+  const mx = useMotionValue(0.5);
+  const my = useMotionValue(0.5);
 
-  const springConfig = { stiffness: 30, damping: 25 };
-  const smoothX = useSpring(mouseX, springConfig);
-  const smoothY = useSpring(mouseY, springConfig);
+  const cfg = { stiffness: 20, damping: 30 };
+  const sx = useSpring(mx, cfg);
+  const sy = useSpring(my, cfg);
 
-  const glowX = useTransform(smoothX, [0, 1], ["-10%", "110%"]);
-  const glowY = useTransform(smoothY, [0, 1], ["-10%", "110%"]);
+  const gx = useTransform(sx, [0, 1], ["-5%", "105%"]);
+  const gy = useTransform(sy, [0, 1], ["-5%", "105%"]);
 
   useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX / window.innerWidth);
-      mouseY.set(e.clientY / window.innerHeight);
+    const h = (e: MouseEvent) => {
+      mx.set(e.clientX / window.innerWidth);
+      my.set(e.clientY / window.innerHeight);
     };
-    window.addEventListener("mousemove", handleMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMove);
-  }, [mouseX, mouseY]);
+    window.addEventListener("mousemove", h, { passive: true });
+    return () => window.removeEventListener("mousemove", h);
+  }, [mx, my]);
 
   return (
-    <motion.div
-      className="absolute rounded-full pointer-events-none"
-      style={{
-        width: 500,
-        height: 500,
-        left: glowX,
-        top: glowY,
-        x: "-50%",
-        y: "-50%",
-        background: "radial-gradient(circle, rgba(212,175,55,0.05) 0%, rgba(212,175,55,0.02) 30%, transparent 60%)",
-        filter: "blur(40px)",
-      }}
-    />
+    <>
+      {/* Outer soft halo */}
+      <motion.div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          width: 700,
+          height: 700,
+          left: gx,
+          top: gy,
+          x: "-50%",
+          y: "-50%",
+          background:
+            "radial-gradient(circle, rgba(212,175,55,0.025) 0%, rgba(200,165,40,0.01) 35%, transparent 60%)",
+          filter: "blur(60px)",
+        }}
+      />
+      {/* Inner warm core */}
+      <motion.div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          width: 300,
+          height: 300,
+          left: gx,
+          top: gy,
+          x: "-50%",
+          y: "-50%",
+          background:
+            "radial-gradient(circle, rgba(255,235,180,0.03) 0%, rgba(212,175,55,0.015) 40%, transparent 65%)",
+          filter: "blur(30px)",
+        }}
+      />
+    </>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LAYER 10 — Micro grid (subtle dot matrix)
+   LAYER 10 — Film grain overlay (texture, not pattern)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function MicroGrid() {
+function FilmGrain() {
   return (
-    <motion.div
-      className="absolute inset-0 pointer-events-none"
+    <div
+      className="absolute inset-0 pointer-events-none mix-blend-soft-light"
       style={{
-        backgroundImage: "radial-gradient(circle, rgba(212,175,55,0.04) 1px, transparent 1px)",
-        backgroundSize: "40px 40px",
+        opacity: 0.04,
+        filter: "url(#grain)",
       }}
-      animate={{ opacity: [0.3, 0.5, 0.3] }}
-      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
     />
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MAIN COMPONENT — Composite of all layers
+   MAIN COMPONENT
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function OrbitBackground({
@@ -562,40 +709,46 @@ export default function OrbitBackground({
       className="fixed inset-0 overflow-hidden pointer-events-none"
       style={{ zIndex: 0 }}
     >
-      {/* L10 — Subtle dot grid */}
-      <MicroGrid />
+      {/* SVG filter definitions */}
+      <NoiseFilters />
 
-      {/* L7 — Nebula clouds (deep in back) */}
-      <NebulaClouds />
+      {/* Deepest layer — atmospheric nebulae (noise-warped) */}
+      <Atmosphere />
 
-      {/* L4 — Aurora light bands */}
-      <AuroraBands />
+      {/* Aurora veils (noise-warped bands) */}
+      <Aurora />
 
-      {/* L8 — Light rays from center */}
-      <LightRays />
+      {/* Volumetric god rays */}
+      <GodRays />
 
-      {/* Radial glow (existing) */}
+      {/* Radial core glow (existing) */}
       <div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] sm:w-[1200px] sm:h-[1200px] rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 60%)" }}
+        style={{
+          background:
+            "radial-gradient(circle, rgba(212,175,55,0.08) 0%, rgba(200,165,40,0.03) 30%, transparent 60%)",
+        }}
       />
 
-      {/* L5 — Sacred geometry */}
+      {/* Sacred geometry */}
       <SacredGeometry />
 
-      {/* L2 — Concentric pulsing rings (existing) */}
+      {/* Concentric rings (existing) */}
       <ConcentricRings />
 
-      {/* L3 — Floating particle field */}
-      {mounted && <ParticleField />}
+      {/* Particles */}
+      {mounted && <Particles />}
 
-      {/* L6 — Shooting stars */}
+      {/* Shooting stars */}
       {mounted && <ShootingStars />}
 
-      {/* L9 — Mouse-tracking glow */}
+      {/* Mouse glow */}
       {mounted && <MouseGlow />}
 
-      {/* L1 — Orbiting terms (existing) */}
+      {/* Film grain (topmost) */}
+      {mounted && <FilmGrain />}
+
+      {/* Orbiting terms (existing) */}
       {showTerms && (
         <div className="absolute inset-0 flex items-center justify-center">
           {orbitConfigs.map((cfg, i) => (

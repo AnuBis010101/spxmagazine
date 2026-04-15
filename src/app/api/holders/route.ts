@@ -14,21 +14,15 @@ interface HoldersPayload {
   lastUpdated: string;
 }
 
-// ── In-memory cache (hot path — sub-ms reads) ───────────────────────────────
+// ── Config ───────────────────────────────────────────────────────────────────
 
-let memoryCache: HoldersPayload | null = null;
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 300; // 5 min for full refresh
 
-function getMemoryCache(): HoldersPayload | null {
-  return memoryCache;
-}
+const STALE_AFTER_MS = 9 * 60 * 60 * 1000; // 9 hours — triggers background refresh
 
 // ── Database persistence (Supabase site_settings) ────────────────────────────
-//
-// Stores holder counts in the `site_settings` table under key "holder_counts".
-// This survives server restarts, deployments, and cold starts.
-// The background refresh writes here; the GET handler reads from memory first,
-// then falls back to DB on cold start.
-// ─────────────────────────────────────────────────────────────────────────────
 
 async function loadFromDatabase(): Promise<HoldersPayload | null> {
   try {
@@ -42,7 +36,8 @@ async function loadFromDatabase(): Promise<HoldersPayload | null> {
 
     if (error || !data?.value) return null;
     return data.value as HoldersPayload;
-  } catch {
+  } catch (e) {
+    console.error("[holders] DB load failed:", e);
     return null;
   }
 }
@@ -57,8 +52,9 @@ async function saveToDatabase(payload: HoldersPayload): Promise<void> {
         { key: "holder_counts", value: payload, updated_at: new Date().toISOString() },
         { onConflict: "key" }
       );
+    console.log("[holders] Saved to database");
   } catch (e) {
-    console.error("[holders] Failed to save to database:", e);
+    console.error("[holders] DB save failed:", e);
   }
 }
 
@@ -237,6 +233,11 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
 }
 
 // ── Base (filtered: $2 minimum) ──────────────────────────────────────────────
+//
+// IMPORTANT: This function NEVER returns the unfiltered total count.
+// If price is unavailable or pagination is interrupted, it returns "N/A"
+// so the merge logic preserves the previous curated value from the DB.
+// ─────────────────────────────────────────────────────────────────────────────
 
 const BASE_ADDR = "0x50dA645f148798F68EF2d7dB7C1CB22A6819bb2C";
 const BASE_DECIMALS = 8;
@@ -256,6 +257,7 @@ interface BlockScoutPageParams {
 }
 
 async function fetchBaseTokenPrice(): Promise<number | null> {
+  // Try DexScreener first
   const data = await safeFetch(
     `https://api.dexscreener.com/latest/dex/tokens/${BASE_ADDR}`,
     {},
@@ -263,9 +265,24 @@ async function fetchBaseTokenPrice(): Promise<number | null> {
     10_000
   );
   const pairs = (data as any)?.pairs;
-  if (!Array.isArray(pairs) || pairs.length === 0) return null;
-  const price = parseFloat(pairs[0].priceUsd);
-  return Number.isFinite(price) && price > 0 ? price : null;
+  if (Array.isArray(pairs) && pairs.length > 0) {
+    const price = parseFloat(pairs[0].priceUsd);
+    if (Number.isFinite(price) && price > 0) return price;
+  }
+
+  // Try CoinGecko as backup
+  const cg = await safeFetch(
+    "https://api.coingecko.com/api/v3/simple/token_price/base?contract_addresses=" +
+      BASE_ADDR +
+      "&vs_currencies=usd",
+    {},
+    "coingecko-base",
+    10_000
+  );
+  const cgPrice = (cg as any)?.[BASE_ADDR.toLowerCase()]?.usd;
+  if (typeof cgPrice === "number" && cgPrice > 0) return cgPrice;
+
+  return null;
 }
 
 async function fetchHoldersPage(
@@ -281,7 +298,7 @@ async function fetchHoldersPage(
     url += `?${params}`;
   }
 
-  // Retry up to 3 times on failure (rate limiting, timeouts)
+  // Retry up to 3 times with exponential backoff
   for (let attempt = 1; attempt <= 3; attempt++) {
     const data = await safeFetch(url, {}, "blockscout-holders", 15_000);
     if (data) {
@@ -308,29 +325,27 @@ async function fetchBaseHolders(): Promise<ChainResult> {
     explorer: `https://basescan.org/token/${BASE_ADDR}`,
   };
 
+  // ── Step 1: Get live price (REQUIRED for curation) ──
   const price = await fetchBaseTokenPrice();
   if (!price) {
-    console.warn("[holders] Base: no price, falling back to total count");
-    const bs = await safeFetch(
-      `${BLOCKSCOUT_BASE_URL}/tokens/${BASE_ADDR}`,
-      {},
-      "blockscout-base"
-    );
-    const bsCount = extractCount((bs as any)?.holders_count);
-    if (bsCount !== null) return { ...base, holders: bsCount };
+    // CRITICAL: Do NOT fall back to unfiltered count.
+    // Return "N/A" so merge logic preserves the previous curated value.
+    console.error("[holders] Base: price unavailable — returning N/A to preserve curated count");
     return base;
   }
 
+  // ── Step 2: Calculate minimum raw token amount for $2 threshold ──
   const minTokens = MIN_HOLDING_USD / price;
   const minRaw = BigInt(Math.ceil(minTokens * 10 ** BASE_DECIMALS));
   console.log(
-    `[holders] Base: price=$${price}, min $${MIN_HOLDING_USD} = ${minTokens.toFixed(2)} tokens (raw: ${minRaw})`
+    `[holders] Base: price=$${price.toFixed(6)}, min $${MIN_HOLDING_USD} = ${minTokens.toFixed(2)} tokens (raw: ${minRaw})`
   );
 
+  // ── Step 3: Paginate through holders (sorted descending by balance) ──
   let qualifiedCount = 0;
   let cursor: BlockScoutPageParams | undefined = undefined;
   let pagesFetched = 0;
-  let completedNormally = false; // true only if we found the threshold boundary
+  let completedNormally = false;
 
   while (pagesFetched < MAX_PAGES) {
     const { items, next, failed } = await fetchHoldersPage(cursor);
@@ -343,7 +358,7 @@ async function fetchBaseHolders(): Promise<ChainResult> {
     }
 
     if (items.length === 0) {
-      // Legitimate end of data (all holders are above threshold)
+      // Legitimate end of data — all holders are above threshold
       completedNormally = true;
       break;
     }
@@ -383,126 +398,145 @@ async function fetchBaseHolders(): Promise<ChainResult> {
     `[holders] Base: ${qualifiedCount} holders above $${MIN_HOLDING_USD} (${pagesFetched} pages, ${completedNormally ? "complete" : "INTERRUPTED"})`
   );
 
+  // Only return a count if pagination completed AND we got a reasonable number
   if (completedNormally && qualifiedCount > 0) {
     return { ...base, holders: qualifiedCount };
   }
 
+  // Pagination interrupted or zero count — return "N/A" to preserve previous curated value
   if (!completedNormally) {
-    console.error("[holders] Base: pagination interrupted, returning N/A to preserve previous data");
+    console.error("[holders] Base: pagination interrupted — returning N/A to preserve previous data");
+  } else {
+    console.error("[holders] Base: qualified count is 0 despite completion — returning N/A");
   }
   return base;
 }
 
-// ── Background refresh (runs every 8h, writes to DB + memory) ────────────────
+// ── Refresh logic ────────────────────────────────────────────────────────────
+//
+// Called on-demand by GET ?refresh=1 or by Vercel cron.
+// Fetches all 3 chains in parallel, merges with previous DB data
+// (preserving curated values when a chain returns "N/A"),
+// and persists to Supabase.
+// ─────────────────────────────────────────────────────────────────────────────
 
-const REFRESH_INTERVAL = 8 * 60 * 60 * 1000; // 8 hours
+let refreshPromise: Promise<void> | null = null;
 
-let isRefreshing = false;
-
-async function refreshHolders(): Promise<void> {
-  if (isRefreshing) {
-    console.log("[holders] Refresh already in progress, skipping");
-    return;
-  }
-
-  isRefreshing = true;
+async function doRefresh(): Promise<void> {
   const start = Date.now();
-  console.log("[holders] Background refresh started");
+  console.log("[holders] ═══ Refresh started ═══");
 
-  try {
-    const [ethereum, solana, base] = await Promise.all([
-      fetchEthereumHolders(),
-      fetchSolanaHolders(),
-      fetchBaseHolders(),
-    ]);
+  // Load previous data from DB (source of truth on serverless)
+  const previous = await loadFromDatabase();
 
-    // Merge with previous data: keep old values for any chain that returned "N/A"
-    const previous = getMemoryCache();
-    const freshResults = [ethereum, solana, base];
-    let hasNewData = false;
-    const merged = freshResults.map((result) => {
-      if (result.holders !== "N/A") {
-        hasNewData = true;
-        return result;
-      }
-      const prev = previous?.holders.find((h) => h.chain === result.chain);
-      if (prev && prev.holders !== "N/A") {
-        console.log(
-          `[holders] ${result.chain}: keeping previous value ${prev.holders} (refresh returned N/A)`
-        );
-        return { ...result, holders: prev.holders };
-      }
+  // Fetch all three chains in parallel
+  const [ethereum, solana, base] = await Promise.all([
+    fetchEthereumHolders(),
+    fetchSolanaHolders(),
+    fetchBaseHolders(),
+  ]);
+
+  const freshResults = [ethereum, solana, base];
+
+  // Merge: keep previous curated value for any chain that returned "N/A"
+  let hasNewData = false;
+  const merged = freshResults.map((result) => {
+    if (result.holders !== "N/A") {
+      hasNewData = true;
       return result;
-    });
+    }
+    // Chain returned "N/A" — preserve previous value from DB
+    const prev = previous?.holders.find((h) => h.chain === result.chain);
+    if (prev && prev.holders !== "N/A") {
+      console.log(
+        `[holders] ${result.chain}: keeping previous curated value ${prev.holders} (refresh returned N/A)`
+      );
+      return { ...result, holders: prev.holders };
+    }
+    // No previous value either — stays "N/A"
+    return result;
+  });
 
-    // Only update the timestamp when at least one chain got fresh data
-    const payload: HoldersPayload = {
-      holders: merged,
-      lastUpdated: hasNewData
-        ? new Date().toISOString()
-        : previous?.lastUpdated ?? new Date().toISOString(),
-    };
+  // Build payload — only update timestamp when we actually got new data
+  const now = new Date().toISOString();
+  const payload: HoldersPayload = {
+    holders: merged,
+    lastUpdated: hasNewData
+      ? now
+      : previous?.lastUpdated ?? now,
+  };
 
-    // Write to memory (instant reads)
-    memoryCache = payload;
+  // Persist to database (source of truth)
+  await saveToDatabase(payload);
 
-    // Write to database (survives restarts/deploys)
-    await saveToDatabase(payload);
-
-    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-    console.log(
-      `[holders] Background refresh complete in ${elapsed}s — ` +
-        `ETH: ${merged[0].holders}, SOL: ${merged[1].holders}, BASE: ${merged[2].holders}`
-    );
-  } catch (error) {
-    console.error("[holders] Background refresh failed:", error);
-  } finally {
-    isRefreshing = false;
-  }
+  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+  console.log(
+    `[holders] ═══ Refresh complete in ${elapsed}s ═══\n` +
+      `  ETH: ${merged[0].holders}\n` +
+      `  SOL: ${merged[1].holders}\n` +
+      `  BASE: ${merged[2].holders}\n` +
+      `  hasNewData: ${hasNewData}\n` +
+      `  lastUpdated: ${payload.lastUpdated}`
+  );
 }
 
-// On module load: hydrate memory from DB, then start background refresh cycle
-(async () => {
-  // 1. Hydrate memory from DB immediately (instant cold-start reads)
-  const dbData = await loadFromDatabase();
-  if (dbData) {
-    memoryCache = dbData;
-    console.log(
-      `[holders] Hydrated from DB (last updated: ${dbData.lastUpdated})`
-    );
+/** Singleton guard: only one refresh at a time */
+function refreshHolders(): Promise<void> {
+  if (refreshPromise) {
+    console.log("[holders] Refresh already in progress — reusing promise");
+    return refreshPromise;
   }
+  refreshPromise = doRefresh().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+}
 
-  // 2. Fire first background refresh (non-blocking)
-  refreshHolders();
-
-  // 3. Schedule recurring refreshes every 8 hours
-  setInterval(refreshHolders, REFRESH_INTERVAL);
-})();
-
-// ── Route handler (always instant) ───────────────────────────────────────────
+// ── Route handler ────────────────────────────────────────────────────────────
+//
+// GET /api/holders          → instant read from DB
+// GET /api/holders?refresh=1 → trigger refresh, return current DB data immediately
+// GET /api/holders?refresh=1&wait=1 → trigger refresh and wait for it (for cron)
+// ─────────────────────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
-    const force = request.nextUrl.searchParams.get("force") === "1";
+    const params = request.nextUrl.searchParams;
+    const wantRefresh = params.get("refresh") === "1" || params.get("force") === "1";
+    const waitForRefresh = params.get("wait") === "1";
 
-    if (force) {
-      refreshHolders(); // fire-and-forget
+    // If cron or manual trigger: refresh and optionally wait
+    if (wantRefresh) {
+      if (waitForRefresh) {
+        // Cron job: wait for refresh to complete, then return fresh data
+        await refreshHolders();
+        const fresh = await loadFromDatabase();
+        if (fresh) {
+          return NextResponse.json(fresh);
+        }
+      } else {
+        // Fire-and-forget refresh, return stale data immediately
+        refreshHolders();
+      }
     }
 
-    // 1. Serve from memory (sub-ms)
-    const cached = getMemoryCache();
-    if (cached) {
-      return NextResponse.json(cached);
-    }
-
-    // 2. Memory empty (cold start) — try DB directly
+    // Serve from database (source of truth on serverless)
     const dbData = await loadFromDatabase();
     if (dbData) {
-      memoryCache = dbData;
+      // Check staleness — if data is too old, kick off a background refresh
+      if (!wantRefresh && dbData.lastUpdated) {
+        const age = Date.now() - new Date(dbData.lastUpdated).getTime();
+        if (age > STALE_AFTER_MS) {
+          console.log(
+            `[holders] Data is ${(age / 3600000).toFixed(1)}h old — triggering background refresh`
+          );
+          refreshHolders(); // fire-and-forget
+        }
+      }
       return NextResponse.json(dbData);
     }
 
-    // 3. Absolute first deploy — no data anywhere yet
+    // No data in DB at all (first-ever deploy)
     return NextResponse.json(
       { error: "Holder data not yet available, please retry shortly" },
       { status: 503 }

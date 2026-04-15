@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/constants";
 import FlippeningTracker from "@/components/widgets/FlippeningTracker";
 import HoldersTracker from "@/components/widgets/HoldersTracker";
-import StateOfWorld from "@/components/widgets/StateOfWorld";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export const metadata: Metadata = {
@@ -50,22 +49,6 @@ export default function DataPage() {
               updated regularly to reflect current distribution.
             </p>
             <HoldersTracker />
-          </div>
-        </ScrollReveal>
-
-        {/* State of the World */}
-        <ScrollReveal direction="up" scale blur duration={0.7}>
-          <div className="mt-16">
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-3">
-              State of the World
-            </h2>
-            <div className="w-16 h-0.5 bg-gold-400 mb-6" />
-            <p className="text-mag-muted mb-8 max-w-2xl">
-              Real-time indicators of global sentiment: market fear,
-              loneliness, trust erosion. The data behind why the movement
-              matters.
-            </p>
-            <StateOfWorld />
           </div>
         </ScrollReveal>
 

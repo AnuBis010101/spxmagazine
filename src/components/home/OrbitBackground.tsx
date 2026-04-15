@@ -93,7 +93,7 @@ function ConcentricRings() {
  * Fixed orbit background — always visible behind all page content.
  * Renders the orbit system, concentric rings, and radial glow.
  */
-export default function OrbitBackground({ glossaryTerms }: { glossaryTerms: string[] }) {
+export default function OrbitBackground({ glossaryTerms, showTerms = true }: { glossaryTerms: string[]; showTerms?: boolean }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -136,20 +136,22 @@ export default function OrbitBackground({ glossaryTerms }: { glossaryTerms: stri
       <ConcentricRings />
 
       {/* Orbiting terms */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {orbitConfigs.map((cfg, i) => (
-          <OrbitTerm
-            key={`orbit-${i}`}
-            term={cfg.term}
-            radius={cfg.radius}
-            duration={cfg.duration}
-            startAngle={cfg.startAngle}
-            size={cfg.size}
-            reverse={cfg.reverse}
-            showRing={cfg.showRing}
-          />
-        ))}
-      </div>
+      {showTerms && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {orbitConfigs.map((cfg, i) => (
+            <OrbitTerm
+              key={`orbit-${i}`}
+              term={cfg.term}
+              radius={cfg.radius}
+              duration={cfg.duration}
+              startAngle={cfg.startAngle}
+              size={cfg.size}
+              reverse={cfg.reverse}
+              showRing={cfg.showRing}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

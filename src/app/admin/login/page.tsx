@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import OrbitBackground from "@/components/home/OrbitBackground";
 
 type LoginState = "idle" | "loading" | "success" | "error";
 
@@ -103,12 +104,13 @@ export default function AdminLoginPage() {
   const isDisabled = loginState === "loading" || loginState === "success";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-mag-black">
+    <div className="min-h-screen flex items-center justify-center bg-mag-black relative">
+      <OrbitBackground glossaryTerms={[]} showTerms={false} />
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-        className="max-w-sm w-full mx-4 bg-mag-dark border border-mag-border rounded-xl p-8"
+        className="relative z-10 max-w-sm w-full mx-4 bg-mag-dark/80 backdrop-blur-xl border border-mag-border rounded-xl p-8"
       >
         {/* Logo */}
         <div className="flex justify-center">

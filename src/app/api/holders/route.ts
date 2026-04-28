@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +12,13 @@ interface ChainResult {
 interface HoldersPayload {
   holders: ChainResult[];
   lastUpdated: string;
+  // Per-chain refresh telemetry — helps diagnose stale data without DB inspection
+  lastAttempt?: {
+    at: string;
+    ethereum: { ok: boolean; reason?: string; durationMs?: number };
+    solana: { ok: boolean; reason?: string; durationMs?: number };
+    base: { ok: boolean; reason?: string; durationMs?: number; pages?: number };
+  };
 }
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -20,7 +27,18 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5 min for full refresh
 
-const STALE_AFTER_MS = 9 * 60 * 60 * 1000; // 9 hours — triggers background refresh
+// Stale window — if the lastUpdated is older than this on a normal request,
+// we kick a background refresh. Set tight enough that one missed cron run
+// triggers self-healing on the very next page view.
+const STALE_AFTER_MS = 7 * 60 * 60 * 1000; // 7 hours (cron runs every 6h)
+
+// Hard wall-clock budget for the entire refresh — keep safely under maxDuration
+// so we always have headroom to write to the DB before the function dies.
+const REFRESH_BUDGET_MS = 270_000; // 4m30s
+const PHASE_1_BUDGET_MS = 30_000; // ETH + SOL: 30s max
+const BASE_DEADLINE_BUFFER_MS = 15_000; // leave 15s for the final DB write
+
+const DB_KEY = "holder_counts";
 
 // ── Database persistence (Supabase site_settings) ────────────────────────────
 
@@ -31,7 +49,7 @@ async function loadFromDatabase(): Promise<HoldersPayload | null> {
     const { data, error } = await supabase
       .from("site_settings")
       .select("value")
-      .eq("key", "holder_counts")
+      .eq("key", DB_KEY)
       .single();
 
     if (error || !data?.value) return null;
@@ -42,19 +60,25 @@ async function loadFromDatabase(): Promise<HoldersPayload | null> {
   }
 }
 
-async function saveToDatabase(payload: HoldersPayload): Promise<void> {
+async function saveToDatabase(payload: HoldersPayload): Promise<boolean> {
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
     const supabase = createAdminClient();
-    await supabase
+    const { error } = await supabase
       .from("site_settings")
       .upsert(
-        { key: "holder_counts", value: payload, updated_at: new Date().toISOString() },
+        { key: DB_KEY, value: payload, updated_at: new Date().toISOString() },
         { onConflict: "key" }
       );
+    if (error) {
+      console.error("[holders] DB save error:", error);
+      return false;
+    }
     console.log("[holders] Saved to database");
+    return true;
   } catch (e) {
     console.error("[holders] DB save failed:", e);
+    return false;
   }
 }
 
@@ -111,33 +135,60 @@ async function safeFetch(
   }
 }
 
+/** Race a promise against a wall-clock timeout, surfacing a clean error. */
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(
+      () => reject(new Error(`${label} exceeded ${ms}ms`)),
+      ms
+    );
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      }
+    );
+  });
+}
+
 // ── Ethereum ──────────────────────────────────────────────────────────────────
 
 const ETH_ADDR = "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c";
 
-async function fetchEthereumHolders(): Promise<ChainResult> {
-  const base: ChainResult = {
-    chain: "Ethereum",
-    holders: "N/A",
-    address: ETH_ADDR,
-    explorer: `https://etherscan.io/token/${ETH_ADDR}`,
-  };
+const ETH_BASE: ChainResult = {
+  chain: "Ethereum",
+  holders: "N/A",
+  address: ETH_ADDR,
+  explorer: `https://etherscan.io/token/${ETH_ADDR}`,
+};
 
+async function fetchEthereumHolders(): Promise<ChainResult> {
   const bs = await safeFetch(
     `https://eth.blockscout.com/api/v2/tokens/${ETH_ADDR}`,
     {},
     "blockscout-eth"
   );
   const bsCount = extractCount((bs as any)?.holders_count);
-  if (bsCount !== null) return { ...base, holders: bsCount };
+  if (bsCount !== null) return { ...ETH_BASE, holders: bsCount };
 
   console.error("[holders] Ethereum: all sources failed");
-  return base;
+  return ETH_BASE;
 }
 
 // ── Solana ────────────────────────────────────────────────────────────────────
 
 const SOL_MINT = "J3NKxxXZcnNiMjKw9hYb2K4LUxgwB6t1FtPtQVsv3KFr";
+
+const SOL_BASE: ChainResult = {
+  chain: "Solana",
+  holders: "N/A",
+  address: SOL_MINT,
+  explorer: `https://solscan.io/token/${SOL_MINT}`,
+};
 
 const SOLANA_RPCS = [
   "https://api.mainnet-beta.solana.com",
@@ -162,18 +213,13 @@ const SOL_RPC_BODY = JSON.stringify({
 });
 
 async function fetchSolanaHolders(): Promise<ChainResult> {
-  const fallback: ChainResult = {
-    chain: "Solana",
-    holders: "N/A",
-    address: SOL_MINT,
-    explorer: `https://solscan.io/token/${SOL_MINT}`,
-  };
-
   for (const rpc of SOLANA_RPCS) {
     const host = new URL(rpc).hostname;
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 45_000);
+      // Cap each Solana RPC attempt at 25s — keeps us under PHASE_1_BUDGET_MS
+      // even if both endpoints time out.
+      const timer = setTimeout(() => controller.abort(), 25_000);
 
       const res = await fetch(rpc, {
         method: "POST",
@@ -218,7 +264,7 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
         }
       }
 
-      if (active > 0) return { ...fallback, holders: active };
+      if (active > 0) return { ...SOL_BASE, holders: active };
     } catch (err: any) {
       const reason =
         err?.name === "AbortError"
@@ -229,7 +275,7 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
   }
 
   console.error("[holders] Solana: all RPC endpoints failed");
-  return fallback;
+  return SOL_BASE;
 }
 
 // ── Base (filtered: $2 minimum) ──────────────────────────────────────────────
@@ -243,7 +289,16 @@ const BASE_ADDR = "0x50dA645f148798F68EF2d7dB7C1CB22A6819bb2C";
 const BASE_DECIMALS = 8;
 const MIN_HOLDING_USD = 2;
 const BLOCKSCOUT_BASE_URL = "https://base.blockscout.com/api/v2";
-const MAX_PAGES = 5000;
+// Hard cap on pages — 1500 × 100 items = 150k holders headroom.
+// Keeps us bounded even if BlockScout's `next` cursor loops on a bug.
+const MAX_PAGES = 1500;
+
+const BASE_DEFAULT: ChainResult = {
+  chain: "Base",
+  holders: "N/A",
+  address: BASE_ADDR,
+  explorer: `https://basescan.org/token/${BASE_ADDR}`,
+};
 
 interface BlockScoutHolder {
   address: { hash: string };
@@ -286,7 +341,8 @@ async function fetchBaseTokenPrice(): Promise<number | null> {
 }
 
 async function fetchHoldersPage(
-  cursor?: BlockScoutPageParams
+  cursor: BlockScoutPageParams | undefined,
+  deadlineAt: number
 ): Promise<{ items: BlockScoutHolder[]; next: BlockScoutPageParams | null; failed: boolean }> {
   let url = `${BLOCKSCOUT_BASE_URL}/tokens/${BASE_ADDR}/holders`;
   if (cursor) {
@@ -298,9 +354,15 @@ async function fetchHoldersPage(
     url += `?${params}`;
   }
 
-  // Retry up to 3 times with exponential backoff
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const data = await safeFetch(url, {}, "blockscout-holders", 15_000);
+  // 2 attempts (was 3) with shorter backoff — faster failure detection
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    if (Date.now() > deadlineAt) {
+      console.warn(`[holders] Base page fetch: deadline hit before attempt ${attempt}`);
+      return { items: [], next: null, failed: true };
+    }
+    const remainingMs = Math.max(2_000, deadlineAt - Date.now());
+    const timeoutMs = Math.min(12_000, remainingMs);
+    const data = await safeFetch(url, {}, "blockscout-holders", timeoutMs);
     if (data) {
       return {
         items: (data as any).items ?? [],
@@ -308,30 +370,23 @@ async function fetchHoldersPage(
         failed: false,
       };
     }
-    if (attempt < 3) {
-      console.warn(`[holders] Base page fetch failed, retry ${attempt}/3`);
-      await new Promise((r) => setTimeout(r, 2000 * attempt));
+    if (attempt < 2) {
+      console.warn(`[holders] Base page fetch failed, retry ${attempt}/2`);
+      await new Promise((r) => setTimeout(r, 1_500));
     }
   }
 
   return { items: [], next: null, failed: true };
 }
 
-async function fetchBaseHolders(): Promise<ChainResult> {
-  const base: ChainResult = {
-    chain: "Base",
-    holders: "N/A",
-    address: BASE_ADDR,
-    explorer: `https://basescan.org/token/${BASE_ADDR}`,
-  };
-
+async function fetchBaseHolders(
+  deadlineAt: number
+): Promise<{ result: ChainResult; pages: number; reason?: string }> {
   // ── Step 1: Get live price (REQUIRED for curation) ──
   const price = await fetchBaseTokenPrice();
   if (!price) {
-    // CRITICAL: Do NOT fall back to unfiltered count.
-    // Return "N/A" so merge logic preserves the previous curated value.
     console.error("[holders] Base: price unavailable — returning N/A to preserve curated count");
-    return base;
+    return { result: BASE_DEFAULT, pages: 0, reason: "price unavailable" };
   }
 
   // ── Step 2: Calculate minimum raw token amount for $2 threshold ──
@@ -346,11 +401,19 @@ async function fetchBaseHolders(): Promise<ChainResult> {
   let cursor: BlockScoutPageParams | undefined = undefined;
   let pagesFetched = 0;
   let completedNormally = false;
+  let interruptReason = "";
 
   while (pagesFetched < MAX_PAGES) {
-    const { items, next, failed } = await fetchHoldersPage(cursor);
+    if (Date.now() > deadlineAt) {
+      interruptReason = "wall-clock deadline";
+      console.warn(`[holders] Base: deadline hit at page ${pagesFetched}`);
+      break;
+    }
+
+    const { items, next, failed } = await fetchHoldersPage(cursor, deadlineAt);
 
     if (failed) {
+      interruptReason = "page fetch failed after retries";
       console.error(
         `[holders] Base: page fetch failed after retries at page ${pagesFetched + 1}, aborting`
       );
@@ -394,89 +457,217 @@ async function fetchBaseHolders(): Promise<ChainResult> {
     }
   }
 
+  if (!completedNormally && pagesFetched >= MAX_PAGES) {
+    interruptReason = `MAX_PAGES (${MAX_PAGES}) reached without boundary`;
+  }
+
   console.log(
-    `[holders] Base: ${qualifiedCount} holders above $${MIN_HOLDING_USD} (${pagesFetched} pages, ${completedNormally ? "complete" : "INTERRUPTED"})`
+    `[holders] Base: ${qualifiedCount} holders above $${MIN_HOLDING_USD} (${pagesFetched} pages, ${completedNormally ? "complete" : "INTERRUPTED: " + interruptReason})`
   );
 
   // Only return a count if pagination completed AND we got a reasonable number
   if (completedNormally && qualifiedCount > 0) {
-    return { ...base, holders: qualifiedCount };
+    return { result: { ...BASE_DEFAULT, holders: qualifiedCount }, pages: pagesFetched };
   }
 
-  // Pagination interrupted or zero count — return "N/A" to preserve previous curated value
-  if (!completedNormally) {
-    console.error("[holders] Base: pagination interrupted — returning N/A to preserve previous data");
-  } else {
-    console.error("[holders] Base: qualified count is 0 despite completion — returning N/A");
-  }
-  return base;
+  return {
+    result: BASE_DEFAULT,
+    pages: pagesFetched,
+    reason: interruptReason || (qualifiedCount === 0 ? "0 qualified" : "unknown"),
+  };
 }
 
 // ── Refresh logic ────────────────────────────────────────────────────────────
 //
-// Called on-demand by GET ?refresh=1 or by Vercel cron.
-// Fetches all 3 chains in parallel, merges with previous DB data
-// (preserving curated values when a chain returns "N/A"),
-// and persists to Supabase.
+// Bulletproof design:
+//   Phase 1: ETH + SOL in parallel (fast, ~5-15s total). Save to DB immediately.
+//   Phase 2: Base (slow, can take minutes). Save to DB on completion.
+//
+// Even if Phase 2 hangs and gets killed by Vercel's function timeout,
+// Phase 1's results are already persisted — so ETH/SOL keep refreshing
+// reliably regardless of BlockScout-Base flakiness.
+//
+// Each phase is independently try/catch'd; one chain's failure cannot
+// cascade into another chain's data being lost.
 // ─────────────────────────────────────────────────────────────────────────────
 
 let refreshPromise: Promise<void> | null = null;
 
-async function doRefresh(): Promise<void> {
-  const start = Date.now();
-  console.log("[holders] ═══ Refresh started ═══");
+async function mergePhaseAndSave(
+  phaseResults: ChainResult[],
+  reason: string
+): Promise<void> {
+  // Re-load latest DB state before each save so we don't clobber a sibling
+  // phase's recent write (e.g. Base finishing while we were re-merging).
+  const current = await loadFromDatabase();
+  const previousByChain = new Map<string, ChainResult>(
+    (current?.holders ?? []).map((h) => [h.chain, h])
+  );
 
-  // Load previous data from DB (source of truth on serverless)
-  const previous = await loadFromDatabase();
-
-  // Fetch all three chains in parallel
-  const [ethereum, solana, base] = await Promise.all([
-    fetchEthereumHolders(),
-    fetchSolanaHolders(),
-    fetchBaseHolders(),
-  ]);
-
-  const freshResults = [ethereum, solana, base];
-
-  // Merge: keep previous curated value for any chain that returned "N/A"
+  // For chains we're updating in this phase: prefer fresh value, fall back
+  // to previous DB value if "N/A".
   let hasNewData = false;
-  const merged = freshResults.map((result) => {
-    if (result.holders !== "N/A") {
-      hasNewData = true;
-      return result;
-    }
-    // Chain returned "N/A" — preserve previous value from DB
-    const prev = previous?.holders.find((h) => h.chain === result.chain);
-    if (prev && prev.holders !== "N/A") {
+  for (const fresh of phaseResults) {
+    if (fresh.holders !== "N/A") {
+      previousByChain.set(fresh.chain, fresh);
+      const prev = current?.holders.find((h) => h.chain === fresh.chain);
+      if (!prev || prev.holders !== fresh.holders) hasNewData = true;
+    } else {
+      // Keep whatever we have — don't overwrite curated DB value with N/A
+      const prev = previousByChain.get(fresh.chain);
+      if (!prev) previousByChain.set(fresh.chain, fresh);
       console.log(
-        `[holders] ${result.chain}: keeping previous curated value ${prev.holders} (refresh returned N/A)`
+        `[holders] ${fresh.chain}: refresh returned N/A — preserving DB value (${prev?.holders ?? "none"})`
       );
-      return { ...result, holders: prev.holders };
     }
-    // No previous value either — stays "N/A"
-    return result;
-  });
+  }
 
-  // Build payload — only update timestamp when we actually got new data
-  const now = new Date().toISOString();
+  // Maintain canonical chain order
+  const order = ["Ethereum", "Solana", "Base"];
+  const merged: ChainResult[] = order
+    .map((name) => previousByChain.get(name))
+    .filter((x): x is ChainResult => Boolean(x));
+
+  // Add any unexpected chains we didn't know about (shouldn't happen but safe)
+  for (const [name, val] of previousByChain) {
+    if (!order.includes(name)) merged.push(val);
+  }
+
   const payload: HoldersPayload = {
     holders: merged,
     lastUpdated: hasNewData
-      ? now
-      : previous?.lastUpdated ?? now,
+      ? new Date().toISOString()
+      : current?.lastUpdated ?? new Date().toISOString(),
+    lastAttempt: current?.lastAttempt,
   };
 
-  // Persist to database (source of truth)
-  await saveToDatabase(payload);
+  const ok = await saveToDatabase(payload);
+  console.log(
+    `[holders] ${reason} ${ok ? "saved" : "FAILED"} → ${merged.map((m) => `${m.chain}=${m.holders}`).join(", ")}`
+  );
+}
+
+async function saveAttemptTelemetry(
+  attempt: HoldersPayload["lastAttempt"]
+): Promise<void> {
+  const current = await loadFromDatabase();
+  if (!current) return;
+  await saveToDatabase({ ...current, lastAttempt: attempt });
+}
+
+async function doRefresh(): Promise<void> {
+  const start = Date.now();
+  const refreshDeadline = start + REFRESH_BUDGET_MS;
+  console.log("[holders] ═══ Refresh started ═══");
+
+  const attempt: NonNullable<HoldersPayload["lastAttempt"]> = {
+    at: new Date().toISOString(),
+    ethereum: { ok: false },
+    solana: { ok: false },
+    base: { ok: false },
+  };
+
+  // ── Phase 1: ETH + SOL (fast) ────────────────────────────────────────────
+  // Run both in parallel with a strict per-phase timeout. Save what we got.
+  let ethereum: ChainResult = ETH_BASE;
+  let solana: ChainResult = SOL_BASE;
+  const phase1Start = Date.now();
+
+  try {
+    const settled = await Promise.allSettled([
+      withTimeout(fetchEthereumHolders(), PHASE_1_BUDGET_MS, "ETH").catch(
+        (e) => {
+          console.error("[holders] ETH error:", e);
+          return ETH_BASE;
+        }
+      ),
+      withTimeout(fetchSolanaHolders(), PHASE_1_BUDGET_MS, "SOL").catch((e) => {
+        console.error("[holders] SOL error:", e);
+        return SOL_BASE;
+      }),
+    ]);
+
+    if (settled[0].status === "fulfilled") ethereum = settled[0].value;
+    if (settled[1].status === "fulfilled") solana = settled[1].value;
+
+    const phase1Duration = Date.now() - phase1Start;
+    attempt.ethereum = {
+      ok: ethereum.holders !== "N/A",
+      reason:
+        ethereum.holders === "N/A" ? "all sources failed" : undefined,
+      durationMs: phase1Duration,
+    };
+    attempt.solana = {
+      ok: solana.holders !== "N/A",
+      reason: solana.holders === "N/A" ? "all RPCs failed" : undefined,
+      durationMs: phase1Duration,
+    };
+
+    // Save Phase 1 immediately — this is the critical fix.
+    // Even if Phase 2 hangs forever, ETH/SOL are now persisted.
+    await mergePhaseAndSave([ethereum, solana], "Phase 1 (ETH+SOL)");
+  } catch (e) {
+    console.error("[holders] Phase 1 catastrophic failure:", e);
+  }
+
+  // ── Phase 2: Base (slow) ─────────────────────────────────────────────────
+  // Hard wall-clock deadline so we always finish before maxDuration.
+  const remaining = refreshDeadline - Date.now() - BASE_DEADLINE_BUFFER_MS;
+
+  if (remaining < 30_000) {
+    console.warn(
+      `[holders] Skipping Phase 2 — only ${remaining}ms remaining of budget`
+    );
+    attempt.base = {
+      ok: false,
+      reason: `insufficient time (${remaining}ms left)`,
+      durationMs: 0,
+    };
+  } else {
+    const phase2Start = Date.now();
+    const baseDeadline = Date.now() + remaining;
+
+    try {
+      const { result: base, pages, reason } = await withTimeout(
+        fetchBaseHolders(baseDeadline),
+        remaining + 5_000,
+        "BASE"
+      ).catch((e) => {
+        console.error("[holders] BASE error:", e);
+        return { result: BASE_DEFAULT, pages: 0, reason: String(e) };
+      });
+
+      attempt.base = {
+        ok: base.holders !== "N/A",
+        reason,
+        durationMs: Date.now() - phase2Start,
+        pages,
+      };
+
+      await mergePhaseAndSave([base], "Phase 2 (BASE)");
+    } catch (e) {
+      console.error("[holders] Phase 2 catastrophic failure:", e);
+      attempt.base = {
+        ok: false,
+        reason: String(e),
+        durationMs: Date.now() - phase2Start,
+      };
+    }
+  }
+
+  // ── Persist telemetry so the diagnose endpoint shows what happened ──
+  try {
+    await saveAttemptTelemetry(attempt);
+  } catch (e) {
+    console.error("[holders] Failed to save attempt telemetry:", e);
+  }
 
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
   console.log(
     `[holders] ═══ Refresh complete in ${elapsed}s ═══\n` +
-      `  ETH: ${merged[0].holders}\n` +
-      `  SOL: ${merged[1].holders}\n` +
-      `  BASE: ${merged[2].holders}\n` +
-      `  hasNewData: ${hasNewData}\n` +
-      `  lastUpdated: ${payload.lastUpdated}`
+      `  ETH: ${attempt.ethereum.ok ? "OK" : "FAIL"} (${attempt.ethereum.durationMs}ms)\n` +
+      `  SOL: ${attempt.solana.ok ? "OK" : "FAIL"} (${attempt.solana.durationMs}ms)\n` +
+      `  BASE: ${attempt.base.ok ? "OK" : "FAIL"} (${attempt.base.durationMs}ms, ${attempt.base.pages ?? 0} pages)${attempt.base.reason ? ` — ${attempt.base.reason}` : ""}`
   );
 }
 
@@ -494,9 +685,10 @@ function refreshHolders(): Promise<void> {
 
 // ── Route handler ────────────────────────────────────────────────────────────
 //
-// GET /api/holders          → instant read from DB
-// GET /api/holders?refresh=1 → trigger refresh, return current DB data immediately
-// GET /api/holders?refresh=1&wait=1 → trigger refresh and wait for it (for cron)
+// GET /api/holders                    → instant read from DB
+// GET /api/holders?refresh=1          → trigger refresh, return current DB data
+// GET /api/holders?refresh=1&wait=1   → trigger refresh and wait (for cron)
+// GET /api/holders?diagnose=1         → return DB state + last attempt telemetry
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -504,6 +696,27 @@ export async function GET(request: NextRequest) {
     const params = request.nextUrl.searchParams;
     const wantRefresh = params.get("refresh") === "1" || params.get("force") === "1";
     const waitForRefresh = params.get("wait") === "1";
+    const wantDiagnose = params.get("diagnose") === "1";
+
+    // Diagnostic endpoint — exposes telemetry without triggering work
+    if (wantDiagnose) {
+      const dbData = await loadFromDatabase();
+      if (!dbData) {
+        return NextResponse.json(
+          { error: "No data in database", refreshInProgress: refreshPromise !== null },
+          { status: 404 }
+        );
+      }
+      const ageMs = Date.now() - new Date(dbData.lastUpdated).getTime();
+      return NextResponse.json({
+        lastUpdated: dbData.lastUpdated,
+        ageHours: (ageMs / 3600000).toFixed(2),
+        isStale: ageMs > STALE_AFTER_MS,
+        holders: dbData.holders,
+        lastAttempt: dbData.lastAttempt ?? null,
+        refreshInProgress: refreshPromise !== null,
+      });
+    }
 
     // If cron or manual trigger: refresh and optionally wait
     if (wantRefresh) {
@@ -515,22 +728,26 @@ export async function GET(request: NextRequest) {
           return NextResponse.json(fresh);
         }
       } else {
-        // Fire-and-forget refresh, return stale data immediately
-        refreshHolders();
+        // Schedule with `after` — keeps the function alive past the response
+        // (up to maxDuration), unlike a bare fire-and-forget which can be
+        // killed when the response is sent.
+        after(refreshHolders);
       }
     }
 
     // Serve from database (source of truth on serverless)
     const dbData = await loadFromDatabase();
     if (dbData) {
-      // Check staleness — if data is too old, kick off a background refresh
+      // Check staleness — if data is too old, schedule a post-response refresh.
+      // `after` ensures the work runs to completion even after the user has
+      // their response, unlike a naked fire-and-forget that the runtime can kill.
       if (!wantRefresh && dbData.lastUpdated) {
         const age = Date.now() - new Date(dbData.lastUpdated).getTime();
         if (age > STALE_AFTER_MS) {
           console.log(
-            `[holders] Data is ${(age / 3600000).toFixed(1)}h old — triggering background refresh`
+            `[holders] Data is ${(age / 3600000).toFixed(1)}h old — scheduling post-response refresh`
           );
-          refreshHolders(); // fire-and-forget
+          after(refreshHolders);
         }
       }
       return NextResponse.json(dbData);

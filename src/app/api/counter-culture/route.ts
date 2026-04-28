@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -431,7 +431,7 @@ export async function GET(request: NextRequest) {
         const fresh = await loadFromDatabase();
         if (fresh) return NextResponse.json(fresh);
       } else {
-        refreshCounterCulture();
+        after(refreshCounterCulture);
       }
     }
 
@@ -441,9 +441,9 @@ export async function GET(request: NextRequest) {
         const age = Date.now() - new Date(dbData.lastUpdated).getTime();
         if (age > STALE_AFTER_MS) {
           console.log(
-            `[counter-culture] Data is ${(age / (24 * 3600000)).toFixed(1)}d old — triggering background refresh`
+            `[counter-culture] Data is ${(age / (24 * 3600000)).toFixed(1)}d old — scheduling post-response refresh`
           );
-          refreshCounterCulture();
+          after(refreshCounterCulture);
         }
       }
       return NextResponse.json(dbData);

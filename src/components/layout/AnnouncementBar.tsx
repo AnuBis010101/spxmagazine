@@ -41,7 +41,7 @@ export function AnnouncementBar({ message, link, linkText }: AnnouncementBarProp
       </p>
       <button
         onClick={dismiss}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gold-400/60 hover:text-gold-400 transition-colors p-1"
+        className="absolute right-1 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center text-gold-400/60 hover:text-gold-400 transition-colors"
         aria-label="Dismiss announcement"
       >
         <X className="w-3.5 h-3.5" />

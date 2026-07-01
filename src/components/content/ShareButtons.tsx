@@ -56,7 +56,7 @@ export default function ShareButtons({ url, title }: ShareButtonsProps) {
   }, [url]);
 
   const buttonBase =
-    "inline-flex items-center justify-center w-9 h-9 rounded-lg text-mag-muted hover:text-gold-400 hover:bg-gold-400/10 transition-colors";
+    "inline-flex items-center justify-center w-11 h-11 rounded-lg text-mag-muted hover:text-gold-400 hover:bg-gold-400/10 transition-colors";
 
   return (
     <div className="flex items-center gap-1">

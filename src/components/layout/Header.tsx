@@ -149,7 +149,7 @@ export function Header() {
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.93 }}>
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400"
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400"
                   aria-label="Search"
                 >
                   <Search className="h-4 w-4" />
@@ -161,7 +161,7 @@ export function Header() {
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.93 }}>
                 <Link
                   href="/bookmarks"
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400"
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400"
                   aria-label="Bookmarks"
                 >
                   <Bookmark className="h-4 w-4" />
@@ -176,7 +176,7 @@ export function Header() {
             <motion.button
               type="button"
               onClick={() => setIsMobileNavOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400 md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400 md:hidden"
               aria-label="Open menu"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.93 }}

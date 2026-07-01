@@ -157,7 +157,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         <div className="hidden xl:block" />
 
         <div>
-          <div className="rounded-2xl bg-[#111] border border-mag-border/50 p-6 md:p-10">
+          <div className="rounded-2xl bg-mag-dark border border-mag-border/50 p-6 md:p-10">
             <GlossaryHighlighter>
               <div
                 className="prose-magazine"

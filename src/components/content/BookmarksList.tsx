@@ -12,6 +12,7 @@ export default function BookmarksList() {
   const { bookmarkedSlugs } = useBookmarks();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (bookmarkedSlugs.length === 0) {
@@ -24,20 +25,25 @@ export default function BookmarksList() {
 
     async function fetchPosts() {
       setLoading(true);
+      setError(false);
       try {
         const supabase = createClient();
-        const { data } = await supabase
+        const { data, error: fetchError } = await supabase
           .from("posts")
           .select("*, category:categories(*)")
           .in("slug", bookmarkedSlugs)
           .eq("status", "published")
           .order("published_at", { ascending: false });
 
-        if (!cancelled && data) {
-          setPosts(data as Post[]);
+        if (cancelled) return;
+        if (fetchError) {
+          setError(true);
+        } else {
+          setPosts((data as Post[]) || []);
         }
       } catch (err) {
         console.error("Failed to fetch bookmarked posts:", err);
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -64,6 +70,26 @@ export default function BookmarksList() {
             </div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (error && posts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <h2 className="font-display text-xl font-bold text-white mb-2">
+          Couldn&apos;t load your reading list
+        </h2>
+        <p className="text-mag-muted text-sm max-w-md mb-6">
+          Something went wrong fetching your saved articles. Your bookmarks are
+          safe — please try again.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gold-400 text-mag-black text-sm font-bold hover:bg-gold-400/90 transition-colors"
+        >
+          Reload
+        </button>
       </div>
     );
   }

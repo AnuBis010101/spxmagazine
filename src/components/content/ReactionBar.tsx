@@ -26,7 +26,7 @@ function Particle({ index }: { index: number }) {
 
   return (
     <motion.span
-      className="absolute w-1.5 h-1.5 rounded-full bg-[#D4AF37] pointer-events-none"
+      className="absolute w-1.5 h-1.5 rounded-full bg-gold-400 pointer-events-none"
       initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
       animate={{ opacity: 0, x, y, scale: 0 }}
       exit={{ opacity: 0 }}
@@ -68,7 +68,7 @@ export default function ReactionBar({
             className={cn(
               "relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors",
               isActive
-                ? "border border-[#D4AF37] bg-[#D4AF37]/10 text-white"
+                ? "border border-gold-400 bg-gold-400/10 text-white"
                 : "border border-transparent text-mag-muted hover:text-white hover:bg-white/5",
             )}
             aria-label={label}

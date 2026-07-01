@@ -125,7 +125,7 @@ export default function TableOfContents({
                 "w-full text-left text-sm py-1.5 px-3 rounded-md transition-colors border-l-2",
                 h.level === 3 && "ml-4",
                 activeId === h.id
-                  ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/5"
+                  ? "border-gold-400 text-gold-400 bg-gold-400/5"
                   : "border-transparent text-mag-muted hover:text-white hover:bg-white/5",
               )}
             >

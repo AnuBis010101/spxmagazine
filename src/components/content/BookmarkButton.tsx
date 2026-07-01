@@ -28,8 +28,8 @@ export default function BookmarkButton({ slug, className }: BookmarkButtonProps)
       className={cn(
         "inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
         active
-          ? "text-[#D4AF37] hover:bg-[#D4AF37]/10"
-          : "text-mag-muted hover:text-[#D4AF37] hover:bg-white/5",
+          ? "text-gold-400 hover:bg-gold-400/10"
+          : "text-mag-muted hover:text-gold-400 hover:bg-white/5",
         className,
       )}
       aria-label={active ? "Remove bookmark" : "Bookmark this article"}

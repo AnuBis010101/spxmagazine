@@ -13,7 +13,6 @@ export default function Preloader() {
     return "loading";
   });
   const rafRef = useRef<number>(0);
-  const startTime = useRef(Date.now());
 
   const preloadImage = useCallback((src: string): Promise<void> => {
     return new Promise((resolve) => {
@@ -25,76 +24,75 @@ export default function Preloader() {
   }, []);
 
   useEffect(() => {
-    let target = 0;
-    let current = 0;
-
-    // Phase 1: Preload critical assets (0-70%)
-    const assetPromises = CRITICAL_ASSETS.map((src) => preloadImage(src));
-
-    let assetsLoaded = 0;
-    assetPromises.forEach((p) =>
-      p.then(() => {
-        assetsLoaded++;
-        target = Math.max(target, (assetsLoaded / CRITICAL_ASSETS.length) * 70);
-      })
-    );
-
-    // Phase 2: Wait for fonts (70-85%)
-    if (document.fonts?.ready) {
-      document.fonts.ready.then(() => {
-        target = Math.max(target, 85);
-      });
-    } else {
-      target = Math.max(target, 85);
+    // Skip entirely if we've already loaded this session.
+    if (typeof window !== "undefined" && sessionStorage.getItem("spx-loaded")) {
+      return;
     }
 
-    // Phase 3: DOM ready (85-100%)
-    const onReady = () => {
-      target = 100;
+    let cancelled = false;
+    let current = 0;
+    let target = 12; // never sit at a dead 0%
+    const start = Date.now();
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const minTime = reduce ? 200 : 1400; // minimum on-screen time
+    const maxTime = 5000; // absolute failsafe — never hang
+
+    const bump = (t: number) => {
+      target = Math.max(target, t);
     };
 
-    if (document.readyState === "complete") {
-      Promise.all(assetPromises).then(onReady);
-    } else {
-      window.addEventListener("load", onReady, { once: true });
-      // Fallback: if load event already fired or takes too long
-      Promise.all(assetPromises).then(() => {
-        setTimeout(onReady, 300);
-      });
-    }
+    // Load signals nudge the target upward — but they can NEVER block completion.
+    Promise.all(CRITICAL_ASSETS.map((src) => preloadImage(src))).then(() => bump(80));
+    if (document.fonts?.ready) document.fonts.ready.then(() => bump(92));
+    else bump(92);
 
-    // Minimum display time for premium feel
-    const minTime = 1400;
+    const onLoad = () => bump(100);
+    if (document.readyState === "complete") bump(100);
+    else window.addEventListener("load", onLoad, { once: true });
+    const reachTimer = window.setTimeout(() => bump(100), reduce ? 100 : 1600);
 
-    // Smooth progress animation
-    const animate = () => {
-      const elapsed = Date.now() - startTime.current;
-      // Ease toward target
-      current += (target - current) * 0.08;
-
-      // Slow organic growth when waiting
-      if (target < 70 && current < 40) {
-        current = Math.max(current, (elapsed / minTime) * 35);
-      }
-
-      const rounded = Math.min(Math.round(current), 100);
-      setProgress(rounded);
-
-      if (rounded >= 100 && elapsed >= minTime) {
-        setPhase("finishing");
+    const finish = () => {
+      if (cancelled) return;
+      cancelled = true;
+      setProgress(100);
+      setPhase("finishing");
+      try {
         sessionStorage.setItem("spx-loaded", "1");
-        setTimeout(() => setPhase("done"), 800);
+      } catch {
+        /* sessionStorage may be unavailable */
+      }
+      window.setTimeout(() => setPhase("done"), reduce ? 200 : 700);
+    };
+
+    // Hard failsafe: dismiss no matter what (covers throttled rAF / missing events).
+    const failsafe = window.setTimeout(finish, maxTime);
+
+    const animate = () => {
+      if (cancelled) return;
+      const elapsed = Date.now() - start;
+      current += (target - current) * 0.1;
+      // Guaranteed wall-clock progress so the bar always fills to 100% by
+      // minTime, even if no asset/font/load signal ever arrives.
+      current = Math.max(current, Math.min(100, (elapsed / minTime) * 100));
+
+      setProgress(Math.min(Math.round(current), 100));
+
+      if (current >= 99.5 && elapsed >= minTime) {
+        finish();
         return;
       }
-
       rafRef.current = requestAnimationFrame(animate);
     };
-
     rafRef.current = requestAnimationFrame(animate);
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("load", onReady);
+      window.clearTimeout(failsafe);
+      window.clearTimeout(reachTimer);
+      window.removeEventListener("load", onLoad);
     };
   }, [preloadImage]);
 

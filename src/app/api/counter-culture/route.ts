@@ -446,7 +446,13 @@ export async function GET(request: NextRequest) {
           after(refreshCounterCulture);
         }
       }
-      return NextResponse.json(dbData);
+      // Counter-culture metrics refresh ~weekly — cache aggressively at the CDN.
+      return NextResponse.json(dbData, {
+        headers: {
+          "Cache-Control":
+            "public, s-maxage=86400, stale-while-revalidate=604800",
+        },
+      });
     }
 
     // First-ever deploy — seed synchronously

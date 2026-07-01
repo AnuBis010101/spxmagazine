@@ -750,7 +750,13 @@ export async function GET(request: NextRequest) {
           after(refreshHolders);
         }
       }
-      return NextResponse.json(dbData);
+      // Holder data refreshes a few times a day — let the CDN cache it.
+      return NextResponse.json(dbData, {
+        headers: {
+          "Cache-Control":
+            "public, s-maxage=1800, stale-while-revalidate=86400",
+        },
+      });
     }
 
     // No data in DB at all (first-ever deploy)

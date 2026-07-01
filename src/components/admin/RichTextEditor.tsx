@@ -87,14 +87,19 @@ export default function RichTextEditor({
 
   const addLink = () => {
     const url = window.prompt('Enter URL:');
-    if (url) {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url })
-        .run();
+    if (!url) return;
+    const trimmed = url.trim();
+    // Reject javascript:/data: and other unsafe schemes.
+    if (!/^(https?:\/\/|mailto:|\/)/i.test(trimmed)) {
+      toast.error('Only http(s), mailto, or relative links are allowed.');
+      return;
     }
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink({ href: trimmed })
+      .run();
   };
 
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,9 +131,13 @@ export default function RichTextEditor({
 
   const addYoutube = () => {
     const url = window.prompt('Enter YouTube URL:');
-    if (url) {
-      editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    if (!url) return;
+    const trimmed = url.trim();
+    if (!/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(trimmed)) {
+      toast.error('Enter a valid YouTube URL.');
+      return;
     }
+    editor.chain().focus().setYoutubeVideo({ src: trimmed }).run();
   };
 
   return (

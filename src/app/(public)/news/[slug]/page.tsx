@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SITE_URL } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPostBySlug, getRelatedPosts } from "@/lib/queries/articles";
+import { sanitizeHtml } from "@/lib/utils/sanitize";
 import { formatDate } from "@/lib/utils/format-date";
 import { estimateReadingTime } from "@/lib/utils/slugify";
 import CategoryBadge from "@/components/content/CategoryBadge";
@@ -147,7 +148,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
             <GlossaryHighlighter>
               <div
                 className="prose-magazine"
-                dangerouslySetInnerHTML={{ __html: post.body_html || "" }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.body_html || "") }}
               />
             </GlossaryHighlighter>
           </div>

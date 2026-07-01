@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyAdmin } from '@/lib/supabase/verify-admin';
 
-const ALLOWED_FOLDERS = new Set(['posts', 'videos', 'authors', 'media', 'og']);
+const ALLOWED_FOLDERS = new Set(['posts', 'videos', 'authors', 'media', 'og', 'content']);
 
 export async function POST(req: NextRequest) {
   try {

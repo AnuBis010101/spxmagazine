@@ -101,12 +101,28 @@ html[data-theme="gold"] {
   text-decoration-style: solid;
 }
 
-/* Gold Gradient Text */
+/* Gold Gradient Text — with a slow "pressed foil" sheen sweeping across */
+@keyframes gold-foil {
+  to {
+    background-position: 200% center;
+  }
+}
+
 .text-gold-gradient {
-  background: linear-gradient(135deg, var(--color-gold-300), var(--color-gold-500));
+  background: linear-gradient(
+    110deg,
+    var(--color-gold-500) 0%,
+    var(--color-gold-300) 28%,
+    #fff6d8 50%,
+    var(--color-gold-300) 72%,
+    var(--color-gold-500) 100%
+  );
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+  animation: gold-foil 6s linear infinite;
 }
 
 /* Article Body Styles */
@@ -363,7 +379,8 @@ html[data-theme="gold"] {
   .animate-shimmer,
   .animate-gold-glow,
   .animate-gold-heartbeat,
-  .animate-fade-in {
+  .animate-fade-in,
+  .text-gold-gradient {
     animation: none !important;
   }
 }

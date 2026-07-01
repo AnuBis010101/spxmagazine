@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { usePrice } from "@/hooks/usePrice";
 import { ChevronDown } from "lucide-react";
+import CountUp from "@/components/widgets/CountUp";
 
 const TIERS = [
   { label: "$1B", value: 1_000_000_000 },
@@ -249,7 +250,7 @@ export default function FlippeningTracker() {
                 SPX6900 Market Cap
               </p>
               <p className="font-display text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gold-300 via-gold-500 to-gold-300 bg-clip-text text-transparent truncate">
-                {formatCurrency(marketCap)}
+                <CountUp value={marketCap} format={formatCurrency} />
               </p>
             </div>
             <div className="sm:text-right min-w-0">

@@ -136,7 +136,8 @@ export async function getLatestPosts(limit = 6): Promise<Post[]> {
 export async function getRelatedPosts(
   postId: string,
   categoryId: string | null,
-  limit = 3
+  limit = 3,
+  tags?: string[]
 ): Promise<Post[]> {
   const supabase = createPublicClient();
   let query = supabase
@@ -148,8 +149,12 @@ export async function getRelatedPosts(
     .order("published_at", { ascending: false })
     .limit(limit);
 
+  // Prefer same-category; otherwise fall back to shared tags so uncategorized
+  // posts don't just surface arbitrary recent articles.
   if (categoryId) {
     query = query.eq("category_id", categoryId);
+  } else if (tags && tags.length > 0) {
+    query = query.overlaps("tags", tags);
   }
 
   const { data, error } = await query;

@@ -69,7 +69,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const relatedPosts = await getRelatedPosts(post.id, post.category_id, 3);
+  const relatedPosts = await getRelatedPosts(post.id, post.category_id, 3, post.tags);
   const readingTime = post.body_html ? estimateReadingTime(post.body_html) : null;
   const articleUrl = `${SITE_URL}/articles/${post.slug}`;
 

@@ -227,6 +227,28 @@ html[data-theme="gold"] {
   margin: 2rem 0;
 }
 
+/* Wide tables scroll horizontally instead of overflowing the layout */
+.prose-magazine table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.prose-magazine th,
+.prose-magazine td {
+  border: 1px solid var(--color-mag-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose-magazine th {
+  background: var(--color-mag-dark);
+  color: var(--color-mag-white);
+}
+
 /* Drop Cap — first letter of first paragraph */
 .prose-magazine > p:first-of-type::first-letter {
   float: left;

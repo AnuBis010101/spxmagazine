@@ -32,12 +32,14 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: SITE_NAME,
     type: "website",
-    images: [{ url: buildOgImageUrl({ title: "SPX Magazine", subtitle: "The Voice of SPX6900" }), width: 1200, height: 630 }],
+    images: [{ url: buildOgImageUrl({ title: "SPX Magazine", subtitle: "The Voice of SPX6900" }), width: 1200, height: 630, alt: "SPX Magazine — The Voice of SPX6900" }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
+    site: "@SPX6900",
+    creator: "@SPX6900",
   },
   robots: {
     index: true,

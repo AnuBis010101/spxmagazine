@@ -7,6 +7,7 @@ import { NewsTicker } from "@/components/layout/NewsTicker";
 import NewsletterStickyBar from "@/components/layout/NewsletterStickyBar";
 import EasterEgg from "@/components/layout/EasterEgg";
 import CustomCursor from "@/components/layout/CustomCursor";
+import FilmGrain from "@/components/layout/FilmGrain";
 import PageTransition from "@/components/animations/PageTransition";
 import ViewTransitions from "@/components/animations/ViewTransitions";
 import OrbitBackground from "@/components/home/OrbitBackground";
@@ -54,6 +55,8 @@ export default async function PublicLayout({
       </a>
       {/* Fixed orbit animation — always visible behind all content */}
       <OrbitBackground glossaryTerms={termsList} />
+      {/* Static film-grain texture over the whole canvas */}
+      <FilmGrain />
       {announcement && (
         <AnnouncementBar
           message={announcement.message}

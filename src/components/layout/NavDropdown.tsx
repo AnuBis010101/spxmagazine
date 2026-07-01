@@ -64,7 +64,7 @@ export default function NavDropdown({
       <Link
         href={item.href}
         className="relative flex items-center gap-1 px-4 py-1.5"
-        aria-haspopup="menu"
+        aria-haspopup="true"
         aria-expanded={open}
       >
         <span className="relative z-10 overflow-hidden" style={{ height: "1.2em" }}>
@@ -97,7 +97,6 @@ export default function NavDropdown({
       <AnimatePresence>
         {open && (
           <motion.div
-            role="menu"
             initial={{ opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
@@ -110,7 +109,6 @@ export default function NavDropdown({
                 <Link
                   key={`${child.label}-${child.href}`}
                   href={child.href}
-                  role="menuitem"
                   className={cn(
                     "block whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors",
                     active

@@ -75,6 +75,7 @@ export default async function ArticlesPage({
               currentPage={currentPage}
               totalPages={totalPages}
               basePath="/articles"
+              extraParams={{ tag }}
             />
           </div>
         </ScrollReveal>

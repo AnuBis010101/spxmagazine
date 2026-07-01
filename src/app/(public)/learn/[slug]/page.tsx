@@ -5,6 +5,7 @@ import { SITE_URL } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPostBySlug, getRelatedPosts } from "@/lib/queries/articles";
 import { sanitizeHtml } from "@/lib/utils/sanitize";
+import ArticleJsonLd from "@/components/content/ArticleJsonLd";
 import { formatDate } from "@/lib/utils/format-date";
 import { estimateReadingTime } from "@/lib/utils/slugify";
 import CategoryBadge from "@/components/content/CategoryBadge";
@@ -37,6 +38,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical: `/learn/${post.slug}` },
     description: post.meta_description || post.excerpt || undefined,
     openGraph: {
+      type: "article",
+      publishedTime: post.published_at || undefined,
+      authors: [post.author_name],
       title: post.meta_title || post.title,
       description: post.meta_description || post.excerpt || undefined,
       images: [
@@ -73,6 +77,7 @@ export default async function LearnArticlePage({ params }: PageProps) {
     <>
     <ReadingProgress />
     <article className="max-w-7xl mx-auto px-4 py-12">
+      <ArticleJsonLd post={post} url={articleUrl} />
       <Breadcrumbs items={[
         { label: "Home", href: "/" },
         { label: "Learn", href: "/learn" },

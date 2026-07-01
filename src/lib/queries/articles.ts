@@ -176,13 +176,17 @@ export async function getLatestByContentType(
 }
 
 export async function searchPosts(query: string): Promise<Post[]> {
+  // Strip characters that would break PostgREST's or() filter grammar.
+  const safe = query.replace(/[,()]/g, " ").trim();
+  if (!safe) return [];
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")
     .eq("status", "published")
     .lte("published_at", new Date().toISOString())
-    .or(`title.ilike.%${query}%,excerpt.ilike.%${query}%`)
+    .or(`title.ilike.%${safe}%,excerpt.ilike.%${safe}%`)
     .order("published_at", { ascending: false })
     .limit(20);
 

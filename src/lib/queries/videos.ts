@@ -7,6 +7,7 @@ export async function getPublishedVideos(limit = 12): Promise<Video[]> {
     .from("videos")
     .select("*, category:categories(*)")
     .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
     .limit(limit);
 
@@ -21,6 +22,7 @@ export async function getVideoBySlug(slug: string): Promise<Video | null> {
     .select("*, category:categories(*)")
     .eq("slug", slug)
     .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
     .single();
 
   if (error) return null;
@@ -34,6 +36,7 @@ export async function getFeaturedVideo(): Promise<Video | null> {
     .select("*, category:categories(*)")
     .eq("is_featured", true)
     .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
     .limit(1)
     .single();

@@ -7,6 +7,7 @@ import ScrollReveal from "@/components/animations/ScrollReveal";
 export function generateMetadata(): Metadata {
   return {
     title: `Search`,
+    robots: { index: false, follow: true },
   };
 }
 

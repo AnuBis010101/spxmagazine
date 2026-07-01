@@ -6,16 +6,28 @@ interface PaginationProps {
   currentPage: number;
   totalPages: number;
   basePath: string;
+  /** Extra query params to preserve across pages (e.g. the active tag filter). */
+  extraParams?: Record<string, string | undefined>;
 }
 
 export default function Pagination({
   currentPage,
   totalPages,
   basePath,
+  extraParams,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
-  const getPageUrl = (page: number) => `${basePath}?page=${page}`;
+  const getPageUrl = (page: number) => {
+    const sp = new URLSearchParams();
+    if (extraParams) {
+      for (const [k, v] of Object.entries(extraParams)) {
+        if (v) sp.set(k, v);
+      }
+    }
+    sp.set("page", String(page));
+    return `${basePath}?${sp.toString()}`;
+  };
 
   const pages: (number | "ellipsis")[] = [];
   if (totalPages <= 7) {

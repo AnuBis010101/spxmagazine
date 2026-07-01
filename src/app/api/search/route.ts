@@ -9,8 +9,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ posts: [], glossary: [] });
   }
 
+  // Strip characters that would break PostgREST's or() filter grammar.
+  const safe = query.replace(/[,()]/g, " ").trim();
+  if (!safe) {
+    return NextResponse.json({ posts: [], glossary: [] });
+  }
+
   const supabase = await createClient();
-  const pattern = `%${query}%`;
+  const pattern = `%${safe}%`;
 
   // Search posts
   const { data: posts } = await supabase

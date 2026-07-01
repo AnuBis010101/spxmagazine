@@ -73,6 +73,7 @@ export default async function NewsPage({
               currentPage={currentPage}
               totalPages={totalPages}
               basePath="/news"
+              extraParams={{ tag }}
             />
           </div>
         </ScrollReveal>

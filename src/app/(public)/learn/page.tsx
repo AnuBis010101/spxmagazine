@@ -73,6 +73,7 @@ export default async function LearnPage({
               currentPage={currentPage}
               totalPages={totalPages}
               basePath="/learn"
+              extraParams={{ tag }}
             />
           </div>
         </ScrollReveal>

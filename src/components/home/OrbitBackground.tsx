@@ -97,12 +97,18 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const terms = glossaryTerms.length > 0 ? glossaryTerms : [
-    "Cognisphere", "SPX6900", "Flippening", "Murad", "Polymetric",
-    "S&P 500", "Diamond Hands", "WAGMI", "Community", "Onchain",
-    "Decentralized", "Movement", "Believe", "Revolution", "Cathedral",
-    "Aeon", "DCA", "The Ticker", "6900", "Euphoria",
-  ];
+  // Cap the number of orbiting terms so the animation cost doesn't grow with the
+  // glossary size (each term spawns several always-on Framer loops).
+  const MAX_TERMS = 14;
+  const terms = (glossaryTerms.length > 0
+    ? glossaryTerms
+    : [
+        "Cognisphere", "SPX6900", "Flippening", "Murad", "Polymetric",
+        "S&P 500", "Diamond Hands", "WAGMI", "Community", "Onchain",
+        "Decentralized", "Movement", "Believe", "Revolution", "Cathedral",
+        "Aeon", "DCA", "The Ticker", "6900", "Euphoria",
+      ]
+  ).slice(0, MAX_TERMS);
 
   const orbitConfigs = useMemo(() => {
     if (!mounted) return [];

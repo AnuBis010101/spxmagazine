@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -28,7 +28,8 @@ interface PostFormProps {
 
 export default function PostForm({ post, categories }: PostFormProps) {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState<PostStatus | null>(null);
+  const saving = savingAction !== null;
   const [slugEditable, setSlugEditable] = useState(false);
 
   // Form state
@@ -121,6 +122,24 @@ export default function PostForm({ post, categories }: PostFormProps) {
   });
 
   // Save handler
+  // Warn before losing unsaved edits (refresh / close / external nav).
+  const dirty =
+    title !== (post?.title || '') ||
+    slug !== (post?.slug || '') ||
+    excerpt !== (post?.excerpt || '') ||
+    bodyHtml !== (post?.body_html || '') ||
+    coverImage !== (post?.cover_image || '');
+
+  useEffect(() => {
+    if (!dirty || saving) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [dirty, saving]);
+
   const handleSave = async (saveStatus?: PostStatus) => {
     const finalStatus = saveStatus || status;
 
@@ -132,8 +151,12 @@ export default function PostForm({ post, categories }: PostFormProps) {
       toast.error('Slug is required');
       return;
     }
+    if (finalStatus === 'scheduled' && !scheduledFor) {
+      toast.error('Pick a date to schedule this post');
+      return;
+    }
 
-    setSaving(true);
+    setSavingAction(finalStatus);
 
     const postData = {
       title: title.trim(),
@@ -190,7 +213,7 @@ export default function PostForm({ post, categories }: PostFormProps) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : 'Failed to save post');
     } finally {
-      setSaving(false);
+      setSavingAction(null);
     }
   };
 
@@ -304,20 +327,32 @@ export default function PostForm({ post, categories }: PostFormProps) {
                 size="sm"
                 className="flex-1"
                 onClick={() => handleSave('draft')}
-                isLoading={saving}
+                isLoading={savingAction === 'draft'}
                 disabled={saving}
               >
                 Save Draft
               </Button>
-              <Button
-                size="sm"
-                className="flex-1"
-                onClick={() => handleSave('published')}
-                isLoading={saving}
-                disabled={saving}
-              >
-                Publish
-              </Button>
+              {status === 'scheduled' ? (
+                <Button
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handleSave('scheduled')}
+                  isLoading={savingAction === 'scheduled'}
+                  disabled={saving}
+                >
+                  Schedule
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handleSave('published')}
+                  isLoading={savingAction === 'published'}
+                  disabled={saving}
+                >
+                  Publish
+                </Button>
+              )}
             </div>
           </div>
 

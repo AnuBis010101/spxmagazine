@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -8,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { NAV_ITEMS } from "@/lib/constants";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 interface MobileNavProps {
   isOpen: boolean;
@@ -16,16 +18,22 @@ interface MobileNavProps {
 
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(isOpen, panelRef);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site navigation"
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="fixed inset-0 z-[60] flex flex-col bg-mag-black/95 backdrop-blur-xl"
+          className="fixed inset-0 z-[60] flex flex-col bg-mag-black/95 backdrop-blur-xl focus:outline-none"
         >
           {/* Top bar */}
           <div className="flex items-center justify-between px-6 py-5">

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import type { Post, GlossaryTerm } from "@/types/content";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -34,7 +35,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useFocusTrap(isOpen, panelRef);
 
   const handleSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -115,6 +118,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
           {/* Content */}
           <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search"
             className="relative mx-auto flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-mag-border bg-mag-dark shadow-2xl"
             style={{ marginTop: "10vh" }}
             initial={{ opacity: 0, y: -20 }}

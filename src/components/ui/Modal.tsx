@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils/cn';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 
 interface ModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ interface ModalProps {
 }
 
 function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(isOpen, panelRef);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -46,8 +50,13 @@ function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
 
           {/* Modal */}
           <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title || 'Dialog'}
+            tabIndex={-1}
             className={cn(
-              'relative bg-mag-dark border border-mag-border rounded-xl p-6 max-w-lg w-full mx-4',
+              'relative bg-mag-dark border border-mag-border rounded-xl p-6 max-w-lg w-full mx-4 focus:outline-none',
               className
             )}
             initial={{ opacity: 0, scale: 0.95 }}

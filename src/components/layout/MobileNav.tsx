@@ -60,14 +60,16 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   className="flex flex-col items-center gap-3"
                 >
                   {item.children ? (
-                    <span
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
                       className={cn(
-                        "font-display text-2xl font-semibold",
-                        isActive ? "text-gold-400" : "text-white"
+                        "font-display text-2xl font-semibold transition-colors",
+                        isActive ? "text-gold-400" : "text-white hover:text-gold-400"
                       )}
                     >
                       {item.label}
-                    </span>
+                    </Link>
                   ) : (
                     <Link
                       href={item.href}

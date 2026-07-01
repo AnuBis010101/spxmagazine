@@ -9,8 +9,9 @@ const EVENT_NAME = "spx_bookmarks_change";
 /*  Tiny external store so every component using the hook stays in sync */
 /* ------------------------------------------------------------------ */
 
+const EMPTY_SNAPSHOT: string[] = [];
 let listeners: Array<() => void> = [];
-let snapshot: string[] = [];
+let snapshot: string[] = EMPTY_SNAPSHOT;
 
 function emitChange() {
   const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -30,7 +31,7 @@ function getSnapshot() {
 }
 
 function getServerSnapshot() {
-  return [] as string[];
+  return EMPTY_SNAPSHOT;
 }
 
 /* ------------------------------------------------------------------ */

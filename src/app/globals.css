@@ -18,7 +18,7 @@
   --color-mag-dark: #141414;
   --color-mag-gray: #1A1A1A;
   --color-mag-border: #2A2A2A;
-  --color-mag-muted: #6B7280;
+  --color-mag-muted: #9AA1AC;
   --color-mag-light: #F5F5F5;
   --color-mag-white: #FFFFFF;
 
@@ -349,10 +349,49 @@ html[data-theme="gold"] {
   background: linear-gradient(90deg, var(--color-gold-300), var(--color-gold-500), var(--color-gold-300));
 }
 
-/* Reduced motion */
+/* Reduced motion — respect the user's OS preference across CSS + Framer */
 @media (prefers-reduced-motion: reduce) {
-  .animate-gold-glow,
-  .animate-gold-heartbeat {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
+  .animate-ticker,
+  .animate-shimmer,
+  .animate-gold-glow,
+  .animate-gold-heartbeat,
+  .animate-fade-in {
+    animation: none !important;
+  }
+}
+
+/* Keyboard focus — visible gold ring (overrides component focus:outline-none) */
+:focus-visible {
+  outline: 2px solid var(--color-gold-400);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Skip-to-content link — visible only when focused */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 200;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--color-gold-400);
+  color: var(--color-mag-black);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transform: translateY(-160%);
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }

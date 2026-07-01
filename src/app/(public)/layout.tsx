@@ -1,3 +1,4 @@
+import { MotionConfig } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
@@ -43,7 +44,10 @@ export default async function PublicLayout({
   const termsList = glossaryTerms.map((t) => t.term);
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       {/* Fixed orbit animation — always visible behind all content */}
       <OrbitBackground glossaryTerms={termsList} />
       {announcement && (
@@ -56,13 +60,13 @@ export default async function PublicLayout({
       <Header />
       {newsPosts.length > 0 && <NewsTicker posts={newsPosts} />}
       <NewsletterStickyBar />
-      <main className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1">
         <PageTransition>
           {children}
         </PageTransition>
       </main>
       <Footer />
       <ScrollToTop />
-    </>
+    </MotionConfig>
   );
 }

@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { GlossaryTerm } from "@/types/content";
 
 export async function getGlossaryTerms(): Promise<GlossaryTerm[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("glossary_terms")
     .select("*")
@@ -12,7 +12,7 @@ export async function getGlossaryTerms(): Promise<GlossaryTerm[]> {
 }
 
 export async function getGlossaryTermBySlug(slug: string): Promise<GlossaryTerm | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("glossary_terms")
     .select("*")

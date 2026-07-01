@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Post, ContentType } from "@/types/content";
 import { POSTS_PER_PAGE } from "@/lib/constants";
 
@@ -9,7 +9,7 @@ export async function getPublishedPosts(
   tag?: string,
   excludeTag?: string
 ): Promise<{ posts: Post[]; total: number }> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const offset = (page - 1) * limit;
 
   let query = supabase
@@ -42,7 +42,7 @@ export async function getAllTags(
   contentType?: ContentType,
   excludeTag?: string
 ): Promise<string[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   let query = supabase
     .from("posts")
     .select("tags")
@@ -70,7 +70,7 @@ export async function getPostBySlug(
   slug: string,
   contentType?: ContentType
 ): Promise<Post | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   let query = supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -89,7 +89,7 @@ export async function getPostBySlug(
 }
 
 export async function getHeroPost(): Promise<Post | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -105,7 +105,7 @@ export async function getHeroPost(): Promise<Post | null> {
 }
 
 export async function getFeaturedPosts(limit = 3): Promise<Post[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -120,7 +120,7 @@ export async function getFeaturedPosts(limit = 3): Promise<Post[]> {
 }
 
 export async function getLatestPosts(limit = 6): Promise<Post[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -138,7 +138,7 @@ export async function getRelatedPosts(
   categoryId: string | null,
   limit = 3
 ): Promise<Post[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   let query = supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -161,7 +161,7 @@ export async function getLatestByContentType(
   contentType: ContentType,
   limit = 4
 ): Promise<Post[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -180,7 +180,7 @@ export async function searchPosts(query: string): Promise<Post[]> {
   const safe = query.replace(/[,()]/g, " ").trim();
   if (!safe) return [];
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -195,7 +195,7 @@ export async function searchPosts(query: string): Promise<Post[]> {
 }
 
 export async function getTrendingPosts(limit = 5): Promise<Post[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")
@@ -209,7 +209,7 @@ export async function getTrendingPosts(limit = 5): Promise<Post[]> {
 
 export async function getPostsBySlugs(slugs: string[]): Promise<Post[]> {
   if (slugs.length === 0) return [];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")

@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Post } from "@/types/content";
 
 export async function getPostsByAuthor(
   authorName: string,
   limit = 20
 ): Promise<Post[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("posts")
     .select("*, category:categories(*)")

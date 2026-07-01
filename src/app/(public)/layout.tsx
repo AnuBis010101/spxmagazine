@@ -7,13 +7,13 @@ import { NewsTicker } from "@/components/layout/NewsTicker";
 import NewsletterStickyBar from "@/components/layout/NewsletterStickyBar";
 import PageTransition from "@/components/animations/PageTransition";
 import OrbitBackground from "@/components/home/OrbitBackground";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { getLatestPosts } from "@/lib/queries/articles";
 import { getGlossaryTerms } from "@/lib/queries/glossary";
 
 async function getAnnouncement(): Promise<{ message: string; link?: string; linkText?: string } | null> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
       .from("site_settings")
       .select("value")

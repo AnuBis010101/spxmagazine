@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Video } from "@/types/content";
 
 export async function getPublishedVideos(limit = 12): Promise<Video[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("videos")
     .select("*, category:categories(*)")
@@ -16,7 +16,7 @@ export async function getPublishedVideos(limit = 12): Promise<Video[]> {
 }
 
 export async function getVideoBySlug(slug: string): Promise<Video | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("videos")
     .select("*, category:categories(*)")
@@ -30,7 +30,7 @@ export async function getVideoBySlug(slug: string): Promise<Video | null> {
 }
 
 export async function getFeaturedVideo(): Promise<Video | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("videos")
     .select("*, category:categories(*)")

@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { EmbeddedTweet } from "@/types/content";
 
 export async function getSidebarTweets(limit = 5): Promise<EmbeddedTweet[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("embedded_tweets")
     .select("*")
@@ -16,7 +16,7 @@ export async function getSidebarTweets(limit = 5): Promise<EmbeddedTweet[]> {
 }
 
 export async function getFeaturedTweets(limit = 3): Promise<EmbeddedTweet[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("embedded_tweets")
     .select("*")

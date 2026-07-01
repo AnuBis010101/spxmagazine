@@ -14,6 +14,7 @@ import AnimatedNewsletterCTA from "@/components/home/AnimatedNewsletterCTA";
 import FlippeningTracker from "@/components/widgets/FlippeningTracker";
 import TrendingArticles from "@/components/home/TrendingArticles";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import RackFocus from "@/components/animations/RackFocus";
 import ParallaxContent from "@/components/home/ParallaxContent";
 
 export const metadata: Metadata = {
@@ -51,9 +52,11 @@ export default async function HomePage() {
       <AnimatedHero post={heroPost} glossaryTerms={glossaryTerms.map((t) => t.term)} />
       {/* Page content scrolls over the fixed hero */}
       <ParallaxContent>
-        <ScrollReveal direction="up" scale blur duration={0.7}>
+        {/* First block rack-focuses IN as the hero rack-focuses OUT above it —
+            a continuous, scroll-linked focus pull rather than a one-shot reveal. */}
+        <RackFocus>
           <CategoryShowcase news={newsLatest} articles={articlesLatest} learn={learnLatest} />
-        </ScrollReveal>
+        </RackFocus>
         {trendingPosts.length > 0 && (
           <ScrollReveal direction="up" scale blur duration={0.7} delay={0.1}>
             <TrendingArticles posts={trendingPosts} />

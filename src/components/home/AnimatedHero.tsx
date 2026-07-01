@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionTemplate, useReducedMotion } from "framer-motion";
 import GoldParticles from "@/components/animations/GoldParticles";
 import TextReveal from "@/components/animations/TextReveal";
 import type { Post } from "@/types/content";
@@ -155,8 +155,26 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
   const contentY = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
   const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
 
+  // Rack-focus OUT: as the hero scrolls away it recedes and defocuses, handing
+  // the frame to the first content block (which rack-focuses IN via RackFocus).
+  const reduce = useReducedMotion();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    setIsTouch("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  const contentScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.94]);
+  const contentBlurPx = useTransform(scrollYProgress, [0, 0.6], [0, 8]);
+  const contentFilter = useMotionTemplate`blur(${contentBlurPx}px)`;
+  // Blur is the one property that can jank on mobile Safari, so drop it on
+  // touch; skip the whole rack-focus for reduced-motion (final state stands).
+  const rackFocusStyle = reduce
+    ? {}
+    : isTouch
+    ? { scale: contentScale }
+    : { scale: contentScale, filter: contentFilter };
 
   const terms = glossaryTerms.length > 0 ? glossaryTerms : [
     "Cognisphere", "SPX6900", "Flippening", "Murad", "Polymetric",
@@ -233,7 +251,7 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
         >
         <motion.div
           className="flex flex-col items-center text-center px-4 w-full max-w-3xl"
-          style={{ opacity: contentOpacity, y: contentY }}
+          style={{ opacity: contentOpacity, y: contentY, ...rackFocusStyle }}
         >
           {/* Logo */}
           <motion.div
@@ -356,7 +374,7 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
       {/* Content with scroll fade */}
       <motion.div
         className="relative z-10 flex items-end h-full"
-        style={{ opacity: contentOpacity, y: contentY }}
+        style={{ opacity: contentOpacity, y: contentY, ...rackFocusStyle }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24 w-full">
           {post.category && (

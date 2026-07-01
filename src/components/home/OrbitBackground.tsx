@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useVelocity,
+  useSpring,
+  useTransform,
+  useReducedMotion,
+} from "framer-motion";
+import { usePrice } from "@/hooks/usePrice";
 
 /* ── Orbiting glossary term — each term gets its own orbit ring ── */
 function OrbitTerm({ term, radius, duration, startAngle, size, reverse, showRing }: {
@@ -127,16 +135,42 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
     });
   }, [mounted, terms]);
 
+  // ── Momentum-reactive "breathing" ──────────────────────────────────────────
+  // The orbit gently inhales with scroll velocity (the reader) and warms/cools
+  // its central glow with the 24h price move (the market) — the background
+  // "responds to the reader and to the live market". Cheap: two compositor-only
+  // transforms driven by one shared spring, plus a data-driven gradient string.
+  const reduce = useReducedMotion();
+  const { scrollY } = useScroll();
+  const scrollVelocity = useVelocity(scrollY);
+  const smoothVel = useSpring(scrollVelocity, { stiffness: 55, damping: 22, mass: 0.6 });
+  // Symmetric v-shape: fast scroll in either direction adds energy (Framer clamps).
+  const breathScale = useTransform(smoothVel, [-3500, 0, 3500], [1.045, 1, 1.045]);
+  const glowScale = useTransform(smoothVel, [-3500, 0, 3500], [1.1, 1, 1.1]);
+
+  const { change24h, loading: priceLoading } = usePrice();
+  const glowGradient = useMemo(() => {
+    if (priceLoading || !Number.isFinite(change24h)) {
+      return "radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 60%)";
+    }
+    const mag = Math.min(1, Math.abs(change24h) / 15); // ±15% ≈ full swing
+    const alpha = change24h >= 0 ? 0.1 + mag * 0.11 : 0.08 + mag * 0.04;
+    const rgb = change24h >= 0 ? "212,175,55" : "150,124,60"; // warm gold up / muted down
+    return `radial-gradient(circle, rgba(${rgb},${alpha.toFixed(3)}) 0%, transparent 60%)`;
+  }, [change24h, priceLoading]);
+
   return (
-    <div
+    <motion.div
       className="fixed inset-0 overflow-hidden pointer-events-none"
-      style={{ zIndex: 0 }}
+      style={{ zIndex: 0, ...(reduce ? {} : { scale: breathScale }) }}
     >
-      {/* Radial glow */}
-      <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] sm:w-[1200px] sm:h-[1200px] rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 60%)" }}
-      />
+      {/* Radial glow — warms/cools with the market, scales with scroll energy */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <motion.div
+          className="w-[900px] h-[900px] sm:w-[1200px] sm:h-[1200px] rounded-full"
+          style={{ background: glowGradient, ...(reduce ? {} : { scale: glowScale }) }}
+        />
+      </div>
 
       {/* Concentric pulsing rings */}
       <ConcentricRings />
@@ -158,6 +192,6 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

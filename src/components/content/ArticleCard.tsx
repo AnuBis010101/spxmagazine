@@ -41,7 +41,7 @@ export default function ArticleCard({
   if (variant === "horizontal") {
     return (
       <Link href={href} className="group flex gap-4">
-        <div className="w-28 h-20 rounded-lg overflow-hidden relative flex-shrink-0">
+        <div data-vt-cover className="w-28 h-20 rounded-lg overflow-hidden relative flex-shrink-0">
           {post.cover_image ? (
             <Image
               src={post.cover_image}
@@ -82,7 +82,7 @@ export default function ArticleCard({
         href={href}
         className="group rounded-xl overflow-hidden bg-mag-dark border border-mag-border hover:border-gold-400/40 transition-all duration-300 block hover:shadow-[0_8px_32px_rgba(212,175,55,0.12)]"
       >
-        <div className="aspect-video relative overflow-hidden">
+        <div data-vt-cover className="aspect-video relative overflow-hidden">
           {post.cover_image ? (
             <Image
               src={post.cover_image}

@@ -86,10 +86,14 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       ]} />
 
       <div className="max-w-4xl mx-auto">
-        {/* Cover image */}
-        <ScrollReveal direction="up" blur duration={0.6}>
+        {/* Cover image — kept outside ScrollReveal so it is fully painted when a
+            View Transition captures it (shared-element cover morph target). */}
         {post.cover_image && (
-          <div className="aspect-video rounded-xl overflow-hidden relative mt-6">
+          <div
+            data-vt-cover
+            style={{ viewTransitionName: "spx-cover" }}
+            className="aspect-video rounded-xl overflow-hidden relative mt-6"
+          >
             <Image
               src={post.cover_image}
               alt={post.cover_image_alt ?? post.title}
@@ -101,6 +105,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
           </div>
         )}
 
+        <ScrollReveal direction="up" blur duration={0.6}>
         {/* Category badge */}
         {post.category && (
           <div className="mt-6">

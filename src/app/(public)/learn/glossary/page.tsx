@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getGlossaryTerms } from "@/lib/queries/glossary";
 import GlossarySearch from "@/components/content/GlossarySearch";
@@ -20,8 +21,30 @@ export const revalidate = 60;
 export default async function GlossaryPage() {
   const terms = await getGlossaryTerms();
 
+  const jsonLd =
+    terms.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "DefinedTermSet",
+          name: "SPX6900 Glossary",
+          url: `${SITE_URL}/learn/glossary`,
+          hasDefinedTerm: terms.map((t) => ({
+            "@type": "DefinedTerm",
+            name: t.term,
+            description: t.definition,
+            url: `${SITE_URL}/learn/glossary#${t.slug}`,
+          })),
+        }
+      : null;
+
   return (
     <section className="py-12 md:py-20">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page header */}
         <ScrollReveal direction="up" blur duration={0.6}>

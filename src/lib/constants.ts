@@ -27,8 +27,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Data", href: "/data" },
 ];
 
-// External newsletter signup page (client-provided). Placeholder until the link is supplied.
-export const NEWSLETTER_SIGNUP_URL = "#";
+// External newsletter signup page (Substack).
+export const NEWSLETTER_SIGNUP_URL = "https://spx6900magazine.substack.com/subscribe";
 
 export const CONTENT_TYPES = {
   news: { label: "News", slug: "news" },

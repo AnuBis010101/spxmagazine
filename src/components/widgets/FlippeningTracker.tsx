@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { usePrice } from "@/hooks/usePrice";
 import { ChevronDown } from "lucide-react";
 import CountUp from "@/components/widgets/CountUp";
+import FlippeningCelebration from "@/components/widgets/FlippeningCelebration";
+
+const CELEBRATED_TIER_KEY = "spx-flippening-tier";
 
 const TIERS = [
   { label: "$1B", value: 1_000_000_000 },
@@ -226,6 +229,35 @@ export default function FlippeningTracker() {
 
   const lockedCount = TIERS.length - currentTierIdx - 1;
 
+  // ── Milestone celebration ───────────────────────────────────────────────────
+  // Fire once per browser when the tier advances past what we last recorded, so
+  // a returning visitor sees each newly-crossed milestone exactly once. The first
+  // visit records a silent baseline — merely arriving is not an "advance".
+  const [celebrateLabel, setCelebrateLabel] = useState<string | null>(null);
+  useEffect(() => {
+    if (loading || error) return;
+    const observedTier = currentTierIdx;
+    let stored: number | null;
+    try {
+      const raw = localStorage.getItem(CELEBRATED_TIER_KEY);
+      stored = raw === null ? null : parseInt(raw, 10);
+    } catch {
+      return; // localStorage unavailable — skip gracefully
+    }
+    if (stored === null || Number.isNaN(stored)) {
+      try {
+        localStorage.setItem(CELEBRATED_TIER_KEY, String(observedTier));
+      } catch {}
+      return;
+    }
+    if (observedTier > stored && observedTier > 0) {
+      setCelebrateLabel(TIERS[observedTier - 1].label);
+      try {
+        localStorage.setItem(CELEBRATED_TIER_KEY, String(observedTier));
+      } catch {}
+    }
+  }, [loading, error, currentTierIdx]);
+
   return (
     <div
       onClick={(e) => {
@@ -233,8 +265,14 @@ export default function FlippeningTracker() {
         if ((e.target as HTMLElement).closest("[data-accordion]")) return;
         router.push("/data");
       }}
-      className="cursor-pointer bg-[rgba(20,20,20,0.6)] backdrop-blur-xl border border-gold-400/20 rounded-2xl p-4 sm:p-6 md:p-8 transition-all duration-300 hover:border-gold-400/40 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+      className="relative overflow-hidden cursor-pointer bg-[rgba(20,20,20,0.6)] backdrop-blur-xl border border-gold-400/20 rounded-2xl p-4 sm:p-6 md:p-8 transition-all duration-300 hover:border-gold-400/40 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
     >
+      {celebrateLabel && (
+        <FlippeningCelebration
+          label={celebrateLabel}
+          onDismiss={() => setCelebrateLabel(null)}
+        />
+      )}
       {loading ? (
         <SkeletonLoader />
       ) : error ? (

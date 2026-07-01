@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import FlippeningTracker from "@/components/widgets/FlippeningTracker";
+import FlippeningGauge from "@/components/widgets/FlippeningGauge";
 import HoldersTracker from "@/components/widgets/HoldersTracker";
 import CounterCulture from "@/components/widgets/CounterCulture";
 import ScrollReveal from "@/components/animations/ScrollReveal";
@@ -34,6 +36,9 @@ export default function DataPage() {
             <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-6">
               The Flippening Tracker
             </h2>
+            <div className="mb-8 flex justify-center rounded-2xl bg-[rgba(20,20,20,0.4)] border border-gold-400/10 py-8">
+              <FlippeningGauge />
+            </div>
             <FlippeningTracker />
           </div>
         </ScrollReveal>
@@ -123,7 +128,7 @@ export default function DataPage() {
               Read the latest analysis and community insights about SPX6900 and
               its path forward.
             </p>
-            <a
+            <Link
               href="/articles"
               className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gold-400 text-mag-black font-display font-semibold hover:bg-gold-300 transition-colors"
             >
@@ -141,7 +146,7 @@ export default function DataPage() {
                   d="M13 7l5 5m0 0l-5 5m5-5H6"
                 />
               </svg>
-            </a>
+            </Link>
           </div>
         </div>
         </ScrollReveal>

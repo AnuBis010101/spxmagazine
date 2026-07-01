@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { Search } from "lucide-react";
-import { SITE_NAME } from "@/lib/constants";
 import { searchPosts } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Search | ${SITE_NAME}`,
+    title: `Search`,
   };
 }
 

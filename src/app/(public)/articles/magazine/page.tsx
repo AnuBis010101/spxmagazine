@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_NAME, POSTS_PER_PAGE } from "@/lib/constants";
+import { POSTS_PER_PAGE } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPublishedPosts } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
@@ -11,7 +11,7 @@ const MAGAZINE_TAG = "spx-magazine";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `SPX Magazine Articles | ${SITE_NAME}`,
+    title: `SPX Magazine Articles`,
     description: "Editorial and in-depth analysis from the SPX Magazine desk.",
     openGraph: {
       images: [{ url: buildOgImageUrl({ title: "SPX Magazine Articles", subtitle: "Editorial from the SPX Magazine desk" }), width: 1200, height: 630 }],

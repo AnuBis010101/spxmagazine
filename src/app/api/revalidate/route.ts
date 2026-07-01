@@ -1,12 +1,10 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyAdmin } from "@/lib/supabase/verify-admin";
 
 export async function POST(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
-  const secret = searchParams.get("secret");
-
-  if (secret !== process.env.REVALIDATION_SECRET) {
-    return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => ({}));

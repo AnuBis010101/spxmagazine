@@ -28,6 +28,14 @@ export default function NewsletterStickyBar() {
   // Homepage only.
   if (pathname !== "/") return null;
 
+  // Until a real external signup URL is supplied, fall back to the working
+  // on-page newsletter form instead of opening a blank "#" tab.
+  const isExternal = /^https?:\/\//.test(NEWSLETTER_SIGNUP_URL);
+  const href = isExternal ? NEWSLETTER_SIGNUP_URL : "#newsletter";
+  const externalProps = isExternal
+    ? { target: "_blank" as const, rel: "noopener noreferrer" }
+    : {};
+
   return (
     <motion.div
       initial={{ y: -24, opacity: 0 }}
@@ -69,9 +77,8 @@ export default function NewsletterStickyBar() {
         </p>
 
         <a
-          href={NEWSLETTER_SIGNUP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={href}
+          {...externalProps}
           className="group inline-flex h-6 flex-shrink-0 items-center gap-1 rounded-full bg-gold-400 px-3 text-[11px] font-semibold text-mag-black transition-colors hover:bg-gold-500 sm:text-xs"
         >
           Subscribe

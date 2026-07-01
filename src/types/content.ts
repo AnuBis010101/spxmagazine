@@ -24,6 +24,7 @@ export interface Post {
   og_image: string | null;
   tags: string[];
   view_count: number;
+  reactions?: Record<string, number> | null;
   created_at: string;
   updated_at: string;
   category?: Category | null;

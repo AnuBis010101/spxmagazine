@@ -66,15 +66,23 @@ export async function getAllTags(
   return Array.from(tagSet).sort();
 }
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
+export async function getPostBySlug(
+  slug: string,
+  contentType?: ContentType
+): Promise<Post | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("posts")
     .select("*, category:categories(*)")
     .eq("slug", slug)
     .eq("status", "published")
-    .lte("published_at", new Date().toISOString())
-    .single();
+    .lte("published_at", new Date().toISOString());
+
+  // Constrain to the route's content type so the same slug can't resolve at
+  // /news, /articles AND /learn (duplicate content).
+  if (contentType) query = query.eq("content_type", contentType);
+
+  const { data, error } = await query.single();
 
   if (error) return null;
   return data as Post;

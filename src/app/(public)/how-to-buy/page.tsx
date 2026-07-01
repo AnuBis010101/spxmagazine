@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/constants";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export const metadata: Metadata = {
-  title: `How to Buy SPX6900 | ${SITE_NAME}`,
+  title: `How to Buy SPX6900`,
   description:
     "A step-by-step guide to buying SPX6900. Learn how to set up a wallet, get ETH, and swap for SPX6900 on Uniswap or Aerodrome.",
 };

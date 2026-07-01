@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/constants";
 import { getAllAuthors } from "@/lib/authors";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export const metadata: Metadata = {
-  title: `Authors | ${SITE_NAME}`,
+  title: `Authors`,
   description:
     "Meet the writers and contributors behind SPX Magazine.",
 };

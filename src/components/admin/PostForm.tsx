@@ -182,19 +182,8 @@ export default function PostForm({ post, categories }: PostFormProps) {
         toast.success('Post created');
       }
 
-      // Revalidate cached pages
-      try {
-        await fetch(
-          `/api/revalidate?secret=${process.env.NEXT_PUBLIC_REVALIDATION_SECRET || ''}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: '/' }),
-          }
-        );
-      } catch {
-        // Revalidation failure is non-critical
-      }
+      // Cache revalidation happens server-side in the admin posts API
+      // (revalidatePath in /api/admin/posts), so no client call is needed.
 
       router.push('/admin/posts');
     } catch (err) {

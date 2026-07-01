@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SITE_NAME } from "@/lib/constants";
 import { getAuthorBySlug, getAllAuthors } from "@/lib/authors";
 import { getPostsByAuthor } from "@/lib/queries/authors";
 import ArticleGrid from "@/components/content/ArticleGrid";
@@ -19,10 +18,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const author = getAuthorBySlug(slug);
-  if (!author) return { title: `Author Not Found | ${SITE_NAME}` };
+  if (!author) return { title: `Author Not Found` };
 
   return {
-    title: `${author.name} | ${SITE_NAME}`,
+    title: `${author.name}`,
     description: author.bio,
   };
 }

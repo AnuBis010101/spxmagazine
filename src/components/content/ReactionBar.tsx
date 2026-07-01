@@ -55,6 +55,7 @@ export default function ReactionBar({
       {REACTIONS.map(({ type, emoji, label }) => {
         const count = initialReactions[type] ?? 0;
         const isActive = userReaction === type;
+        const total = count + (isActive ? 1 : 0);
 
         return (
           <motion.button
@@ -74,7 +75,7 @@ export default function ReactionBar({
             title={label}
           >
             <span className="text-base">{emoji}</span>
-            <span className="tabular-nums">{count + (isActive ? 1 : 0)}</span>
+            {total > 0 && <span className="tabular-nums">{total}</span>}
 
             {/* Particle burst on activation */}
             <AnimatePresence>

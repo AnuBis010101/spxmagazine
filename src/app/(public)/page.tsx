@@ -17,7 +17,7 @@ import ScrollReveal from "@/components/animations/ScrollReveal";
 import ParallaxContent from "@/components/home/ParallaxContent";
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} | The Voice of SPX6900`,
+  title: { absolute: `${SITE_NAME} | The Voice of SPX6900` },
 };
 
 export const revalidate = 60;

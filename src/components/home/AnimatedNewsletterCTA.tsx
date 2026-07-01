@@ -57,8 +57,9 @@ export default function AnimatedNewsletterCTA() {
 
   return (
     <section
+      id="newsletter"
       ref={sectionRef}
-      className="py-16 md:py-24 relative overflow-hidden border-t border-gold-400/20"
+      className="scroll-mt-24 py-16 md:py-24 relative overflow-hidden border-t border-gold-400/20"
     >
       {/* Subtle gold gradient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-gold-400/[0.03] via-transparent to-gold-400/[0.03]" />

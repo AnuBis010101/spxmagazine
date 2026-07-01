@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
-import { createClient as createServerClient } from "@/lib/supabase/server";
+import { verifyAdmin as verifyAuth } from "@/lib/supabase/verify-admin";
 
 // Service role client for admin operations (bypasses RLS)
 function getAdminClient() {
@@ -9,17 +9,6 @@ function getAdminClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-}
-
-// Verify the request comes from an authenticated admin
-async function verifyAuth(): Promise<boolean> {
-  try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    return !!user;
-  } catch {
-    return false;
-  }
 }
 
 // GET: Fetch a post (and categories) for editing

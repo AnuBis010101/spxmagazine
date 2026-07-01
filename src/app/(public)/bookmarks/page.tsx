@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { SITE_NAME } from "@/lib/constants";
 import BookmarksList from "@/components/content/BookmarksList";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export const metadata: Metadata = {
-  title: `Your Reading List | ${SITE_NAME}`,
+  title: `Your Reading List`,
   description: "Your saved articles and bookmarked content on SPX Magazine.",
 };
 

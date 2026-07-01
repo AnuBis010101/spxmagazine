@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { SITE_URL } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPostBySlug, getRelatedPosts } from "@/lib/queries/articles";
 import { formatDate } from "@/lib/utils/format-date";
@@ -25,14 +25,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getPostBySlug(slug, "news");
 
   if (!post) {
-    return { title: `Not Found | ${SITE_NAME}` };
+    return { title: `Not Found` };
   }
 
   return {
-    title: `${post.meta_title || post.title} | ${SITE_NAME}`,
+    title: post.meta_title || post.title,
+    alternates: { canonical: `/news/${post.slug}` },
     description: post.meta_description || post.excerpt || undefined,
     openGraph: {
       title: post.meta_title || post.title,
@@ -57,7 +58,7 @@ export const revalidate = 60;
 
 export default async function NewsArticlePage({ params }: PageProps) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getPostBySlug(slug, "news");
 
   if (!post) {
     notFound();
@@ -151,7 +152,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
             </GlossaryHighlighter>
           </div>
 
-          <ReactionBar slug={post.slug} />
+          <ReactionBar slug={post.slug} initialReactions={post.reactions ?? undefined} />
 
           <div className="mt-6 pt-6 border-t border-mag-border flex items-center justify-between">
             <span className="text-sm text-mag-muted">Share this article</span>

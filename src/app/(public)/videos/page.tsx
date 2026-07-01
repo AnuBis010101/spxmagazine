@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { SITE_NAME } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPublishedVideos } from "@/lib/queries/videos";
 import VideoCard from "@/components/content/VideoCard";
@@ -9,7 +8,7 @@ import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Videos | ${SITE_NAME}`,
+    title: `Videos`,
     description: "Watch the latest SPX6900 video content, tutorials, and community highlights.",
     openGraph: {
       images: [{ url: buildOgImageUrl({ title: "Videos", subtitle: "Video content, tutorials, and community highlights" }), width: 1200, height: 630 }],

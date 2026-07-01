@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { verifyAdmin } from '@/lib/supabase/verify-admin';
+
+const ALLOWED_FOLDERS = new Set(['posts', 'videos', 'authors', 'media', 'og']);
 
 export async function POST(req: NextRequest) {
   try {
+    if (!(await verifyAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
-    const folder = (formData.get('folder') as string) || 'posts';
+    const folderInput = (formData.get('folder') as string) || 'posts';
+    const folder = ALLOWED_FOLDERS.has(folderInput) ? folderInput : 'posts';
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });

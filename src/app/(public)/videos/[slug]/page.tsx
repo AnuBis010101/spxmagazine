@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SITE_NAME } from "@/lib/constants";
 import { getVideoBySlug } from "@/lib/queries/videos";
 import VideoPlayer from "@/components/content/VideoPlayer";
 import ScrollReveal from "@/components/animations/ScrollReveal";
@@ -14,11 +13,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const video = await getVideoBySlug(slug);
 
   if (!video) {
-    return { title: `Not Found | ${SITE_NAME}` };
+    return { title: `Not Found` };
   }
 
   return {
-    title: `${video.title} | ${SITE_NAME}`,
+    title: `${video.title}`,
     description: video.description || undefined,
     openGraph: {
       title: video.title,

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { SITE_NAME } from "@/lib/constants";
 import FlippeningTracker from "@/components/widgets/FlippeningTracker";
 import HoldersTracker from "@/components/widgets/HoldersTracker";
 import CounterCulture from "@/components/widgets/CounterCulture";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export const metadata: Metadata = {
-  title: `SPX6900 Data | ${SITE_NAME}`,
+  title: `SPX6900 Data`,
   description:
     "Track SPX6900's progress toward flipping the S&P 500 total market cap. View holder counts across Ethereum, Solana, and Base. Live data and analytics.",
 };

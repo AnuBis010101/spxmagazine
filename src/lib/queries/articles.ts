@@ -6,7 +6,8 @@ export async function getPublishedPosts(
   contentType?: ContentType,
   page = 1,
   limit = POSTS_PER_PAGE,
-  tag?: string
+  tag?: string,
+  excludeTag?: string
 ): Promise<{ posts: Post[]; total: number }> {
   const supabase = await createClient();
   const offset = (page - 1) * limit;
@@ -27,13 +28,20 @@ export async function getPublishedPosts(
     query = query.contains("tags", [tag]);
   }
 
+  if (excludeTag) {
+    query = query.not("tags", "cs", `{${excludeTag}}`);
+  }
+
   const { data, count, error } = await query;
   if (error) return { posts: [], total: 0 };
 
   return { posts: (data as Post[]) || [], total: count || 0 };
 }
 
-export async function getAllTags(contentType?: ContentType): Promise<string[]> {
+export async function getAllTags(
+  contentType?: ContentType,
+  excludeTag?: string
+): Promise<string[]> {
   const supabase = await createClient();
   let query = supabase
     .from("posts")
@@ -42,6 +50,7 @@ export async function getAllTags(contentType?: ContentType): Promise<string[]> {
     .lte("published_at", new Date().toISOString());
 
   if (contentType) query = query.eq("content_type", contentType);
+  if (excludeTag) query = query.not("tags", "cs", `{${excludeTag}}`);
 
   const { data, error } = await query;
   if (error || !data) return [];
@@ -52,6 +61,8 @@ export async function getAllTags(contentType?: ContentType): Promise<string[]> {
       for (const t of row.tags) tagSet.add(t);
     }
   }
+  // Never surface the magazine/community discriminator tag as a filter chip.
+  if (excludeTag) tagSet.delete(excludeTag);
   return Array.from(tagSet).sort();
 }
 

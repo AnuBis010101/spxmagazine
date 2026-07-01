@@ -57,19 +57,54 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 + index * 0.05 }}
+                  className="flex flex-col items-center gap-3"
                 >
-                  <Link
-                    href={item.href}
-                    onClick={onClose}
-                    className={cn(
-                      "font-display text-2xl font-semibold transition-colors",
-                      isActive
-                        ? "text-gold-400"
-                        : "text-white hover:text-gold-400"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
+                  {item.children ? (
+                    <span
+                      className={cn(
+                        "font-display text-2xl font-semibold",
+                        isActive ? "text-gold-400" : "text-white"
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      className={cn(
+                        "font-display text-2xl font-semibold transition-colors",
+                        isActive
+                          ? "text-gold-400"
+                          : "text-white hover:text-gold-400"
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+
+                  {item.children && (
+                    <div className="flex flex-col items-center gap-2.5">
+                      {item.children.map((child) => {
+                        const childActive = pathname === child.href;
+                        return (
+                          <Link
+                            key={`${child.label}-${child.href}`}
+                            href={child.href}
+                            onClick={onClose}
+                            className={cn(
+                              "font-body text-base transition-colors",
+                              childActive
+                                ? "text-gold-400"
+                                : "text-mag-muted hover:text-white"
+                            )}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
                 </motion.div>
               );
             })}

@@ -222,7 +222,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         {results.glossary.map((term) => (
                           <li key={term.id}>
                             <Link
-                              href={`/glossary#${term.slug}`}
+                              href={`/learn/glossary#${term.slug}`}
                               onClick={onClose}
                               className="block rounded-lg p-3 transition-colors hover:bg-white/5"
                             >

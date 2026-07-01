@@ -8,12 +8,14 @@ import Pagination from "@/components/content/Pagination";
 import { TagFilter } from "@/components/content/TagFilter";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
+const COMMUNITY_EXCLUDE_TAG = "spx-magazine";
+
 export function generateMetadata(): Metadata {
   return {
-    title: `Articles | ${SITE_NAME}`,
-    description: "In-depth analysis and editorial pieces from SPX Magazine.",
+    title: `Community Articles | ${SITE_NAME}`,
+    description: "Voices, analysis, and editorial from the SPX6900 community.",
     openGraph: {
-      images: [{ url: buildOgImageUrl({ title: "Articles", subtitle: "In-depth analysis and editorial pieces" }), width: 1200, height: 630 }],
+      images: [{ url: buildOgImageUrl({ title: "Community Articles", subtitle: "Voices from the SPX6900 community" }), width: 1200, height: 630 }],
     },
   };
 }
@@ -29,8 +31,8 @@ export default async function ArticlesPage({
   const currentPage = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
 
   const [{ posts, total }, allTags] = await Promise.all([
-    getPublishedPosts("article", currentPage, POSTS_PER_PAGE, tag),
-    getAllTags("article"),
+    getPublishedPosts("article", currentPage, POSTS_PER_PAGE, tag, COMMUNITY_EXCLUDE_TAG),
+    getAllTags("article", COMMUNITY_EXCLUDE_TAG),
   ]);
   const totalPages = Math.ceil(total / POSTS_PER_PAGE);
 
@@ -41,11 +43,11 @@ export default async function ArticlesPage({
         <ScrollReveal direction="up" blur duration={0.6}>
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-bold text-white">
-              Articles
+              Community Articles
             </h1>
             <div className="w-16 h-0.5 bg-gold-400 mt-3" />
             <p className="text-mag-muted mt-4 text-lg">
-              In-depth analysis and editorial pieces
+              Voices from the SPX6900 community
             </p>
             <Suspense>
               <TagFilter tags={allTags} activeTag={tag} />

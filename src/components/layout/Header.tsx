@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils/cn";
 import { NAV_ITEMS } from "@/lib/constants";
 import MagneticHover from "@/components/animations/MagneticHover";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import NavDropdown from "./NavDropdown";
 import { MobileNav } from "./MobileNav";
 import SearchModal from "./SearchModal";
 
@@ -128,11 +129,15 @@ export function Header() {
                 pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <MagneticHover key={item.href} strength={0.25}>
-                  <NavItem
-                    href={item.href}
-                    label={item.label}
-                    isActive={isActive}
-                  />
+                  {item.children ? (
+                    <NavDropdown item={item} isActive={isActive} />
+                  ) : (
+                    <NavItem
+                      href={item.href}
+                      label={item.label}
+                      isActive={isActive}
+                    />
+                  )}
                 </MagneticHover>
               );
             })}

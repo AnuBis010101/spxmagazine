@@ -49,7 +49,7 @@ const navigateLinks = [
 
 const resourceLinks = [
   { label: "How to Buy", href: "/how-to-buy", external: false },
-  { label: "Glossary", href: "/glossary", external: false },
+  { label: "Glossary", href: "/learn/glossary", external: false },
   {
     label: "SPX6900.com",
     href: "https://spx6900.com",

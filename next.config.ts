@@ -5,6 +5,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  async redirects() {
+    return [
+      {
+        source: "/glossary",
+        destination: "/learn/glossary",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

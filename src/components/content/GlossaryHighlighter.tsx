@@ -219,7 +219,7 @@ export default function GlossaryHighlighter({ children }: { children: React.Reac
                 {tooltip.definition}
               </p>
               <Link
-                href={`/glossary#${tooltip.slug}`}
+                href={`/learn/glossary#${tooltip.slug}`}
                 className="inline-block mt-2 text-[10px] uppercase tracking-wider text-gold-400/60 hover:text-gold-400 transition-colors font-display"
               >
                 Learn more &rarr;

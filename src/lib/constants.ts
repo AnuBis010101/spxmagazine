@@ -3,13 +3,32 @@ export const SITE_DESCRIPTION =
   "The premier source for SPX6900 news, insights, and community resources.";
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://spxmagazine.com";
 
-export const NAV_ITEMS = [
+export type NavChild = { label: string; href: string };
+export type NavItem = { label: string; href: string; children?: NavChild[] };
+
+export const NAV_ITEMS: NavItem[] = [
   { label: "News", href: "/news" },
-  { label: "Articles", href: "/articles" },
-  { label: "Learn", href: "/learn" },
+  {
+    label: "Articles",
+    href: "/articles",
+    children: [
+      { label: "SPX Magazine Articles", href: "/articles/magazine" },
+      { label: "Community Articles", href: "/articles" },
+    ],
+  },
+  {
+    label: "Learn",
+    href: "/learn",
+    children: [
+      { label: "Learn", href: "/learn" },
+      { label: "Glossary", href: "/learn/glossary" },
+    ],
+  },
   { label: "Data", href: "/data" },
-  { label: "Glossary", href: "/glossary" },
-] as const;
+];
+
+// External newsletter signup page (client-provided). Placeholder until the link is supplied.
+export const NEWSLETTER_SIGNUP_URL = "#";
 
 export const CONTENT_TYPES = {
   news: { label: "News", slug: "news" },

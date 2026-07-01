@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import ConfirmProvider from '@/components/admin/ConfirmProvider';
 
 export default function AdminLayout({
   children,
@@ -45,6 +46,8 @@ export default function AdminLayout({
         {/* Page content */}
         <main className="flex-1 p-6">{children}</main>
       </div>
+
+      <ConfirmProvider />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import { adminConfirm } from '@/components/admin/ConfirmProvider';
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -218,7 +219,7 @@ export default function EditGlossaryTermPage({ params }: { params: Promise<{ id:
                 variant="secondary"
                 className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
                 onClick={async () => {
-                  const confirmed = window.confirm(
+                  const confirmed = await adminConfirm(
                     `Are you sure you want to delete "${term}"?`
                   );
                   if (!confirmed) return;

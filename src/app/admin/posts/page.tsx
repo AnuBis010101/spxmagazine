@@ -1,4 +1,5 @@
 'use client';
+import { adminConfirm } from '@/components/admin/ConfirmProvider';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -89,7 +90,7 @@ export default function AdminPostsPage() {
   };
 
   const handleDelete = async (id: string, title: string) => {
-    const confirmed = window.confirm(
+    const confirmed = await adminConfirm(
       `Are you sure you want to delete "${title}"? This action cannot be undone.`
     );
     if (!confirmed) return;

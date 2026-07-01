@@ -1,4 +1,5 @@
 'use client';
+import { adminConfirm } from '@/components/admin/ConfirmProvider';
 
 import { useEffect, useState } from 'react';
 import {
@@ -155,7 +156,7 @@ export default function AdminTweetsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    const confirmed = window.confirm(
+    const confirmed = await adminConfirm(
       'Are you sure you want to delete this tweet embed?'
     );
     if (!confirmed) return;

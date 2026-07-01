@@ -1,4 +1,5 @@
 'use client';
+import { adminConfirm } from '@/components/admin/ConfirmProvider';
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -147,7 +148,7 @@ export default function EditVideoPage({ params }: { params: Promise<{ id: string
   };
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(
+    const confirmed = await adminConfirm(
       `Are you sure you want to delete "${title}"? This action cannot be undone.`
     );
     if (!confirmed) return;

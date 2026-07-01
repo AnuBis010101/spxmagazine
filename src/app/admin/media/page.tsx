@@ -1,4 +1,5 @@
 'use client';
+import { adminConfirm } from '@/components/admin/ConfirmProvider';
 
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
@@ -130,7 +131,7 @@ export default function AdminMediaPage() {
   };
 
   const handleDelete = async (item: MediaItem) => {
-    const confirmed = window.confirm(
+    const confirmed = await adminConfirm(
       `Are you sure you want to delete "${item.original_name}"?`
     );
     if (!confirmed) return;

@@ -42,11 +42,11 @@ export default function AdminGlossaryPage() {
     );
     if (!confirmed) return;
 
-    const { error } = await supabase.from('glossary_terms').delete().eq('id', id);
+    const res = await fetch(`/api/admin/glossary?id=${id}`, { method: 'DELETE' });
 
-    if (error) {
+    if (!res.ok) {
       toast.error('Failed to delete term');
-      console.error(error);
+      console.error(await res.text());
     } else {
       toast.success('Term deleted');
       setTerms((prev) => prev.filter((t) => t.id !== id));

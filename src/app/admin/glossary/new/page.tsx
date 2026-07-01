@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { slugify } from '@/lib/utils/slugify';
@@ -12,7 +11,6 @@ import toast from 'react-hot-toast';
 
 export default function NewGlossaryTermPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [saving, setSaving] = useState(false);
 
   const [term, setTerm] = useState('');
@@ -55,8 +53,12 @@ export default function NewGlossaryTermPage() {
     };
 
     try {
-      const { error } = await supabase.from('glossary_terms').insert(termData);
-      if (error) throw error;
+      const res = await fetch('/api/admin/glossary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(termData),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to save term');
       toast.success('Term created');
       router.push('/admin/glossary');
     } catch (err) {

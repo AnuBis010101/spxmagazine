@@ -135,22 +135,14 @@ export default function AdminMediaPage() {
     );
     if (!confirmed) return;
 
-    // Delete from storage
-    const { error: storageError } = await supabase.storage
-      .from('images')
-      .remove([item.storage_path]);
+    const res = await fetch(
+      `/api/admin/media?id=${item.id}&path=${encodeURIComponent(item.storage_path)}`,
+      { method: 'DELETE' }
+    );
 
-    if (storageError) {
-      console.error('Storage delete error:', storageError);
-      // Continue to delete record even if storage fails
-    }
-
-    // Delete record
-    const { error } = await supabase.from('media').delete().eq('id', item.id);
-
-    if (error) {
+    if (!res.ok) {
       toast.error('Failed to delete media');
-      console.error(error);
+      console.error(await res.text());
     } else {
       toast.success('Media deleted');
       setMedia((prev) => prev.filter((m) => m.id !== item.id));

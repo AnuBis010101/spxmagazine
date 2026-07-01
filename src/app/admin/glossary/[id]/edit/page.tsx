@@ -79,11 +79,12 @@ export default function EditGlossaryTermPage({ params }: { params: Promise<{ id:
     };
 
     try {
-      const { error } = await supabase
-        .from('glossary_terms')
-        .update(termData)
-        .eq('id', id);
-      if (error) throw error;
+      const res = await fetch('/api/admin/glossary', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...termData }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
       toast.success('Term updated');
       router.push('/admin/glossary');
     } catch (err) {
@@ -221,11 +222,10 @@ export default function EditGlossaryTermPage({ params }: { params: Promise<{ id:
                     `Are you sure you want to delete "${term}"?`
                   );
                   if (!confirmed) return;
-                  const { error } = await supabase
-                    .from('glossary_terms')
-                    .delete()
-                    .eq('id', id);
-                  if (error) {
+                  const res = await fetch(`/api/admin/glossary?id=${id}`, {
+                    method: 'DELETE',
+                  });
+                  if (!res.ok) {
                     toast.error('Failed to delete');
                   } else {
                     toast.success('Term deleted');

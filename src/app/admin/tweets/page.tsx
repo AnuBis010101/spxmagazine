@@ -115,14 +115,15 @@ export default function AdminTweetsPage() {
     };
 
     try {
-      const { data, error } = await supabase
-        .from('embedded_tweets')
-        .insert(tweetData)
-        .select()
-        .single();
-      if (error) throw error;
+      const res = await fetch('/api/admin/tweets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tweetData),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to add tweet');
       toast.success('Tweet added');
-      setTweets((prev) => [...prev, data as EmbeddedTweet]);
+      setTweets((prev) => [...prev, json.data as EmbeddedTweet]);
       setShowAddModal(false);
       resetForm();
     } catch (err) {
@@ -134,14 +135,15 @@ export default function AdminTweetsPage() {
   };
 
   const handleToggleActive = async (id: string, currentActive: boolean) => {
-    const { error } = await supabase
-      .from('embedded_tweets')
-      .update({ is_active: !currentActive })
-      .eq('id', id);
+    const res = await fetch('/api/admin/tweets', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, is_active: !currentActive }),
+    });
 
-    if (error) {
+    if (!res.ok) {
       toast.error('Failed to update tweet');
-      console.error(error);
+      console.error(await res.text());
     } else {
       setTweets((prev) =>
         prev.map((t) =>
@@ -158,14 +160,11 @@ export default function AdminTweetsPage() {
     );
     if (!confirmed) return;
 
-    const { error } = await supabase
-      .from('embedded_tweets')
-      .delete()
-      .eq('id', id);
+    const res = await fetch(`/api/admin/tweets?id=${id}`, { method: 'DELETE' });
 
-    if (error) {
+    if (!res.ok) {
       toast.error('Failed to delete tweet');
-      console.error(error);
+      console.error(await res.text());
     } else {
       toast.success('Tweet deleted');
       setTweets((prev) => prev.filter((t) => t.id !== id));
@@ -173,14 +172,15 @@ export default function AdminTweetsPage() {
   };
 
   const handleSortOrderChange = async (id: string, newOrder: number) => {
-    const { error } = await supabase
-      .from('embedded_tweets')
-      .update({ sort_order: newOrder })
-      .eq('id', id);
+    const res = await fetch('/api/admin/tweets', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, sort_order: newOrder }),
+    });
 
-    if (error) {
+    if (!res.ok) {
       toast.error('Failed to update order');
-      console.error(error);
+      console.error(await res.text());
     } else {
       setTweets((prev) =>
         prev

@@ -44,11 +44,11 @@ export default function AdminVideosPage() {
     );
     if (!confirmed) return;
 
-    const { error } = await supabase.from('videos').delete().eq('id', id);
+    const res = await fetch(`/api/admin/videos?id=${id}`, { method: 'DELETE' });
 
-    if (error) {
+    if (!res.ok) {
       toast.error('Failed to delete video');
-      console.error(error);
+      console.error(await res.text());
     } else {
       toast.success('Video deleted');
       setVideos((prev) => prev.filter((v) => v.id !== id));

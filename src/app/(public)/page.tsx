@@ -7,7 +7,6 @@ import { getGlossaryTerms } from "@/lib/queries/glossary";
 import ScrollProgress from "@/components/home/ScrollProgress";
 import AnimatedHero from "@/components/home/AnimatedHero";
 import CategoryShowcase from "@/components/home/CategoryShowcase";
-import NewsletterBanner from "@/components/home/NewsletterBanner";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import VideoSpotlight from "@/components/home/VideoSpotlight";
 import CommunityPulse from "@/components/home/CommunityPulse";
@@ -52,7 +51,6 @@ export default async function HomePage() {
       <AnimatedHero post={heroPost} glossaryTerms={glossaryTerms.map((t) => t.term)} />
       {/* Page content scrolls over the fixed hero */}
       <ParallaxContent>
-        <NewsletterBanner />
         <ScrollReveal direction="up" scale blur duration={0.7}>
           <CategoryShowcase news={newsLatest} articles={articlesLatest} learn={learnLatest} />
         </ScrollReveal>

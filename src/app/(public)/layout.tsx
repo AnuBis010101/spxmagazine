@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { NewsTicker } from "@/components/layout/NewsTicker";
+import NewsletterStickyBar from "@/components/layout/NewsletterStickyBar";
 import PageTransition from "@/components/animations/PageTransition";
 import OrbitBackground from "@/components/home/OrbitBackground";
 import { createClient } from "@/lib/supabase/server";
@@ -54,6 +55,7 @@ export default async function PublicLayout({
       )}
       <Header />
       {newsPosts.length > 0 && <NewsTicker posts={newsPosts} />}
+      <NewsletterStickyBar />
       <main className="flex-1">
         <PageTransition>
           {children}

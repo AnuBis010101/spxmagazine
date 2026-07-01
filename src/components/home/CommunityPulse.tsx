@@ -106,6 +106,11 @@ export default function CommunityPulse({ tweets }: CommunityPulseProps) {
         ref={scrollRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
+        onPointerDown={() => setIsPaused(true)}
+        onPointerUp={() => setIsPaused(false)}
+        onPointerCancel={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
         className="flex gap-5 pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-8 overflow-x-auto scrollbar-hide"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >

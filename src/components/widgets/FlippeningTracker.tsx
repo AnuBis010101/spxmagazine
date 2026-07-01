@@ -7,6 +7,8 @@ import { usePrice } from "@/hooks/usePrice";
 import { ChevronDown } from "lucide-react";
 import CountUp from "@/components/widgets/CountUp";
 import FlippeningCelebration from "@/components/widgets/FlippeningCelebration";
+import Sparkline from "@/components/widgets/Sparkline";
+import { useRollingSeries } from "@/hooks/useRollingSeries";
 
 const CELEBRATED_TIER_KEY = "spx-flippening-tier";
 
@@ -218,6 +220,8 @@ export default function FlippeningTracker() {
   const router = useRouter();
   const { marketCap, sp500MarketCap, loading, error } = usePrice();
   const [showLocked, setShowLocked] = useState(false);
+  // Client-side rolling buffer — the price API has no history (see hook docs).
+  const mcSeries = useRollingSeries("spx-mc-series", marketCap);
 
   const percentage =
     sp500MarketCap > 0 ? (marketCap / sp500MarketCap) * 100 : 0;
@@ -290,6 +294,7 @@ export default function FlippeningTracker() {
               <p className="font-display text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gold-300 via-gold-500 to-gold-300 bg-clip-text text-transparent truncate">
                 <CountUp value={marketCap} format={formatCurrency} />
               </p>
+              <Sparkline data={mcSeries} className="mt-2" />
             </div>
             <div className="sm:text-right min-w-0">
               <p className="text-mag-muted text-[11px] sm:text-sm font-body uppercase tracking-wider">

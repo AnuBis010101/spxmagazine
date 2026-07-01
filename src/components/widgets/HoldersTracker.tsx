@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, useSpring, useTransform, useInView } from "framer-motion";
+import Sparkline from "@/components/widgets/Sparkline";
+import { useRollingSeries } from "@/hooks/useRollingSeries";
 
 interface HolderData {
   chain: string;
@@ -186,6 +188,16 @@ export default function HoldersTracker() {
     return () => clearInterval(interval);
   }, []);
 
+  // Total across chains + a rolling buffer for the trend sparkline. Computed
+  // before the early returns so the hook order stays stable. Holders refresh
+  // only ~3×/day, so this series builds over days (kept up to 14d).
+  const total = data?.holders
+    ? data.holders.reduce((sum, h) => sum + parseCount(h.holders), 0)
+    : 0;
+  const holdersSeries = useRollingSeries("spx-holders-series", total, {
+    maxAgeMs: 14 * 24 * 60 * 60 * 1000,
+  });
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -206,8 +218,6 @@ export default function HoldersTracker() {
   }
 
   if (!data?.holders) return null;
-
-  const total = data.holders.reduce((sum, h) => sum + parseCount(h.holders), 0);
 
   return (
     <div className="space-y-4">
@@ -344,6 +354,11 @@ export default function HoldersTracker() {
 
           {/* Animated total */}
           <TotalCounter total={total} />
+
+          {/* Live trend sparkline (client-accumulated; see useRollingSeries) */}
+          <div className="mt-5 flex justify-center">
+            <Sparkline data={holdersSeries} label="Trend" />
+          </div>
 
           {/* Breakdown bar */}
           <div className="mt-8 max-w-lg mx-auto">

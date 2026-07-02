@@ -63,7 +63,12 @@ export default async function PublicLayout({
       <Header />
       {newsPosts.length > 0 && <NewsTicker posts={newsPosts} />}
       <NewsletterStickyBar />
-      <main id="main" tabIndex={-1} className="flex-1">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1"
+        data-ticker={newsPosts.length > 0 ? "true" : "false"}
+      >
         <PageTransition>
           {children}
         </PageTransition>

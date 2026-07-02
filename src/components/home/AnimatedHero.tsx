@@ -200,7 +200,7 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
       <section
         ref={sectionRef}
         className="relative overflow-hidden"
-        style={mounted ? { height: "calc(100svh - 102px)" } : { height: "100svh" }}
+        style={{ height: "calc(100svh - var(--chrome-h, 65px))" }}
       >
         {/* Two ambient ticker strips only — top and bottom thirds, clear of the mark */}
         {mounted && (
@@ -221,7 +221,7 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
         {/* ═══ CENTER CONTENT — positioned at orbit center (50vh from viewport top) ═══ */}
         <div
           className="absolute z-10 left-0 right-0 flex justify-center"
-          style={mounted ? { top: "calc(50svh - 102px)", transform: "translateY(-50%)" } : { top: "50%", transform: "translateY(-50%)" }}
+          style={{ top: "calc(50svh - var(--chrome-h, 65px))", transform: "translateY(-50%)" }}
         >
         <motion.div
           className="flex flex-col items-center text-center px-4 w-full max-w-3xl"

@@ -60,25 +60,25 @@ export default async function HomePage() {
           <CategoryShowcase news={newsLatest} articles={articlesLatest} learn={learnLatest} />
         </RackFocus>
         {trendingPosts.length > 0 && (
-          <ScrollReveal direction="up" scale blur duration={0.7} delay={0.1}>
+          <ScrollReveal direction="up" duration={0.55}>
             <TrendingArticles posts={trendingPosts} />
           </ScrollReveal>
         )}
-        <ScrollReveal direction="up" scale blur duration={0.8}>
+        <ScrollReveal direction="up" duration={0.55}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             <FlippeningTracker />
           </div>
         </ScrollReveal>
-        <ScrollReveal direction="up" scale blur duration={0.7}>
+        <ScrollReveal direction="up" duration={0.55}>
           <FeaturedCarousel posts={featuredPosts} />
         </ScrollReveal>
-        <ScrollReveal direction="up" blur duration={0.7}>
+        <ScrollReveal direction="up" duration={0.55}>
           <VideoSpotlight video={featuredVideo} />
         </ScrollReveal>
-        <ScrollReveal direction="up" scale blur duration={0.7}>
+        <ScrollReveal direction="up" duration={0.55}>
           <CommunityPulse tweets={sidebarTweets} />
         </ScrollReveal>
-        <ScrollReveal direction="up" blur duration={0.8}>
+        <ScrollReveal direction="up" duration={0.55}>
           <AnimatedNewsletterCTA />
         </ScrollReveal>
       </ParallaxContent>

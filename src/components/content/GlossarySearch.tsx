@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-import { Search, X, BookOpen, Sparkles } from "lucide-react";
+import { Search, X, BookOpen, Sparkles, ArrowRight, ShoppingCart, GraduationCap } from "lucide-react";
 import type { GlossaryTerm } from "@/types/content";
 
 interface GlossarySearchProps {
@@ -15,6 +16,17 @@ const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
 function TermCard({ term, index }: { term: GlossaryTerm; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-40px" });
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    if (hash && hash === term.slug) {
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 1600);
+      return () => clearTimeout(t);
+    }
+  }, [term.slug]);
 
   return (
     <motion.div
@@ -29,7 +41,13 @@ function TermCard({ term, index }: { term: GlossaryTerm; index: number }) {
       }}
       className="group relative scroll-mt-32"
     >
-      <div className="relative overflow-hidden rounded-2xl border border-mag-border bg-gradient-to-br from-mag-dark via-mag-dark to-mag-black p-6 transition-all duration-500 hover:border-gold-400/40 hover:shadow-[0_0_30px_rgba(212,175,55,0.08)]">
+      <div
+        className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br from-mag-dark via-mag-dark to-mag-black p-6 motion-safe:transition-all motion-safe:duration-500 hover:border-gold-400/40 hover:shadow-[0_0_30px_rgba(212,175,55,0.08)] ${
+          flash
+            ? "border-gold-400/70 shadow-[0_0_40px_rgba(212,175,55,0.25)] ring-1 ring-gold-400/50"
+            : "border-mag-border"
+        }`}
+      >
         {/* Shimmer effect on hover */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold-400/[0.03] to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
@@ -278,6 +296,50 @@ export default function GlossarySearch({ terms }: GlossarySearchProps) {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* ── Exit band ───────────────────────────────────────── */}
+      <div className="mt-20 border-t border-mag-border pt-12">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-gold-400/70">
+          Keep exploring
+        </p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 max-w-3xl mx-auto">
+          <Link
+            href="/how-to-buy"
+            className="group flex items-center gap-4 rounded-2xl border border-mag-border bg-mag-dark p-5 transition-all duration-300 hover:border-gold-400/40 hover:shadow-[0_0_30px_rgba(212,175,55,0.08)]"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-400/[0.08] border border-gold-400/10 text-gold-400">
+              <ShoppingCart className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-display font-bold text-white group-hover:text-gold-400 transition-colors">
+                How to Buy
+              </span>
+              <span className="block text-sm text-mag-muted">
+                Get your first SPX6900 in minutes.
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-gold-400/50 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-gold-400" />
+          </Link>
+
+          <Link
+            href="/learn"
+            className="group flex items-center gap-4 rounded-2xl border border-mag-border bg-mag-dark p-5 transition-all duration-300 hover:border-gold-400/40 hover:shadow-[0_0_30px_rgba(212,175,55,0.08)]"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-400/[0.08] border border-gold-400/10 text-gold-400">
+              <GraduationCap className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-display font-bold text-white group-hover:text-gold-400 transition-colors">
+                Guides
+              </span>
+              <span className="block text-sm text-mag-muted">
+                Go deeper with SPX6900 explainers.
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-gold-400/50 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-gold-400" />
+          </Link>
+        </div>
       </div>
     </div>
   );

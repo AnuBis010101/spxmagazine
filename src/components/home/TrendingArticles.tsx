@@ -88,6 +88,18 @@ export default function TrendingArticles({ posts }: TrendingArticlesProps) {
           );
         })}
       </motion.div>
+
+      <div className="mt-8">
+        <Link
+          href="/articles"
+          className="group inline-flex items-center gap-2 text-sm font-display font-semibold text-gold-400/80 hover:text-gold-400 transition-colors"
+        >
+          View all
+          <span className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">
+            &rarr;
+          </span>
+        </Link>
+      </div>
     </section>
   );
 }

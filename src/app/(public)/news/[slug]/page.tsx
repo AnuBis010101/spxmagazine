@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SITE_URL } from "@/lib/constants";
+import { getAuthorByName } from "@/lib/authors";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPostBySlug, getRelatedPosts } from "@/lib/queries/articles";
 import { sanitizeHtml } from "@/lib/utils/sanitize";
@@ -121,7 +123,19 @@ export default async function NewsArticlePage({ params }: PageProps) {
         <ViewCounter postId={post.id} />
 
         <div className="flex items-center gap-3 text-sm text-mag-muted mt-4 flex-wrap">
-          <span>{post.author_name}</span>
+          {(() => {
+            const author = post.author_name ? getAuthorByName(post.author_name) : null;
+            return author ? (
+              <Link
+                href={`/authors/${author.slug}`}
+                className="text-gold-400/80 hover:text-gold-400 hover:underline underline-offset-2 transition-colors"
+              >
+                {post.author_name}
+              </Link>
+            ) : (
+              <span>{post.author_name}</span>
+            );
+          })()}
           {post.published_at && (
             <>
               <span>&middot;</span>

@@ -5,13 +5,21 @@ interface NewsTickerProps {
   posts: Post[];
 }
 
+const CONTENT_PATH: Record<string, string> = {
+  news: '/news/',
+  article: '/articles/',
+  learn: '/learn/',
+};
+
 export function NewsTicker({ posts }: NewsTickerProps) {
   if (!posts.length) return null;
 
-  // Below 3 items there isn't enough content for a seamless marquee loop, so
-  // fall back to a single static headline. Duplicate for the loop only at >=3.
-  const marquee = posts.length >= 3;
-  const items = marquee ? [...posts, ...posts] : posts.slice(0, 1);
+  // A seamless marquee needs the strip duplicated so the loop has no visible
+  // seam. With a single item there's nothing to scroll, so hold it static; with
+  // 2+ we run the non-stop loop (the ticker is fed the latest published posts, so
+  // in practice this is always scrolling).
+  const marquee = posts.length >= 2;
+  const items = marquee ? [...posts, ...posts] : posts;
 
   return (
     <div className="bg-mag-dark border-b border-mag-border overflow-hidden flex items-stretch">
@@ -45,7 +53,7 @@ export function NewsTicker({ posts }: NewsTickerProps) {
           {items.map((post, i) => (
             <Link
               key={`${post.id}-${i}`}
-              href={`/news/${post.slug}`}
+              href={`${CONTENT_PATH[post.content_type] ?? '/articles/'}${post.slug}`}
               className="inline-flex items-center gap-2 px-6 text-sm text-mag-muted hover:text-white transition-colors flex-shrink-0"
             >
               <span className="w-1 h-1 rounded-full bg-gold-400/60 flex-shrink-0" />

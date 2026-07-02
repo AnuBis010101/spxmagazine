@@ -42,7 +42,6 @@ export default async function PublicLayout({
     getGlossaryTerms(),
   ]);
 
-  const newsPosts = tickerPosts.filter((p) => p.content_type === "news");
   const termsList = glossaryTerms.map((t) => t.term);
 
   return (
@@ -61,13 +60,13 @@ export default async function PublicLayout({
         />
       )}
       <Header />
-      {newsPosts.length > 0 && <NewsTicker posts={newsPosts} />}
+      {tickerPosts.length > 0 && <NewsTicker posts={tickerPosts} />}
       <NewsletterStickyBar />
       <main
         id="main"
         tabIndex={-1}
         className="flex-1"
-        data-ticker={newsPosts.length > 0 ? "true" : "false"}
+        data-ticker={tickerPosts.length > 0 ? "true" : "false"}
       >
         <PageTransition>
           {children}

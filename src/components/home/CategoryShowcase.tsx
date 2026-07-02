@@ -109,6 +109,54 @@ function SmallCard({ post }: { post: Post }) {
 function NewsLayout({ posts }: { posts: Post[] }) {
   if (posts.length === 0) return <EmptyState label="news" />;
   const [main, ...rest] = posts;
+
+  // n=1 — full-width cinematic card.
+  if (posts.length === 1) {
+    return (
+      <div className="grid grid-cols-1">
+        <StaggerItem className="rounded-xl overflow-hidden relative min-h-[340px] md:min-h-[460px] border border-mag-border hover:border-gold-400/40 transition-colors">
+          <CardOverlay post={main} />
+        </StaggerItem>
+      </div>
+    );
+  }
+
+  // n=2 — balanced 2-up.
+  if (posts.length === 2) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {posts.map((post) => (
+          <StaggerItem
+            key={post.id}
+            className="rounded-xl overflow-hidden relative min-h-[300px] md:min-h-[360px] border border-mag-border hover:border-gold-400/40 transition-colors"
+          >
+            <CardOverlay post={post} />
+          </StaggerItem>
+        ))}
+      </div>
+    );
+  }
+
+  // n=3 — hero + 2 stacked.
+  if (posts.length === 3) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <StaggerItem className="md:row-span-2 rounded-xl overflow-hidden relative min-h-[300px] md:min-h-[400px] border border-mag-border hover:border-gold-400/40 transition-colors">
+          <CardOverlay post={main} />
+        </StaggerItem>
+        {rest.map((post) => (
+          <StaggerItem
+            key={post.id}
+            className="rounded-xl overflow-hidden bg-mag-dark border border-mag-border hover:border-gold-400/40 transition-all p-4 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(212,175,55,0.08)]"
+          >
+            <SmallCard post={post} />
+          </StaggerItem>
+        ))}
+      </div>
+    );
+  }
+
+  // n>=4 — current row-span layout (unchanged).
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Large card left */}
@@ -130,42 +178,54 @@ function NewsLayout({ posts }: { posts: Post[] }) {
 
 function ArticlesLayout({ posts }: { posts: Post[] }) {
   if (posts.length === 0) return <EmptyState label="articles" />;
+  const cards = posts.map((post) => {
+    const href = `${contentTypePathMap[post.content_type] ?? "/articles/"}${post.slug}`;
+    return (
+      <StaggerItem
+        key={post.id}
+        className="rounded-xl overflow-hidden bg-mag-dark border border-mag-border hover:border-gold-400/40 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(212,175,55,0.12)]"
+      >
+        <Link href={href} className="group block">
+          <div className="aspect-[4/3] relative overflow-hidden">
+            <CardImage post={post} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
+          </div>
+          <div className="p-4">
+            {post.category && (
+              <span className="inline-block bg-gold-400/90 text-mag-black text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mb-2">
+                {post.category.name}
+              </span>
+            )}
+            <h3 className="font-display font-bold text-base text-white line-clamp-2 group-hover:text-gold-400 transition-colors">
+              {post.title}
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-mag-muted mt-2">
+              <span>{post.author_name}</span>
+              {post.published_at && (
+                <>
+                  <span>&middot;</span>
+                  <span>{formatDate(post.published_at)}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </Link>
+      </StaggerItem>
+    );
+  });
+
+  // n<=2 — centered max-w-3xl 2-col.
+  if (posts.length <= 2) {
+    return (
+      <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {cards}
+      </div>
+    );
+  }
+
+  // n>=3 — current 3-col grid (unchanged).
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {posts.map((post) => {
-        const href = `${contentTypePathMap[post.content_type] ?? "/articles/"}${post.slug}`;
-        return (
-          <StaggerItem
-            key={post.id}
-            className="rounded-xl overflow-hidden bg-mag-dark border border-mag-border hover:border-gold-400/40 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(212,175,55,0.12)]"
-          >
-            <Link href={href} className="group block">
-              <div className="aspect-[4/3] relative overflow-hidden">
-                <CardImage post={post} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
-              </div>
-              <div className="p-4">
-                {post.category && (
-                  <span className="inline-block bg-gold-400/90 text-mag-black text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mb-2">
-                    {post.category.name}
-                  </span>
-                )}
-                <h3 className="font-display font-bold text-base text-white line-clamp-2 group-hover:text-gold-400 transition-colors">
-                  {post.title}
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-mag-muted mt-2">
-                  <span>{post.author_name}</span>
-                  {post.published_at && (
-                    <>
-                      <span>&middot;</span>
-                      <span>{formatDate(post.published_at)}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Link>
-          </StaggerItem>
-        );
-      })}
+      {cards}
     </div>
   );
 }

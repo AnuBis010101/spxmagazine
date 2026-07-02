@@ -132,6 +132,27 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
 
   if (posts.length === 0) return null;
 
+  // n=1 — static centered card, no drag track, no dots.
+  if (posts.length === 1) {
+    return (
+      <section className="py-16 md:py-24 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+          <ScrollReveal>
+            <SectionHeading
+              folio="03"
+              eyebrow="Editors' Picks"
+              title={<>Featured <span className="text-gold-static">Stories</span></>}
+              standfirst="Handpicked reads from our editors"
+            />
+          </ScrollReveal>
+        </div>
+        <div className="perspective-1000 flex justify-center px-4 sm:px-6 lg:px-8">
+          <TiltCard post={posts[0]} />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 md:py-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">

@@ -8,8 +8,10 @@ interface NewsTickerProps {
 export function NewsTicker({ posts }: NewsTickerProps) {
   if (!posts.length) return null;
 
-  // Duplicate items for seamless loop
-  const items = [...posts, ...posts];
+  // Below 3 items there isn't enough content for a seamless marquee loop, so
+  // fall back to a single static headline. Duplicate for the loop only at >=3.
+  const marquee = posts.length >= 3;
+  const items = marquee ? [...posts, ...posts] : posts.slice(0, 1);
 
   return (
     <div className="bg-mag-dark border-b border-mag-border overflow-hidden flex items-stretch">
@@ -21,9 +23,9 @@ export function NewsTicker({ posts }: NewsTickerProps) {
         </span>
       </div>
 
-      {/* Scrolling strip */}
+      {/* Scrolling strip (marquee at >=3, static headline below that) */}
       <div className="flex-1 overflow-hidden relative">
-        <div className="flex animate-ticker whitespace-nowrap py-2">
+        <div className={`flex whitespace-nowrap py-2 ${marquee ? "animate-ticker" : ""}`}>
           {items.map((post, i) => (
             <Link
               key={`${post.id}-${i}`}

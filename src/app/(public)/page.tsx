@@ -59,7 +59,7 @@ export default async function HomePage() {
         <RackFocus>
           <CategoryShowcase news={newsLatest} articles={articlesLatest} learn={learnLatest} />
         </RackFocus>
-        {trendingPosts.length > 0 && (
+        {trendingPosts.length >= 3 && (
           <ScrollReveal direction="up" duration={0.55}>
             <TrendingArticles posts={trendingPosts} />
           </ScrollReveal>

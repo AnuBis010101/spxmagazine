@@ -108,26 +108,41 @@ export default function CommunityPulse({ tweets }: CommunityPulseProps) {
         </ScrollReveal>
       </div>
 
-      <div
-        ref={scrollRef}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onPointerDown={() => setIsPaused(true)}
-        onPointerUp={() => setIsPaused(false)}
-        onPointerCancel={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
-        className="flex gap-5 pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-8 overflow-x-auto scrollbar-hide"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        <StaggerContainer staggerDelay={0.08} className="flex gap-5">
-          {tweets.map((tweet) => (
-            <StaggerItem key={tweet.id}>
-              <TweetCard tweet={tweet} />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-      </div>
+      {tweets.length < 3 ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <StaggerContainer
+            staggerDelay={0.08}
+            className="flex flex-wrap justify-center gap-5"
+          >
+            {tweets.map((tweet) => (
+              <StaggerItem key={tweet.id}>
+                <TweetCard tweet={tweet} />
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        </div>
+      ) : (
+        <div
+          ref={scrollRef}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onPointerDown={() => setIsPaused(true)}
+          onPointerUp={() => setIsPaused(false)}
+          onPointerCancel={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+          className="flex gap-5 pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-8 overflow-x-auto scrollbar-hide"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          <StaggerContainer staggerDelay={0.08} className="flex gap-5">
+            {tweets.map((tweet) => (
+              <StaggerItem key={tweet.id}>
+                <TweetCard tweet={tweet} />
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        </div>
+      )}
     </section>
   );
 }

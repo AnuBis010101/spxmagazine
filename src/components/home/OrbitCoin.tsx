@@ -53,7 +53,7 @@ export default function OrbitCoin() {
     >
       <motion.div
         style={{ opacity, scale }}
-        className="relative h-[220px] w-[220px] sm:h-[300px] sm:w-[300px] md:h-[360px] md:w-[360px]"
+        className="relative h-[110px] w-[110px] sm:h-[150px] sm:w-[150px] md:h-[180px] md:w-[180px]"
       >
         {/* Base coin with a soft gold aura */}
         <Image

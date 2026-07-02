@@ -25,6 +25,41 @@
   /* Fonts */
   --font-display: var(--font-space-grotesk), system-ui, sans-serif;
   --font-body: var(--font-inter), system-ui, sans-serif;
+
+  /* Surface / elevation ladder — 0 page · 1 cards · 2 chips/stat-rows · well insets.
+     surface-0/1 mirror mag-black/mag-dark; 2 and well are the new steps. */
+  --color-surface-0: #0A0A0A;
+  --color-surface-1: #141414;
+  --color-surface-2: #1D1D1D;
+  --color-surface-well: #0F0F0F;
+
+  /* Elevation glows — the only three shadow recipes. */
+  --shadow-card: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  --shadow-glow-hover: 0 8px 32px rgba(212, 175, 55, 0.12);
+  --shadow-glow-feature: 0 0 40px rgba(212, 175, 55, 0.25);
+
+  /* Display type scale — all weight 700, tracking + leading baked in.
+     xl hero · lg detail-H1 · md index-H1 · sm section-H2 · xs H3/feature. */
+  --text-display-xl: clamp(2.75rem, 6vw, 4.5rem);
+  --text-display-xl--line-height: 1.05;
+  --text-display-xl--letter-spacing: -0.03em;
+  --text-display-xl--font-weight: 700;
+  --text-display-lg: clamp(2.25rem, 4.5vw, 3.375rem);
+  --text-display-lg--line-height: 1.08;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+  --text-display-md: clamp(2rem, 3.5vw, 3rem);
+  --text-display-md--line-height: 1.1;
+  --text-display-md--letter-spacing: -0.02em;
+  --text-display-md--font-weight: 700;
+  --text-display-sm: clamp(1.5rem, 2.5vw, 1.875rem);
+  --text-display-sm--line-height: 1.15;
+  --text-display-sm--letter-spacing: -0.02em;
+  --text-display-sm--font-weight: 700;
+  --text-display-xs: 1.375rem;
+  --text-display-xs--line-height: 1.25;
+  --text-display-xs--letter-spacing: -0.02em;
+  --text-display-xs--font-weight: 700;
 }
 
 /* Sticky-chrome height (header + optional breaking ticker), used by the hero to
@@ -79,6 +114,19 @@ html[data-theme="gold"] {
   --color-gold-400: #E8C547;
   --color-gold-300: #F0D96E;
   --color-gold-500: #D4AF37;
+  --color-surface-0: #1A1408;
+  --color-surface-1: #231C0E;
+  --color-surface-2: #2F2614;
+  --color-surface-well: #14100A;
+}
+
+/* One glass recipe — data widgets only (chrome keeps bg-mag-black/90 + blur-xl).
+   Explicit rgba + -webkit-first so Lightning CSS keeps the backdrop-filter. */
+.glass-panel {
+  background-color: rgba(20, 20, 20, 0.65);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 /* Custom Scrollbar */

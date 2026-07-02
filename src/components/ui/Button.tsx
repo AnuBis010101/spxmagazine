@@ -22,6 +22,28 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
+/**
+ * The Button recipe as a bare className — for public CTAs that must be an
+ * anchor (`<a href>`) or another element while looking identical to <Button>.
+ */
+export function buttonStyles({
+  variant = 'primary',
+  size = 'md',
+  className,
+}: {
+  variant?: keyof typeof variantStyles;
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+} = {}) {
+  return cn(
+    'inline-flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-mag-black active:scale-[0.97]',
+    variantStyles[variant],
+    sizeStyles[size],
+    className,
+  );
+}
+
 const Spinner = () => (
   <svg
     className="animate-spin -ml-1 mr-2 h-4 w-4"
@@ -63,13 +85,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={cn(
-          'inline-flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 focus-visible:ring-offset-mag-black active:scale-[0.97]',
-          variantStyles[variant],
-          sizeStyles[size],
-          className
-        )}
+        className={buttonStyles({ variant, size, className })}
         {...props}
       >
         {isLoading && <Spinner />}

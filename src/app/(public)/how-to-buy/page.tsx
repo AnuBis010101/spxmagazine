@@ -4,7 +4,7 @@ import ScrollReveal from "@/components/animations/ScrollReveal";
 import { SPX6900_CONTRACTS } from "@/lib/constants";
 
 const PAGE_DESCRIPTION =
-  "A step-by-step guide to buying SPX6900. Learn how to set up a wallet, get ETH, and swap for SPX6900 on Uniswap or Aerodrome.";
+  "A step-by-step guide to buying SPX6900 on Ethereum. Learn how to set up a wallet, get ETH, and swap for SPX6900 on Uniswap or CoW Swap.";
 
 export const metadata: Metadata = {
   title: `How to Buy SPX6900`,
@@ -17,7 +17,7 @@ const steps = [
     number: 1,
     title: "Get a Wallet",
     description:
-      "Download MetaMask or Coinbase Wallet on your phone or browser. Create a new wallet and securely back up your seed phrase. Never share your seed phrase with anyone.",
+      "Download MetaMask or another self-custody wallet on your phone or browser. Create a new wallet and securely back up your seed phrase. Never share your seed phrase with anyone.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 013 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 013 6v3" />
@@ -28,7 +28,7 @@ const steps = [
     number: 2,
     title: "Get ETH",
     description:
-      "Buy ETH from a centralized exchange like Coinbase, Kraken, or Binance, then send it to your wallet address. Alternatively, buy ETH directly inside your wallet using a debit card or bank transfer.",
+      "Buy ETH from a centralized exchange like Kraken or Binance, then send it to your wallet address. Alternatively, buy ETH directly inside your wallet using a debit card or bank transfer.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -39,7 +39,7 @@ const steps = [
     number: 3,
     title: "Connect to a DEX",
     description:
-      "Go to Uniswap (for Ethereum) or Aerodrome (for Base). Click \"Connect Wallet\" and select your wallet. Approve the connection when prompted.",
+      "Go to a trusted Ethereum DEX like Uniswap or CoW Swap. Click \"Connect Wallet\" and select your wallet. Approve the connection when prompted.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.54a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.34 8.374" />
@@ -73,8 +73,6 @@ const steps = [
 
 const contracts = [
   { chain: "Ethereum", address: SPX6900_CONTRACTS.ethereum },
-  { chain: "Base", address: SPX6900_CONTRACTS.base },
-  { chain: "Solana", address: SPX6900_CONTRACTS.solana },
 ];
 
 const quickLinks = [
@@ -84,9 +82,9 @@ const quickLinks = [
     description: "Swap on Ethereum",
   },
   {
-    label: "Aerodrome",
-    href: `https://aerodrome.finance/swap?to=${SPX6900_CONTRACTS.base}`,
-    description: "Swap on Base",
+    label: "CoW Swap",
+    href: `https://swap.cow.fi/#/1/swap/ETH/${SPX6900_CONTRACTS.ethereum}`,
+    description: "MEV-protected swap",
   },
   {
     label: "CoinGecko",
@@ -165,7 +163,7 @@ export default function HowToBuyPage() {
       <ScrollReveal direction="up" scale blur duration={0.7}>
       <div className="mt-16">
         <h2 className="mb-6 font-display text-2xl font-bold text-white">
-          Contract Addresses
+          Contract Address
         </h2>
         <div className="space-y-3">
           {contracts.map((contract) => (

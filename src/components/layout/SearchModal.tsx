@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import type { Post, GlossaryTerm } from "@/types/content";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
+import { EASE } from "@/lib/motion";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reduce = useReducedMotion();
   useFocusTrap(isOpen, panelRef);
 
   const handleSearch = useCallback(async (searchQuery: string) => {
@@ -130,7 +132,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             transition={{ duration: 0.2 }}
           >
             {/* Search Input */}
-            <div className="flex items-center border-b border-mag-border px-4">
+            <div className="group relative flex items-center border-b border-mag-border px-4 transition-colors focus-within:border-gold-400/60">
+              {/* Focus-glow seam: a soft gold underline that brightens on focus */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold-400 to-transparent opacity-0 shadow-[0_0_12px_rgba(212,175,55,0.5)] transition-opacity duration-300 group-focus-within:opacity-70"
+              />
               <svg
                 className="h-5 w-5 shrink-0 text-mag-muted"
                 xmlns="http://www.w3.org/2000/svg"
@@ -192,8 +199,13 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         Articles & News
                       </h3>
                       <ul className="space-y-2">
-                        {results.posts.map((post) => (
-                          <li key={post.id}>
+                        {results.posts.map((post, i) => (
+                          <motion.li
+                            key={post.id}
+                            initial={{ opacity: 0, y: reduce ? 0 : 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, ease: EASE.out, delay: i * 0.03 }}
+                          >
                             <Link
                               href={`${contentTypePathMap[post.content_type] || "/articles/"}${post.slug}`}
                               onClick={onClose}
@@ -213,7 +225,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                                 <CategoryBadge type={post.content_type} />
                               </div>
                             </Link>
-                          </li>
+                          </motion.li>
                         ))}
                       </ul>
                     </div>
@@ -226,8 +238,17 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         Glossary
                       </h3>
                       <ul className="space-y-2">
-                        {results.glossary.map((term) => (
-                          <li key={term.id}>
+                        {results.glossary.map((term, i) => (
+                          <motion.li
+                            key={term.id}
+                            initial={{ opacity: 0, y: reduce ? 0 : 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              ease: EASE.out,
+                              delay: (results.posts.length + i) * 0.03,
+                            }}
+                          >
                             <Link
                               href={`/learn/glossary#${term.slug}`}
                               onClick={onClose}
@@ -240,7 +261,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                                 {term.definition}
                               </p>
                             </Link>
-                          </li>
+                          </motion.li>
                         ))}
                       </ul>
                     </div>
@@ -248,6 +269,22 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 </div>
               )}
             </div>
+
+            {/* Footer: jump to the full /search results page */}
+            {query.trim() && (
+              <div className="border-t border-mag-border px-4 py-3">
+                <Link
+                  href={`/search?q=${encodeURIComponent(query.trim())}`}
+                  onClick={onClose}
+                  className="group inline-flex items-center gap-1.5 text-sm font-medium text-gold-400 transition-colors hover:text-gold-300 focus:outline-none focus-visible:underline"
+                >
+                  View all results
+                  <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">
+                    &rarr;
+                  </span>
+                </Link>
+              </div>
+            )}
           </motion.div>
         </div>
       )}

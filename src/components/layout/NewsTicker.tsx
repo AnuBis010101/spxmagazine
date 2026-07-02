@@ -48,7 +48,7 @@ export function NewsTicker({ posts }: NewsTickerProps) {
       >
         <div
           className={`flex whitespace-nowrap py-2 ${marquee ? "animate-ticker" : ""}`}
-          style={marquee ? { animationDuration: `${posts.length * 4}s` } : undefined}
+          style={marquee ? { animationDuration: `${posts.length * 2}s` } : undefined}
         >
           {items.map((post, i) => (
             <Link

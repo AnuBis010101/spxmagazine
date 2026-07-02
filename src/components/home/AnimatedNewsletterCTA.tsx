@@ -84,7 +84,7 @@ export default function AnimatedNewsletterCTA() {
       <div className="relative z-10 max-w-2xl mx-auto text-center px-4">
         <ScrollReveal>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-            Stay in the <span className="text-gold-gradient">Loop</span>
+            Stay in the <span className="text-gold-static">Loop</span>
           </h2>
           <p className="text-mag-muted mt-3">
             Get the latest SPX6900 news and insights delivered to your inbox.

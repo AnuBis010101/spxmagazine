@@ -68,7 +68,7 @@ function TickerStrip({ words, direction, speed, className }: {
   return (
     <div className={`absolute w-full overflow-hidden pointer-events-none ${className ?? ""}`}>
       <motion.div
-        className="whitespace-nowrap font-display text-[10px] sm:text-xs tracking-[0.25em] uppercase text-gold-400/[0.08]"
+        className="whitespace-nowrap font-display text-[10px] sm:text-xs tracking-[0.25em] uppercase text-gold-400/[0.045] sm:text-gold-400/[0.08]"
         animate={{ x: direction === 1 ? ["0%", "-33.33%"] : ["-33.33%", "0%"] }}
         transition={{ duration: speed, repeat: Infinity, ease: "linear" }}
       >
@@ -78,10 +78,11 @@ function TickerStrip({ words, direction, speed, className }: {
   );
 }
 
-/* ── Floating glossary term ── */
+/* ── Floating glossary term (opacity keyframes are supplied per config so the
+   hero can quiet itself on mobile) ── */
 function FloatingTerm({ term, config }: {
   term: string;
-  config: { x: string; y: string; size: number; dur: number; delay: number; drift: number };
+  config: { x: string; y: string; size: number; dur: number; delay: number; drift: number; opacity: number[] };
 }) {
   return (
     <motion.span
@@ -89,7 +90,7 @@ function FloatingTerm({ term, config }: {
       style={{ left: config.x, top: config.y, fontSize: config.size }}
       initial={{ opacity: 0 }}
       animate={{
-        opacity: [0, 0.12, 0.05, 0.1, 0],
+        opacity: config.opacity,
         y: [0, -config.drift, config.drift * 0.5, -config.drift * 0.3, 0],
         x: [0, config.drift * 0.4, -config.drift * 0.6, config.drift * 0.2, 0],
         scale: [1, 1.05, 0.95, 1.02, 1],
@@ -103,42 +104,15 @@ function FloatingTerm({ term, config }: {
   );
 }
 
-/* ── Ink ripple ── */
-function InkRipple({ delay, x, y, size }: { delay: number; x: string; y: string; size: number }) {
-  return (
-    <motion.div
-      className="absolute rounded-full pointer-events-none border border-gold-400/20"
-      style={{ left: x, top: y, width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
-      animate={{ scale: [0, 3, 5], opacity: [0.2, 0.05, 0] }}
-      transition={{ duration: 5, delay, repeat: Infinity, ease: "easeOut" }}
-    />
-  );
-}
+const HERO_PILLS = [
+  { label: "News", href: "/news" },
+  { label: "Articles", href: "/articles" },
+  { label: "Guides", href: "/learn" },
+  { label: "Videos", href: "/videos" },
+  { label: "Glossary", href: "/learn/glossary" },
+] as const;
 
-/* ── Flying term that crosses screen ── */
-function FlyingTerm({ term, delay, fromLeft }: { term: string; delay: number; fromLeft: boolean }) {
-  return (
-    <motion.div
-      className="absolute pointer-events-none whitespace-nowrap font-display text-sm sm:text-base font-bold"
-      style={{ top: `${20 + Math.random() * 60}%` }}
-      initial={{ x: fromLeft ? "-100vw" : "100vw", opacity: 0 }}
-      animate={{
-        x: fromLeft ? "100vw" : "-100vw",
-        opacity: [0, 0.15, 0.15, 0],
-      }}
-      transition={{
-        duration: 12 + Math.random() * 8,
-        delay,
-        repeat: Infinity,
-        ease: "linear",
-      }}
-    >
-      <span className="bg-gradient-to-r from-gold-400/20 via-gold-300/40 to-gold-400/20 bg-clip-text text-transparent">
-        {term}
-      </span>
-    </motion.div>
-  );
-}
+const MotionLink = motion(Link);
 
 /* ═══════════════════════════════════════════════════
    MAIN HERO COMPONENT
@@ -185,15 +159,29 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
 
   const floatingConfigs = useMemo(() => {
     if (!mounted) return [];
-    return terms.slice(0, 24).map(() => ({
+    const count = isTouch ? 5 : 8;
+    // Dim the atmosphere so it never competes with the wordmark — halve peak
+    // opacity on touch where terms sit closest to the type.
+    const opacity = isTouch ? [0, 0.06, 0.03, 0.05, 0] : [0, 0.1, 0.04, 0.08, 0];
+    // Keep the vertical middle band (35–65%) clear so terms never land on the
+    // SPX MAGAZINE lockup.
+    const clearY = () => {
+      let v;
+      do {
+        v = Math.random() * 80 + 10;
+      } while (v > 35 && v < 65);
+      return v;
+    };
+    return terms.slice(0, count).map(() => ({
       x: `${Math.random() * 90 + 5}%`,
-      y: `${Math.random() * 80 + 10}%`,
-      size: Math.random() * 20 + 12,
+      y: `${clearY()}%`,
+      size: Math.random() * 18 + 12,
       dur: Math.random() * 18 + 14,
       delay: Math.random() * 8,
       drift: Math.random() * 35 + 15,
+      opacity,
     }));
-  }, [mounted, terms]);
+  }, [mounted, isTouch, terms]);
 
   const typewriterPhrases = [
     "The Voice of SPX6900",
@@ -214,35 +202,21 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
         className="relative overflow-hidden"
         style={mounted ? { height: "calc(100svh - 102px)" } : { height: "100svh" }}
       >
-        {/* Decorative elements inside the hero (scroll with it) */}
+        {/* Two ambient ticker strips only — top and bottom thirds, clear of the mark */}
         {mounted && (
           <>
             <TickerStrip words={tickerTerms1} direction={1} speed={50} className="top-[15%]" />
-            <TickerStrip words={tickerTerms2} direction={-1} speed={60} className="top-[30%]" />
-            <TickerStrip words={tickerTerms1} direction={1} speed={55} className="top-[70%]" />
             <TickerStrip words={tickerTerms2} direction={-1} speed={45} className="top-[85%]" />
           </>
         )}
 
-        {/* Floating glossary terms */}
+        {/* Floating glossary terms (capped + wordmark-safe) */}
         {floatingConfigs.map((cfg, i) => (
           <FloatingTerm key={i} term={terms[i % terms.length]} config={cfg} />
         ))}
 
-        {/* Flying terms */}
-        {mounted && terms.slice(0, 6).map((term, i) => (
-          <FlyingTerm key={`fly-${i}`} term={term} delay={i * 3} fromLeft={i % 2 === 0} />
-        ))}
-
-        {/* Ink ripples */}
-        <InkRipple delay={0} x="25%" y="35%" size={60} />
-        <InkRipple delay={2.5} x="72%" y="28%" size={50} />
-        <InkRipple delay={5} x="50%" y="65%" size={70} />
-        <InkRipple delay={7.5} x="35%" y="78%" size={55} />
-        <InkRipple delay={1.5} x="65%" y="55%" size={45} />
-
         {/* Gold particles */}
-        <GoldParticles count={12} />
+        <GoldParticles count={6} />
 
         {/* ═══ CENTER CONTENT — positioned at orbit center (50vh from viewport top) ═══ */}
         <div
@@ -253,25 +227,20 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
           className="flex flex-col items-center text-center px-4 w-full max-w-3xl"
           style={{ opacity: contentOpacity, y: contentY, ...rackFocusStyle }}
         >
-          {/* Logo */}
+          {/* Logo — steady mark, entrance spring only */}
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, type: "spring", stiffness: 150, damping: 20 }}
           >
-            <motion.div
-              animate={{ rotate: [0, 2, -2, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Image
-                src="/spxlogo.png"
-                alt="SPX6900 Logo"
-                width={100}
-                height={100}
-                className="mx-auto w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[120px] md:h-[120px]"
-                priority
-              />
-            </motion.div>
+            <Image
+              src="/spxlogo.png"
+              alt="SPX6900 Logo"
+              width={100}
+              height={100}
+              className="mx-auto w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[120px] md:h-[120px]"
+              priority
+            />
           </motion.div>
 
           {/* Title */}
@@ -300,28 +269,23 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
             <TypewriterCycle phrases={typewriterPhrases} />
           </motion.div>
 
-          {/* Category pills */}
-          <motion.div
-            className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
-          >
-            {["News", "Articles", "Guides", "Videos", "Glossary"].map((label, i) => (
-              <motion.span
+          {/* Category nav — real links, one entrance beat, then quiet */}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-8">
+            {HERO_PILLS.map(({ label, href }, i) => (
+              <MotionLink
                 key={label}
-                className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-gold-400/20 bg-gold-400/[0.04] text-[10px] sm:text-xs font-display font-semibold text-gold-400/50 tracking-wider uppercase cursor-default"
-                animate={{
-                  borderColor: ["rgba(212,175,55,0.12)", "rgba(212,175,55,0.35)", "rgba(212,175,55,0.12)"],
-                  color: ["rgba(212,175,55,0.4)", "rgba(212,175,55,0.7)", "rgba(212,175,55,0.4)"],
-                }}
-                transition={{ duration: 3, delay: i * 0.6, repeat: Infinity, ease: "easeInOut" }}
-                whileHover={{ scale: 1.1, borderColor: "rgba(212,175,55,0.6)" }}
+                href={href}
+                className="inline-flex min-h-[44px] items-center rounded-full border border-gold-400/30 bg-gold-400/[0.04] px-4 py-1.5 text-[10px] sm:text-xs font-display font-semibold text-gold-400/75 tracking-wider uppercase transition-colors hover:border-gold-400/60 hover:text-gold-300"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0 + i * 0.12, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {label}
-              </motion.span>
+              </MotionLink>
             ))}
-          </motion.div>
+          </div>
         </motion.div>
         </div>
 
@@ -369,7 +333,7 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
       <div className="absolute inset-0 bg-gradient-to-b from-mag-black/30 via-transparent to-transparent" />
 
       {/* Floating particles */}
-      <GoldParticles count={8} />
+      <GoldParticles count={6} />
 
       {/* Content with scroll fade */}
       <motion.div

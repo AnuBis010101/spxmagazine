@@ -44,14 +44,14 @@ function OrbitTerm({ term, radius, duration, startAngle, size, reverse, showRing
           style={{ left: radius, top: -size / 2, fontSize: size }}
           animate={{
             rotate: [-from, -to],
-            opacity: [0.25, 0.6, 0.25],
+            opacity: [0.12, 0.32, 0.12],
           }}
           transition={{
             rotate: { duration, repeat: Infinity, ease: "linear" },
             opacity: { duration: duration * 0.5, repeat: Infinity, ease: "easeInOut" },
           }}
         >
-          <span className="bg-gradient-to-r from-gold-400/60 via-gold-300/90 to-gold-400/60 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-gold-400/40 via-gold-300/60 to-gold-400/40 bg-clip-text text-transparent">
             {term}
           </span>
         </motion.span>

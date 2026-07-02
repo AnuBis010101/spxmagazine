@@ -86,7 +86,7 @@ export default function FlippeningGauge() {
               <p className="text-[10px] uppercase tracking-[0.2em] text-gold-400/70 font-display">
                 SPX6900 Market Cap
               </p>
-              <p className="mt-1 font-display text-2xl sm:text-3xl font-bold text-gold-gradient">
+              <p className="mt-1 font-display text-2xl sm:text-3xl font-bold text-gold-static">
                 <CountUp value={marketCap} format={formatCurrency} />
               </p>
               <p className="mt-2 text-xs text-mag-muted font-body">

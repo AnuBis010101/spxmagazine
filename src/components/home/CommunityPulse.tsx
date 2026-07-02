@@ -90,7 +90,7 @@ export default function CommunityPulse({ tweets }: CommunityPulseProps) {
         <ScrollReveal>
           <div className="flex items-center gap-3">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-              Community <span className="text-gold-gradient">Pulse</span>
+              Community <span className="text-gold-static">Pulse</span>
             </h2>
             <motion.div
               className="w-3 h-3 rounded-full bg-gold-400"

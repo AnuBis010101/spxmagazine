@@ -24,7 +24,7 @@ export default function VideoSpotlight({ video }: VideoSpotlightProps) {
     <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
       <ScrollReveal>
         <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-2">
-          Video <span className="text-gold-gradient">Spotlight</span>
+          Video <span className="text-gold-static">Spotlight</span>
         </h2>
         <p className="text-mag-muted text-center mb-12">
           Watch the latest from the SPX6900 community

@@ -220,7 +220,7 @@ export default function CategoryShowcase({ news, articles, learn }: CategoryShow
     <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <ScrollReveal>
         <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-2">
-          Explore the <span className="text-gold-gradient">Latest</span>
+          Explore the <span className="text-gold-static">Latest</span>
         </h2>
         <p className="text-mag-muted text-center mb-10">
           Discover fresh content across all categories

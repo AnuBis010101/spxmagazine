@@ -80,7 +80,7 @@ export default function NewsletterStickyBar() {
         <p className="whitespace-nowrap text-xs font-medium text-mag-light sm:text-sm">
           <span className="hidden sm:inline">SPX news in your inbox </span>
           <span className="sm:hidden">SPX news </span>
-          <span className="font-semibold text-gold-gradient">every week</span>
+          <span className="font-semibold text-gold-static">every week</span>
         </p>
 
         <a

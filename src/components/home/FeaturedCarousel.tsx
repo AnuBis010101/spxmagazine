@@ -137,7 +137,7 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         <ScrollReveal>
           <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-            Featured <span className="text-gold-gradient">Stories</span>
+            Featured <span className="text-gold-static">Stories</span>
           </h2>
           <p className="text-mag-muted mt-2">Handpicked reads from our editors</p>
         </ScrollReveal>

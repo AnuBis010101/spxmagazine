@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Headphones,
   Play,
@@ -40,6 +40,7 @@ export default function AudioPlayer({
   const abortRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
   const speed = SPEEDS[speedIndex];
+  const reduce = useReducedMotion();
 
   // Initialize audio element (lazy, reusable)
   const getAudio = useCallback(() => {
@@ -238,16 +239,54 @@ export default function AudioPlayer({
     }
   }, [speedIndex]);
 
-  const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const seekTo = useCallback((seconds: number) => {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = Math.max(
-      0,
-      Math.min(1, (e.clientX - rect.left) / rect.width)
-    );
-    audio.currentTime = pct * audio.duration;
+    const clamped = Math.max(0, Math.min(audio.duration, seconds));
+    audio.currentTime = clamped;
+    setCurrentTime(clamped);
+    setProgress((clamped / audio.duration) * 100);
   }, []);
+
+  const handleSeek = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const audio = audioRef.current;
+      if (!audio || !audio.duration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      seekTo(pct * audio.duration);
+    },
+    [seekTo]
+  );
+
+  const handleSeekKey = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const audio = audioRef.current;
+      if (!audio || !audio.duration) return;
+      const STEP = 5; // seconds
+      let handled = true;
+      switch (e.key) {
+        case "ArrowRight":
+        case "ArrowUp":
+          seekTo(audio.currentTime + STEP);
+          break;
+        case "ArrowLeft":
+        case "ArrowDown":
+          seekTo(audio.currentTime - STEP);
+          break;
+        case "Home":
+          seekTo(0);
+          break;
+        case "End":
+          seekTo(audio.duration);
+          break;
+        default:
+          handled = false;
+      }
+      if (handled) e.preventDefault();
+    },
+    [seekTo]
+  );
 
   const formatTime = (s: number) => {
     if (!s || !isFinite(s)) return "0:00";
@@ -318,16 +357,29 @@ export default function AudioPlayer({
             </button>
           )}
 
-          {/* Progress bar */}
+          {/* Progress bar — transform-only fill + hover thumb, keyboard-seekable */}
           <div
-            className="flex-1 h-1.5 bg-mag-border/30 rounded-full overflow-hidden cursor-pointer"
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek audio position"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration) || 0}
+            aria-valuenow={Math.round(currentTime)}
+            aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
             onClick={handleSeek}
+            onKeyDown={handleSeekKey}
+            className="group/seek relative flex-1 h-1.5 bg-mag-border/30 rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             <motion.div
-              className="h-full bg-gold-400 rounded-full"
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute inset-y-0 left-0 w-full origin-left bg-gold-400 rounded-full"
+              style={{ transformOrigin: "left center" }}
+              initial={false}
+              animate={{ scaleX: progress / 100 }}
+              transition={reduce ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
+            />
+            <span
+              className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-400 shadow-[0_0_8px_rgba(212,175,55,0.6)] opacity-0 transition-opacity duration-200 group-hover/seek:opacity-100 group-focus-visible/seek:opacity-100"
+              style={{ left: `${progress}%` }}
             />
           </div>
 

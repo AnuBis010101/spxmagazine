@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import type { NavItem } from "@/lib/constants";
 
@@ -34,6 +34,7 @@ export default function NavDropdown({
   isActive: boolean;
 }) {
   const pathname = usePathname();
+  const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -97,27 +98,62 @@ export default function NavDropdown({
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+            variants={{
+              closed: reduce
+                ? { opacity: 0 }
+                : { opacity: 0, scaleY: 0.85 },
+              open: reduce
+                ? {
+                    opacity: 1,
+                    transition: { duration: 0.18, ease: [0.23, 1, 0.32, 1] },
+                  }
+                : {
+                    opacity: 1,
+                    scaleY: 1,
+                    transition: {
+                      duration: 0.22,
+                      ease: [0.16, 1, 0.3, 1],
+                      staggerChildren: 0.028,
+                      delayChildren: 0.04,
+                    },
+                  },
+            }}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            style={{ transformOrigin: "top center" }}
             className="absolute left-1/2 top-full z-50 mt-2 min-w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-gold-400/20 bg-mag-dark/95 p-1.5 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.7)] backdrop-blur-xl"
           >
             {children.map((child) => {
               const active = isChildActive(child.href, siblingHrefs, pathname);
               return (
-                <Link
+                <motion.div
                   key={`${child.label}-${child.href}`}
-                  href={child.href}
-                  className={cn(
-                    "block whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-gold-400/10 text-gold-400"
-                      : "text-mag-light hover:bg-white/5 hover:text-gold-400"
-                  )}
+                  variants={{
+                    closed: reduce
+                      ? { opacity: 0 }
+                      : { opacity: 0, y: -6 },
+                    open: reduce
+                      ? { opacity: 1 }
+                      : {
+                          opacity: 1,
+                          y: 0,
+                          transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
+                        },
+                  }}
                 >
-                  {child.label}
-                </Link>
+                  <Link
+                    href={child.href}
+                    className={cn(
+                      "block whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-gold-400/10 text-gold-400"
+                        : "text-mag-light hover:bg-white/5 hover:text-gold-400"
+                    )}
+                  >
+                    {child.label}
+                  </Link>
+                </motion.div>
               );
             })}
           </motion.div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useReactions } from "@/hooks/useReactions";
 import { cn } from "@/lib/utils/cn";
 
@@ -16,6 +16,51 @@ const REACTIONS = [
   { type: "clap", emoji: "\uD83D\uDC4F", label: "Clap" },
   { type: "rocket", emoji: "\uD83D\uDE80", label: "Rocket" },
 ] as const;
+
+/* Odometer digit: a vertical 0-9 strip translated to show the active digit.
+   Rolls to the new digit when `value` changes. Reduced motion = static. */
+function OdometerDigit({ value }: { value: number }) {
+  const reduce = useReducedMotion();
+  return (
+    <span
+      className="relative inline-block overflow-hidden tabular-nums"
+      style={{ height: "1em", lineHeight: "1em" }}
+      aria-hidden="true"
+    >
+      {/* Invisible spacer reserves the glyph width (all digits share it). */}
+      <span className="invisible">0</span>
+      <motion.span
+        className="absolute left-0 top-0 flex flex-col"
+        animate={{ y: reduce ? `${-value}em` : `${-value}em` }}
+        transition={
+          reduce
+            ? { duration: 0 }
+            : { type: "spring", stiffness: 300, damping: 30 }
+        }
+      >
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
+          <span key={d} style={{ height: "1em", lineHeight: "1em" }}>
+            {d}
+          </span>
+        ))}
+      </motion.span>
+    </span>
+  );
+}
+
+/* Odometer number: renders each decimal digit as a rolling column.
+   The visible digits are aria-hidden; the wrapper carries the real value
+   for assistive tech. */
+function OdometerNumber({ value }: { value: number }) {
+  const digits = String(value).split("");
+  return (
+    <span className="tabular-nums inline-flex" aria-label={String(value)}>
+      {digits.map((ch, i) => (
+        <OdometerDigit key={i} value={Number(ch)} />
+      ))}
+    </span>
+  );
+}
 
 /* Small gold particle that flies outward and fades */
 function Particle({ index }: { index: number }) {
@@ -78,7 +123,7 @@ export default function ReactionBar({
             title={label}
           >
             <span className="text-base">{emoji}</span>
-            {total > 0 && <span className="tabular-nums">{total}</span>}
+            {total > 0 && <OdometerNumber value={total} />}
 
             {/* Particle burst on activation */}
             <AnimatePresence>

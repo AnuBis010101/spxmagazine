@@ -280,20 +280,14 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
   return SOL_BASE;
 }
 
-// ── Base (filtered: $2 minimum) ──────────────────────────────────────────────
-//
-// IMPORTANT: This function NEVER returns the unfiltered total count.
-// If price is unavailable or pagination is interrupted, it returns "N/A"
-// so the merge logic preserves the previous curated value from the DB.
+// ── Base ─────────────────────────────────────────────────────────────────────
+// Counts ALL holders via Blockscout's total `holders_count` field — same as
+// Ethereum. (Previously curated to a $2 minimum via slow balance-descending
+// pagination; that exclusion has been removed.)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BASE_ADDR = "0x50dA645f148798F68EF2d7dB7C1CB22A6819bb2C";
-const BASE_DECIMALS = 8;
-const MIN_HOLDING_USD = 2;
 const BLOCKSCOUT_BASE_URL = "https://base.blockscout.com/api/v2";
-// Hard cap on pages — 1500 × 100 items = 150k holders headroom.
-// Keeps us bounded even if BlockScout's `next` cursor loops on a bug.
-const MAX_PAGES = 1500;
 
 const BASE_DEFAULT: ChainResult = {
   chain: "Base",
@@ -302,185 +296,27 @@ const BASE_DEFAULT: ChainResult = {
   explorer: `https://basescan.org/token/${BASE_ADDR}`,
 };
 
-interface BlockScoutHolder {
-  address: { hash: string };
-  value: string;
-}
-
-interface BlockScoutPageParams {
-  value: string;
-  address_hash: string;
-  items_count: number;
-}
-
-async function fetchBaseTokenPrice(): Promise<number | null> {
-  // Try DexScreener first
-  const data = await safeFetch(
-    `https://api.dexscreener.com/latest/dex/tokens/${BASE_ADDR}`,
+async function fetchBaseHolders(): Promise<{
+  result: ChainResult;
+  pages: number;
+  reason?: string;
+}> {
+  // Count ALL holders via Blockscout's total holders_count — one fast request,
+  // no pagination, no price, no $2 filtering (mirrors fetchEthereumHolders).
+  const bs = await safeFetch(
+    `${BLOCKSCOUT_BASE_URL}/tokens/${BASE_ADDR}`,
     {},
-    "dexscreener-base",
-    10_000
+    "blockscout-base"
   );
-  const pairs = (data as { pairs?: unknown })?.pairs;
-  if (Array.isArray(pairs) && pairs.length > 0) {
-    const price = parseFloat(pairs[0].priceUsd);
-    if (Number.isFinite(price) && price > 0) return price;
-  }
-
-  // Try CoinGecko as backup
-  const cg = await safeFetch(
-    "https://api.coingecko.com/api/v3/simple/token_price/base?contract_addresses=" +
-      BASE_ADDR +
-      "&vs_currencies=usd",
-    {},
-    "coingecko-base",
-    10_000
+  const bsCount = extractCount(
+    (bs as { holders_count?: unknown } | null)?.holders_count
   );
-  const cgPrice = (cg as Record<string, { usd?: number } | undefined> | null)?.[BASE_ADDR.toLowerCase()]?.usd;
-  if (typeof cgPrice === "number" && cgPrice > 0) return cgPrice;
-
-  return null;
-}
-
-async function fetchHoldersPage(
-  cursor: BlockScoutPageParams | undefined,
-  deadlineAt: number
-): Promise<{ items: BlockScoutHolder[]; next: BlockScoutPageParams | null; failed: boolean }> {
-  let url = `${BLOCKSCOUT_BASE_URL}/tokens/${BASE_ADDR}/holders`;
-  if (cursor) {
-    const params = new URLSearchParams({
-      value: cursor.value,
-      address_hash: cursor.address_hash,
-      items_count: String(cursor.items_count),
-    });
-    url += `?${params}`;
+  if (bsCount !== null) {
+    return { result: { ...BASE_DEFAULT, holders: bsCount }, pages: 0 };
   }
 
-  // 2 attempts (was 3) with shorter backoff — faster failure detection
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    if (Date.now() > deadlineAt) {
-      console.warn(`[holders] Base page fetch: deadline hit before attempt ${attempt}`);
-      return { items: [], next: null, failed: true };
-    }
-    const remainingMs = Math.max(2_000, deadlineAt - Date.now());
-    const timeoutMs = Math.min(12_000, remainingMs);
-    const data = await safeFetch(url, {}, "blockscout-holders", timeoutMs);
-    if (data) {
-      const page = data as {
-        items?: BlockScoutHolder[];
-        next_page_params?: BlockScoutPageParams | null;
-      };
-      return {
-        items: page.items ?? [],
-        next: page.next_page_params ?? null,
-        failed: false,
-      };
-    }
-    if (attempt < 2) {
-      console.warn(`[holders] Base page fetch failed, retry ${attempt}/2`);
-      await new Promise((r) => setTimeout(r, 1_500));
-    }
-  }
-
-  return { items: [], next: null, failed: true };
-}
-
-async function fetchBaseHolders(
-  deadlineAt: number
-): Promise<{ result: ChainResult; pages: number; reason?: string }> {
-  // ── Step 1: Get live price (REQUIRED for curation) ──
-  const price = await fetchBaseTokenPrice();
-  if (!price) {
-    console.error("[holders] Base: price unavailable — returning N/A to preserve curated count");
-    return { result: BASE_DEFAULT, pages: 0, reason: "price unavailable" };
-  }
-
-  // ── Step 2: Calculate minimum raw token amount for $2 threshold ──
-  const minTokens = MIN_HOLDING_USD / price;
-  const minRaw = BigInt(Math.ceil(minTokens * 10 ** BASE_DECIMALS));
-  console.log(
-    `[holders] Base: price=$${price.toFixed(6)}, min $${MIN_HOLDING_USD} = ${minTokens.toFixed(2)} tokens (raw: ${minRaw})`
-  );
-
-  // ── Step 3: Paginate through holders (sorted descending by balance) ──
-  let qualifiedCount = 0;
-  let cursor: BlockScoutPageParams | undefined = undefined;
-  let pagesFetched = 0;
-  let completedNormally = false;
-  let interruptReason = "";
-
-  while (pagesFetched < MAX_PAGES) {
-    if (Date.now() > deadlineAt) {
-      interruptReason = "wall-clock deadline";
-      console.warn(`[holders] Base: deadline hit at page ${pagesFetched}`);
-      break;
-    }
-
-    const { items, next, failed } = await fetchHoldersPage(cursor, deadlineAt);
-
-    if (failed) {
-      interruptReason = "page fetch failed after retries";
-      console.error(
-        `[holders] Base: page fetch failed after retries at page ${pagesFetched + 1}, aborting`
-      );
-      break;
-    }
-
-    if (items.length === 0) {
-      // Legitimate end of data — all holders are above threshold
-      completedNormally = true;
-      break;
-    }
-
-    let foundBoundary = false;
-    for (const holder of items) {
-      if (BigInt(holder.value) >= minRaw) {
-        qualifiedCount++;
-      } else {
-        foundBoundary = true;
-        break;
-      }
-    }
-
-    pagesFetched++;
-
-    if (foundBoundary) {
-      completedNormally = true;
-      break;
-    }
-
-    if (!next) {
-      completedNormally = true;
-      break;
-    }
-
-    cursor = next;
-
-    if (pagesFetched % 100 === 0) {
-      console.log(
-        `[holders] Base: ${pagesFetched} pages, ${qualifiedCount} qualified so far`
-      );
-    }
-  }
-
-  if (!completedNormally && pagesFetched >= MAX_PAGES) {
-    interruptReason = `MAX_PAGES (${MAX_PAGES}) reached without boundary`;
-  }
-
-  console.log(
-    `[holders] Base: ${qualifiedCount} holders above $${MIN_HOLDING_USD} (${pagesFetched} pages, ${completedNormally ? "complete" : "INTERRUPTED: " + interruptReason})`
-  );
-
-  // Only return a count if pagination completed AND we got a reasonable number
-  if (completedNormally && qualifiedCount > 0) {
-    return { result: { ...BASE_DEFAULT, holders: qualifiedCount }, pages: pagesFetched };
-  }
-
-  return {
-    result: BASE_DEFAULT,
-    pages: pagesFetched,
-    reason: interruptReason || (qualifiedCount === 0 ? "0 qualified" : "unknown"),
-  };
+  console.error("[holders] Base: holders_count unavailable");
+  return { result: BASE_DEFAULT, pages: 0, reason: "holders_count unavailable" };
 }
 
 // ── Refresh logic ────────────────────────────────────────────────────────────
@@ -631,11 +467,10 @@ async function doRefresh(): Promise<void> {
     };
   } else {
     const phase2Start = Date.now();
-    const baseDeadline = Date.now() + remaining;
 
     try {
       const { result: base, pages, reason } = await withTimeout(
-        fetchBaseHolders(baseDeadline),
+        fetchBaseHolders(),
         remaining + 5_000,
         "BASE"
       ).catch((e) => {

@@ -254,11 +254,6 @@ export default function HoldersTracker() {
               <div className="mt-5">
                 <p className="text-xs text-mag-muted uppercase tracking-wider font-body">
                   Total Holders
-                  {holder.chain === "Base" && (
-                    <span className="ml-1.5 normal-case tracking-normal text-gold-400/70 italic">
-                      excluding below $2
-                    </span>
-                  )}
                 </p>
                 <p className="mt-1.5 font-display text-3xl md:text-4xl font-bold text-white tabular-nums">
                   {count > 0 ? (

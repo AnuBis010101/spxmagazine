@@ -23,9 +23,9 @@ interface CategoryShowcaseProps {
 }
 
 const tabs = [
-  { key: "news" as const, label: "NEWS" },
-  { key: "articles" as const, label: "ARTICLES" },
-  { key: "learn" as const, label: "LEARN" },
+  { key: "news" as const, label: "NEWS", href: "/news" },
+  { key: "articles" as const, label: "ARTICLES", href: "/articles" },
+  { key: "learn" as const, label: "LEARN", href: "/learn" },
 ];
 
 function CardImage({ post, sizes }: { post: Post; sizes: string }) {
@@ -267,6 +267,20 @@ export default function CategoryShowcase({ news, articles, learn }: CategoryShow
             {activeTab === "articles" && <ArticlesLayout posts={dataMap.articles} />}
             {activeTab === "learn" && <LearnLayout posts={dataMap.learn} />}
           </StaggerContainer>
+
+          {dataMap[activeTab].length > 0 && (
+            <div className="mt-12 flex justify-center">
+              <Link
+                href={tabs.find((t) => t.key === activeTab)!.href}
+                className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.15em] text-mag-muted transition-colors duration-300 hover:text-gold-400"
+              >
+                View all {tabs.find((t) => t.key === activeTab)!.label.toLowerCase()}
+                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     </section>

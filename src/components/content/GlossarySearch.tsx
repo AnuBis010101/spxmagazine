@@ -19,6 +19,7 @@ function TermCard({ term, index }: { term: GlossaryTerm; index: number }) {
   return (
     <motion.div
       ref={ref}
+      id={term.slug}
       initial={{ opacity: 0, y: 30 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
       transition={{
@@ -26,7 +27,7 @@ function TermCard({ term, index }: { term: GlossaryTerm; index: number }) {
         delay: Math.min(index * 0.06, 0.4),
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
-      className="group relative"
+      className="group relative scroll-mt-32"
     >
       <div className="relative overflow-hidden rounded-2xl border border-mag-border bg-gradient-to-br from-mag-dark via-mag-dark to-mag-black p-6 transition-all duration-500 hover:border-gold-400/40 hover:shadow-[0_0_30px_rgba(212,175,55,0.08)]">
         {/* Shimmer effect on hover */}

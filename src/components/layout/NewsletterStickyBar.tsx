@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { NEWSLETTER_SIGNUP_URL } from "@/lib/constants";
 
@@ -68,7 +69,13 @@ export default function NewsletterStickyBar() {
 
       {/* Content */}
       <div className="relative mx-auto flex h-9 max-w-7xl items-center justify-center gap-2.5 px-4 sm:gap-3 sm:px-6 lg:px-8">
-        <Sparkles className="hidden h-3.5 w-3.5 flex-shrink-0 text-gold-400 sm:block" />
+        <Image
+          src="/spx6900-coin.png"
+          alt=""
+          width={14}
+          height={14}
+          className="hidden h-3.5 w-3.5 flex-shrink-0 object-contain sm:block"
+        />
 
         <p className="whitespace-nowrap text-xs font-medium text-mag-light sm:text-sm">
           <span className="hidden sm:inline">SPX news in your inbox </span>

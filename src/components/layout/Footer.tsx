@@ -88,7 +88,14 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {/* Col 1: Brand */}
           <div className="space-y-4">
-            <Link href="/">
+            <Link href="/" className="inline-flex items-center gap-3">
+              <Image
+                src="/spx6900-coin.png"
+                alt=""
+                width={36}
+                height={36}
+                className="h-9 w-9 object-contain"
+              />
               <Image
                 src="/spxlogo.png"
                 alt="SPX Magazine"

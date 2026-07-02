@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 import { SPX6900_CONTRACTS } from "@/lib/constants";
@@ -116,6 +117,14 @@ export default function HowToBuyPage() {
       {/* Header */}
       <ScrollReveal direction="up" blur duration={0.6}>
         <div className="mb-16 text-center">
+          <Image
+            src="/spx6900-coin.png"
+            alt=""
+            width={88}
+            height={88}
+            priority
+            className="mx-auto mb-6 h-20 w-20 object-contain drop-shadow-[0_0_35px_rgba(212,175,55,0.4)] sm:h-24 sm:w-24"
+          />
           <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
             How to Buy{" "}
             <span className="text-gold-400">SPX6900</span>

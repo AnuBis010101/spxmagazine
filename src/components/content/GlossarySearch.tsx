@@ -94,7 +94,7 @@ function LetterHeader({ letter }: { letter: string }) {
       transition={{ duration: 0.4 }}
     >
       <div className="relative">
-        <span className="font-display text-5xl md:text-6xl font-black bg-gradient-to-b from-gold-400 via-gold-400/80 to-gold-400/30 bg-clip-text text-transparent">
+        <span className="font-display text-5xl md:text-6xl font-bold bg-gradient-to-b from-gold-400 via-gold-400/80 to-gold-400/30 bg-clip-text text-transparent">
           {letter}
         </span>
         <div className="absolute -inset-2 bg-gold-400/5 rounded-xl blur-xl -z-10" />

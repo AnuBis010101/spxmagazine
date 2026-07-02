@@ -54,7 +54,7 @@ export default async function GlossaryPage() {
               The SPX6900 Wiki
               <span className="w-8 h-px bg-gold-400/30" />
             </div>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1]">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1]">
               Glossary of{" "}
               <span className="bg-gradient-to-r from-gold-400 via-yellow-300 to-gold-400 bg-clip-text text-transparent">
                 Expressions

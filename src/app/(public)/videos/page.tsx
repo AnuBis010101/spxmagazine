@@ -10,6 +10,8 @@ export function generateMetadata(): Metadata {
   return {
     title: `Videos`,
     description: "Watch the latest SPX6900 video content, tutorials, and community highlights.",
+    // Videos section is hidden for now — keep it out of the index while unlinked.
+    robots: { index: false, follow: false },
     openGraph: {
       images: [{ url: buildOgImageUrl({ title: "Videos", subtitle: "Video content, tutorials, and community highlights" }), width: 1200, height: 630 }],
     },

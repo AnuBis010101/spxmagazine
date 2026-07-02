@@ -19,6 +19,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${video.title}`,
     description: video.description || undefined,
+    // Videos section is hidden for now — keep detail pages out of the index too.
+    robots: { index: false, follow: false },
     openGraph: {
       title: video.title,
       description: video.description || undefined,

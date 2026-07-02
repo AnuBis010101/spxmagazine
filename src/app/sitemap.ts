@@ -7,19 +7,13 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createPublicClient();
 
-  const [postsRes, videosRes] = await Promise.all([
-    supabase
-      .from("posts")
-      .select("slug, content_type, updated_at")
-      .eq("status", "published"),
-    supabase
-      .from("videos")
-      .select("slug, updated_at")
-      .eq("status", "published"),
-  ]);
+  // Videos are hidden for now — the section is not linked or advertised.
+  const postsRes = await supabase
+    .from("posts")
+    .select("slug, content_type, updated_at")
+    .eq("status", "published");
 
   const posts = postsRes.data || [];
-  const videos = videosRes.data || [];
 
   const contentTypeMap: Record<string, string> = {
     news: "news",
@@ -31,7 +25,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/news`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/articles`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
-    { url: `${SITE_URL}/videos`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/learn`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/learn/glossary`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
   ];
@@ -43,12 +36,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  const videoPages: MetadataRoute.Sitemap = videos.map((video) => ({
-    url: `${SITE_URL}/videos/${video.slug}`,
-    lastModified: new Date(video.updated_at),
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
-
-  return [...staticPages, ...postPages, ...videoPages];
+  return [...staticPages, ...postPages];
 }

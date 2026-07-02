@@ -16,7 +16,6 @@ export const NAV_ITEMS: NavItem[] = [
       { label: "Community Articles", href: "/articles" },
     ],
   },
-  { label: "Videos", href: "/videos" },
   {
     label: "Learn",
     href: "/learn",

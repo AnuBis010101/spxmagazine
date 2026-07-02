@@ -108,7 +108,6 @@ const HERO_PILLS = [
   { label: "News", href: "/news" },
   { label: "Articles", href: "/articles" },
   { label: "Guides", href: "/learn" },
-  { label: "Videos", href: "/videos" },
   { label: "Glossary", href: "/learn/glossary" },
 ] as const;
 

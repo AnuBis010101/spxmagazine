@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import FlippeningTracker from "@/components/widgets/FlippeningTracker";
-import FlippeningGauge from "@/components/widgets/FlippeningGauge";
 import HoldersTracker from "@/components/widgets/HoldersTracker";
 import CounterCulture from "@/components/widgets/CounterCulture";
 import ScrollReveal from "@/components/animations/ScrollReveal";
@@ -36,10 +35,7 @@ export default function DataPage() {
             <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-6">
               The Flippening Tracker
             </h2>
-            <div className="mb-8 flex justify-center rounded-2xl bg-[rgba(20,20,20,0.4)] border border-gold-400/10 py-8">
-              <FlippeningGauge />
-            </div>
-            <FlippeningTracker />
+            <FlippeningTracker withGauge />
           </div>
         </ScrollReveal>
 

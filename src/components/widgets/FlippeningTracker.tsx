@@ -9,6 +9,7 @@ import CountUp from "@/components/widgets/CountUp";
 import FlippeningCelebration from "@/components/widgets/FlippeningCelebration";
 import Sparkline from "@/components/widgets/Sparkline";
 import { useRollingSeries } from "@/hooks/useRollingSeries";
+import { cn } from "@/lib/utils/cn";
 
 const CELEBRATED_TIER_KEY = "spx-flippening-tier";
 
@@ -216,7 +217,94 @@ function TierBar({
   );
 }
 
-export default function FlippeningTracker() {
+// ── Radial log gauge (merged in from the former standalone FlippeningGauge) ──
+const GAUGE_MIN = 1_000_000; // $1M floor for the log scale
+const GAUGE_R = 88;
+const GAUGE_C = 2 * Math.PI * GAUGE_R;
+const GAUGE_TRACK = GAUGE_C * 0.75; // 270° open-bottom gauge
+
+function GaugeDial({
+  marketCap,
+  sp500MarketCap,
+}: {
+  marketCap: number;
+  sp500MarketCap: number;
+}) {
+  const logProgress =
+    marketCap > GAUGE_MIN && sp500MarketCap > GAUGE_MIN
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            ((Math.log10(marketCap) - Math.log10(GAUGE_MIN)) /
+              (Math.log10(sp500MarketCap) - Math.log10(GAUGE_MIN))) *
+              100,
+          ),
+        )
+      : 0;
+  const progDash = (GAUGE_TRACK * logProgress) / 100;
+
+  return (
+    <div className="relative h-[220px] w-[220px] shrink-0 sm:h-[260px] sm:w-[260px]">
+      <svg viewBox="0 0 200 200" className="h-full w-full">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#E1C872" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#8C6F22" />
+          </linearGradient>
+        </defs>
+        <g transform="rotate(135 100 100)">
+          <circle
+            cx={100}
+            cy={100}
+            r={GAUGE_R}
+            fill="none"
+            stroke="rgba(212,175,55,0.12)"
+            strokeWidth={10}
+            strokeDasharray={`${GAUGE_TRACK} ${GAUGE_C}`}
+            strokeLinecap="round"
+          />
+          <motion.circle
+            cx={100}
+            cy={100}
+            r={GAUGE_R}
+            fill="none"
+            stroke="url(#gaugeGrad)"
+            strokeWidth={10}
+            strokeLinecap="round"
+            initial={{ strokeDasharray: `0 ${GAUGE_C}` }}
+            animate={{ strokeDasharray: `${progDash} ${GAUGE_C}` }}
+            transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+            style={{ filter: "drop-shadow(0 0 6px rgba(212,175,55,0.4))" }}
+          />
+        </g>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+        <p className="font-display text-[10px] uppercase tracking-[0.2em] text-gold-400/70">
+          SPX6900 Market Cap
+        </p>
+        <p className="mt-1 font-display text-2xl font-bold text-gold-static sm:text-3xl">
+          <CountUp value={marketCap} format={formatCurrency} />
+        </p>
+        <p className="mt-2 font-body text-xs text-mag-muted">
+          of the S&amp;P 500&apos;s{" "}
+          <span className="text-white">{formatCurrency(sp500MarketCap)}</span>
+        </p>
+        <p className="mt-1 font-display text-[10px] uppercase tracking-wider text-gold-400/50">
+          {logProgress.toFixed(0)}% there &middot; log scale
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function FlippeningTracker({
+  withGauge = false,
+}: {
+  /** Show the radial log gauge alongside the milestone breakdown (Data page). */
+  withGauge?: boolean;
+} = {}) {
   const router = useRouter();
   const { marketCap, sp500MarketCap, loading, error } = usePrice();
   const [showLocked, setShowLocked] = useState(false);
@@ -262,50 +350,35 @@ export default function FlippeningTracker() {
     }
   }, [loading, error, currentTierIdx]);
 
-  return (
-    <div
-      onClick={(e) => {
-        // Don't navigate if clicking the accordion toggle
-        if ((e.target as HTMLElement).closest("[data-accordion]")) return;
-        router.push("/data");
-      }}
-      className="relative overflow-hidden cursor-pointer bg-[rgba(20,20,20,0.6)] backdrop-blur-xl border border-gold-400/20 rounded-2xl p-4 sm:p-6 md:p-8 transition-all duration-300 hover:border-gold-400/40 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
-    >
-      {celebrateLabel && (
-        <FlippeningCelebration
-          label={celebrateLabel}
-          onDismiss={() => setCelebrateLabel(null)}
-        />
-      )}
-      {loading ? (
-        <SkeletonLoader />
-      ) : error ? (
-        <p className="text-red-400 text-center py-4">
-          Unable to load market data. Please try again later.
+  // Market-cap comparison header — only shown without the gauge (homepage). On
+  // the Data page the gauge's centre already carries the market cap + S&P target,
+  // so repeating it here would be the duplication we're merging away.
+  const marketCapHeader = (
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
+      <div className="min-w-0">
+        <p className="text-mag-muted text-[11px] sm:text-sm font-body uppercase tracking-wider">
+          SPX6900 Market Cap
         </p>
-      ) : (
-        <div className="space-y-5 sm:space-y-6">
-          {/* Market cap comparison */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
-            <div className="min-w-0">
-              <p className="text-mag-muted text-[11px] sm:text-sm font-body uppercase tracking-wider">
-                SPX6900 Market Cap
-              </p>
-              <p className="font-display text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gold-300 via-gold-500 to-gold-300 bg-clip-text text-transparent truncate">
-                <CountUp value={marketCap} format={formatCurrency} />
-              </p>
-              <Sparkline data={mcSeries} className="mt-2" />
-            </div>
-            <div className="sm:text-right min-w-0">
-              <p className="text-mag-muted text-[11px] sm:text-sm font-body uppercase tracking-wider">
-                S&P 500 Market Cap
-              </p>
-              <p className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-white truncate">
-                {formatCurrency(sp500MarketCap)}
-              </p>
-            </div>
-          </div>
+        <p className="font-display text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gold-300 via-gold-500 to-gold-300 bg-clip-text text-transparent truncate">
+          <CountUp value={marketCap} format={formatCurrency} />
+        </p>
+        <Sparkline data={mcSeries} className="mt-2" />
+      </div>
+      <div className="sm:text-right min-w-0">
+        <p className="text-mag-muted text-[11px] sm:text-sm font-body uppercase tracking-wider">
+          S&P 500 Market Cap
+        </p>
+        <p className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-white truncate">
+          {formatCurrency(sp500MarketCap)}
+        </p>
+      </div>
+    </div>
+  );
 
+  // The milestone breakdown (accordion + tier bars + stats) — shared by both
+  // layouts.
+  const milestone = (
+    <>
           {/* Current milestone — clickable to toggle locked tiers */}
           <button
             data-accordion
@@ -404,6 +477,52 @@ export default function FlippeningTracker() {
               </span>
             </div>
           </div>
+    </>
+  );
+
+  return (
+    <div
+      onClick={
+        withGauge
+          ? undefined
+          : (e) => {
+              // Don't navigate if clicking the accordion toggle
+              if ((e.target as HTMLElement).closest("[data-accordion]")) return;
+              router.push("/data");
+            }
+      }
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-gold-400/20 bg-[rgba(20,20,20,0.6)] p-4 backdrop-blur-xl transition-all duration-300 sm:p-6 md:p-8",
+        !withGauge &&
+          "cursor-pointer hover:border-gold-400/40 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]",
+      )}
+    >
+      {celebrateLabel && (
+        <FlippeningCelebration
+          label={celebrateLabel}
+          onDismiss={() => setCelebrateLabel(null)}
+        />
+      )}
+      {loading ? (
+        <SkeletonLoader />
+      ) : error ? (
+        <p className="text-red-400 text-center py-4">
+          Unable to load market data. Please try again later.
+        </p>
+      ) : withGauge ? (
+        <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-10">
+          <div className="flex flex-col items-center">
+            <GaugeDial marketCap={marketCap} sp500MarketCap={sp500MarketCap} />
+            <Sparkline data={mcSeries} className="mt-3" />
+          </div>
+          <div className="w-full min-w-0 flex-1 space-y-5 sm:space-y-6">
+            {milestone}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-5 sm:space-y-6">
+          {marketCapHeader}
+          {milestone}
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import SectionHeading from "@/components/ui/SectionHeading";
 import StaggerContainer from "@/components/animations/StaggerContainer";
 import StaggerItem from "@/components/animations/StaggerItem";
 import type { EmbeddedTweet } from "@/types/content";
@@ -88,17 +89,22 @@ export default function CommunityPulse({ tweets }: CommunityPulseProps) {
     <section className="py-16 md:py-24 overflow-hidden border-t border-mag-border/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         <ScrollReveal>
-          <div className="flex items-center gap-3">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-              Community <span className="text-gold-static">Pulse</span>
-            </h2>
-            <motion.div
-              className="w-3 h-3 rounded-full bg-gold-400"
-              animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </div>
-          <p className="text-mag-muted mt-2">Voices from the SPX6900 community on X</p>
+          <SectionHeading
+            folio="05"
+            eyebrow="Live from X"
+            title={<>Community <span className="text-gold-static">Pulse</span></>}
+            standfirst="Voices from the SPX6900 community on X"
+            right={
+              <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-gold-400/70">
+                <motion.span
+                  className="w-2.5 h-2.5 rounded-full bg-gold-400"
+                  animate={{ scale: [1, 1.4, 1], opacity: [0.8, 1, 0.8] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                Live
+              </div>
+            }
+          />
         </ScrollReveal>
       </div>
 

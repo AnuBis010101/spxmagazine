@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Post } from "@/types/content";
 import CategoryBadge from "@/components/content/CategoryBadge";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 const contentTypePathMap: Record<string, string> = {
   news: "/news/",
@@ -38,12 +39,11 @@ export default function TrendingArticles({ posts }: TrendingArticlesProps) {
 
   return (
     <section className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-      <div>
-        <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-          Trending Now
-        </h2>
-        <div className="w-16 h-0.5 bg-gold-400 mt-3" />
-      </div>
+      <SectionHeading
+        folio="02"
+        eyebrow="Most Read"
+        title="Trending Now"
+      />
 
       <motion.div
         variants={containerVariants}

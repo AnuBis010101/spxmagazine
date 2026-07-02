@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import GoldParticles from "@/components/animations/GoldParticles";
 import MagneticHover from "@/components/animations/MagneticHover";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import SectionHeading from "@/components/ui/SectionHeading";
 
 export default function AnimatedNewsletterCTA() {
   const [email, setEmail] = useState("");
@@ -83,12 +84,13 @@ export default function AnimatedNewsletterCTA() {
 
       <div className="relative z-10 max-w-2xl mx-auto text-center px-4">
         <ScrollReveal>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-            Stay in the <span className="text-gold-static">Loop</span>
-          </h2>
-          <p className="text-mag-muted mt-3">
-            Get the latest SPX6900 news and insights delivered to your inbox.
-          </p>
+          <SectionHeading
+            folio="06"
+            align="center"
+            eyebrow="Newsletter"
+            title={<>Stay in the <span className="text-gold-static">Loop</span></>}
+            standfirst="Get the latest SPX6900 news and insights delivered to your inbox."
+          />
         </ScrollReveal>
 
         <motion.form

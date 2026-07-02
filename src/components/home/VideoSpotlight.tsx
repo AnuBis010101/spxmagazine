@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import SectionHeading from "@/components/ui/SectionHeading";
 import type { Video } from "@/types/content";
 
 interface VideoSpotlightProps {
@@ -22,13 +23,14 @@ export default function VideoSpotlight({ video }: VideoSpotlightProps) {
 
   return (
     <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
-      <ScrollReveal>
-        <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-2">
-          Video <span className="text-gold-static">Spotlight</span>
-        </h2>
-        <p className="text-mag-muted text-center mb-12">
-          Watch the latest from the SPX6900 community
-        </p>
+      <ScrollReveal className="mb-12">
+        <SectionHeading
+          folio="04"
+          align="center"
+          eyebrow="On Screen"
+          title={<>Video <span className="text-gold-static">Spotlight</span></>}
+          standfirst="Watch the latest from the SPX6900 community"
+        />
       </ScrollReveal>
 
       <div ref={ref} className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">

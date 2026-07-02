@@ -18,6 +18,7 @@ import BookmarkButton from "@/components/content/BookmarkButton";
 import TableOfContents from "@/components/content/TableOfContents";
 import ReactionBar from "@/components/content/ReactionBar";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import LineReveal from "@/components/animations/LineReveal";
 import GlossaryHighlighter from "@/components/content/GlossaryHighlighter";
 import AudioPlayer from "@/components/content/AudioPlayer";
 
@@ -114,9 +115,10 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         )}
 
         {/* Title */}
-        <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mt-4 leading-[1.05] tracking-[-0.02em] text-balance">
-          {post.title}
-        </h1>
+        <LineReveal
+          title={post.title}
+          className="font-display text-display-lg font-bold text-white mt-4 text-balance"
+        />
 
         {/* View counter (fires on mount) */}
         <ViewCounter postId={post.id} />

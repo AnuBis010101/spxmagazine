@@ -9,6 +9,7 @@ import StaggerContainer from "@/components/animations/StaggerContainer";
 import StaggerItem from "@/components/animations/StaggerItem";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 import TypographicCover from "@/components/content/TypographicCover";
+import SectionHeading from "@/components/ui/SectionHeading";
 import { SPRING } from "@/lib/motion";
 import type { Post } from "@/types/content";
 
@@ -226,13 +227,14 @@ export default function CategoryShowcase({ news, articles, learn }: CategoryShow
 
   return (
     <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <ScrollReveal>
-        <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-2">
-          Explore the <span className="text-gold-static">Latest</span>
-        </h2>
-        <p className="text-mag-muted text-center mb-10">
-          Discover fresh content across all categories
-        </p>
+      <ScrollReveal className="mb-10">
+        <SectionHeading
+          folio="01"
+          align="center"
+          eyebrow="Departments"
+          title={<>Explore the <span className="text-gold-static">Latest</span></>}
+          standfirst="Discover fresh content across all categories"
+        />
       </ScrollReveal>
 
       {/* Tabs */}

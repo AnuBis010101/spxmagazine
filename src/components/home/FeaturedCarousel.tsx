@@ -7,6 +7,7 @@ import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent, a
 import { formatDate } from "@/lib/utils/format-date";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 import TypographicCover from "@/components/content/TypographicCover";
+import SectionHeading from "@/components/ui/SectionHeading";
 import type { Post } from "@/types/content";
 
 const contentTypePathMap: Record<string, string> = {
@@ -135,10 +136,12 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
     <section className="py-16 md:py-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         <ScrollReveal>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-            Featured <span className="text-gold-static">Stories</span>
-          </h2>
-          <p className="text-mag-muted mt-2">Handpicked reads from our editors</p>
+          <SectionHeading
+            folio="03"
+            eyebrow="Editors' Picks"
+            title={<>Featured <span className="text-gold-static">Stories</span></>}
+            standfirst="Handpicked reads from our editors"
+          />
         </ScrollReveal>
       </div>
 

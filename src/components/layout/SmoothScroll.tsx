@@ -15,9 +15,14 @@ export default function SmoothScroll() {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    // lerp (frame-rate-normalised interpolation) tracks the wheel continuously
+    // for a natural, responsive glide — the fixed 1.2s duration mode felt floaty
+    // and stuttered when scroll inputs stacked up. Touch stays native (Lenis's
+    // default) so mobile keeps its own momentum.
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.1,
+      smoothWheel: true,
+      wheelMultiplier: 1,
       touchMultiplier: 1.5,
     });
 

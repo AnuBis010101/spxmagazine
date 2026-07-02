@@ -30,11 +30,13 @@ export default function OrbitCoin() {
   }, []);
 
   const { scrollY } = useScroll();
-  const opacity = useTransform(scrollY, [80, 520], [0, 1]);
-  const grow = useTransform(scrollY, [80, 640], [0.4, 1]);
+  // Hold off until the hero writings have started to leave, so the coin never
+  // competes with them near the top — then it fades/grows in.
+  const opacity = useTransform(scrollY, [200, 560], [0, 1]);
+  const grow = useTransform(scrollY, [200, 680], [0.4, 1]);
   const scale = reduce ? 1 : grow;
   // Glitch intensity peaks mid-apparition, then settles to a clean coin.
-  const glitch = useTransform(scrollY, [90, 300, 500], [0, 1, 0]);
+  const glitch = useTransform(scrollY, [220, 400, 560], [0, 1, 0]);
 
   const glitchEnabled = !reduce && !isTouch;
 

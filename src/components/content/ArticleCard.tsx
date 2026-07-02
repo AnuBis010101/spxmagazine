@@ -85,7 +85,7 @@ export default function ArticleCard({
               src={post.cover_image}
               alt={post.cover_image_alt ?? post.title}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-cover group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
@@ -127,6 +127,14 @@ export default function ArticleCard({
                 <span>{post.view_count.toLocaleString()} views</span>
               </>
             )}
+          </div>
+          <div className="mt-4 inline-flex items-center gap-1 text-xs font-display font-semibold uppercase tracking-[0.14em] text-gold-400">
+            <span className="bg-[linear-gradient(var(--color-gold-400),var(--color-gold-400))] bg-no-repeat bg-[position:0_100%] bg-[length:0%_2px] pb-0.5 transition-[background-size] duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-[length:100%_2px]">
+              Read
+            </span>
+            <span aria-hidden className="translate-x-0 transition-transform duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1">
+              &rarr;
+            </span>
           </div>
         </div>
       </Link>

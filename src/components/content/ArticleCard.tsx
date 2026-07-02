@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatDate } from "@/lib/utils/format-date";
 import { estimateReadingTime } from "@/lib/utils/slugify";
 import TiltCard from "@/components/animations/TiltCard";
+import TypographicCover from "@/components/content/TypographicCover";
 import type { Post } from "@/types/content";
 
 const contentTypePathMap: Record<string, string> = {
@@ -51,11 +52,7 @@ export default function ArticleCard({
               sizes="112px"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-mag-dark to-mag-border flex items-center justify-center">
-              <span className="text-gold-400 font-display font-bold text-xs">
-                SPX
-              </span>
-            </div>
+            <TypographicCover title={post.title} seed={post.slug} size="sm" />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -92,11 +89,7 @@ export default function ArticleCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-mag-dark to-mag-border flex items-center justify-center">
-              <span className="text-gold-400 font-display font-bold text-2xl">
-                SPX
-              </span>
-            </div>
+            <TypographicCover title={post.title} seed={post.slug} size="lg" />
           )}
           {post.category && (
             <span className="absolute top-3 left-3 bg-gold-400 text-mag-black text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">

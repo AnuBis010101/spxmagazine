@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent, animate } from "framer-motion";
 import { formatDate } from "@/lib/utils/format-date";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import TypographicCover from "@/components/content/TypographicCover";
 import type { Post } from "@/types/content";
 
 const contentTypePathMap: Record<string, string> = {
@@ -60,9 +61,7 @@ function TiltCard({ post }: { post: Post }) {
                 draggable={false}
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-mag-dark to-mag-border flex items-center justify-center">
-                <span className="text-gold-400 font-display font-bold text-3xl">SPX</span>
-              </div>
+              <TypographicCover title={post.title} seed={post.slug} size="lg" />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-mag-black via-transparent to-transparent" />
             {post.category && (

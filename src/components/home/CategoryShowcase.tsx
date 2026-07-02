@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/utils/format-date";
 import StaggerContainer from "@/components/animations/StaggerContainer";
 import StaggerItem from "@/components/animations/StaggerItem";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import TypographicCover from "@/components/content/TypographicCover";
 import type { Post } from "@/types/content";
 
 const contentTypePathMap: Record<string, string> = {
@@ -28,7 +29,15 @@ const tabs = [
   { key: "learn" as const, label: "LEARN", href: "/learn" },
 ];
 
-function CardImage({ post, sizes }: { post: Post; sizes: string }) {
+function CardImage({
+  post,
+  sizes,
+  size = "lg",
+}: {
+  post: Post;
+  sizes: string;
+  size?: "sm" | "lg";
+}) {
   return post.cover_image ? (
     <Image
       src={post.cover_image}
@@ -38,9 +47,7 @@ function CardImage({ post, sizes }: { post: Post; sizes: string }) {
       sizes={sizes}
     />
   ) : (
-    <div className="absolute inset-0 bg-gradient-to-br from-mag-dark to-mag-border flex items-center justify-center">
-      <span className="text-gold-400 font-display font-bold text-2xl">SPX</span>
-    </div>
+    <TypographicCover title={post.title} seed={post.slug} size={size} />
   );
 }
 
@@ -83,7 +90,7 @@ function SmallCard({ post }: { post: Post }) {
   return (
     <Link href={href} className="group flex gap-4 items-center">
       <div className="w-20 h-20 rounded-lg overflow-hidden relative flex-shrink-0">
-        <CardImage post={post} sizes="80px" />
+        <CardImage post={post} sizes="80px" size="sm" />
       </div>
       <div className="flex-1 min-w-0">
         <h4 className="font-display font-semibold text-sm text-white line-clamp-2 group-hover:text-gold-400 transition-colors">

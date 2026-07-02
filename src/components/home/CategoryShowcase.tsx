@@ -9,6 +9,7 @@ import StaggerContainer from "@/components/animations/StaggerContainer";
 import StaggerItem from "@/components/animations/StaggerItem";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 import TypographicCover from "@/components/content/TypographicCover";
+import { SPRING } from "@/lib/motion";
 import type { Post } from "@/types/content";
 
 const contentTypePathMap: Record<string, string> = {
@@ -252,7 +253,7 @@ export default function CategoryShowcase({ news, articles, learn }: CategoryShow
                   layoutId="activeTab"
                   className="absolute inset-0 bg-gold-400 rounded-full"
                   style={{ zIndex: -1 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  transition={SPRING.snappy}
                 />
               )}
             </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReactions } from "@/hooks/useReactions";
 import { cn } from "@/lib/utils/cn";
@@ -19,10 +19,13 @@ const REACTIONS = [
 
 /* Small gold particle that flies outward and fades */
 function Particle({ index }: { index: number }) {
-  const angle = (index * 120 + Math.random() * 40 - 20) * (Math.PI / 180);
-  const distance = 20 + Math.random() * 16;
-  const x = Math.cos(angle) * distance;
-  const y = Math.sin(angle) * distance;
+  // Seed the trajectory once per mount so it doesn't re-randomise (and jump)
+  // on re-render — keeps the burst pure.
+  const { x, y } = useMemo(() => {
+    const angle = (index * 120 + Math.random() * 40 - 20) * (Math.PI / 180);
+    const distance = 20 + Math.random() * 16;
+    return { x: Math.cos(angle) * distance, y: Math.sin(angle) * distance };
+  }, [index]);
 
   return (
     <motion.span

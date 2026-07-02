@@ -125,11 +125,12 @@ async function safeFetch(
       console.warn(`[holders] ${label || url} → non-JSON body`);
       return null;
     }
-  } catch (err: any) {
+  } catch (err) {
+    const e = err as { name?: string; message?: string } | null;
     const reason =
-      err?.name === "AbortError"
+      e?.name === "AbortError"
         ? "timeout"
-        : (err?.message ?? "network error");
+        : (e?.message ?? "network error");
     console.warn(`[holders] ${label || url} → ${reason}`);
     return null;
   }
@@ -172,7 +173,7 @@ async function fetchEthereumHolders(): Promise<ChainResult> {
     {},
     "blockscout-eth"
   );
-  const bsCount = extractCount((bs as any)?.holders_count);
+  const bsCount = extractCount((bs as { holders_count?: unknown } | null)?.holders_count);
   if (bsCount !== null) return { ...ETH_BASE, holders: bsCount };
 
   console.error("[holders] Ethereum: all sources failed");
@@ -265,11 +266,12 @@ async function fetchSolanaHolders(): Promise<ChainResult> {
       }
 
       if (active > 0) return { ...SOL_BASE, holders: active };
-    } catch (err: any) {
+    } catch (err) {
+      const e = err as { name?: string; message?: string } | null;
       const reason =
-        err?.name === "AbortError"
+        e?.name === "AbortError"
           ? "timeout"
-          : (err?.message ?? "network error");
+          : (e?.message ?? "network error");
       console.warn(`[holders] solana-rpc (${host}) → ${reason}`);
     }
   }
@@ -319,7 +321,7 @@ async function fetchBaseTokenPrice(): Promise<number | null> {
     "dexscreener-base",
     10_000
   );
-  const pairs = (data as any)?.pairs;
+  const pairs = (data as { pairs?: unknown })?.pairs;
   if (Array.isArray(pairs) && pairs.length > 0) {
     const price = parseFloat(pairs[0].priceUsd);
     if (Number.isFinite(price) && price > 0) return price;
@@ -334,7 +336,7 @@ async function fetchBaseTokenPrice(): Promise<number | null> {
     "coingecko-base",
     10_000
   );
-  const cgPrice = (cg as any)?.[BASE_ADDR.toLowerCase()]?.usd;
+  const cgPrice = (cg as Record<string, { usd?: number } | undefined> | null)?.[BASE_ADDR.toLowerCase()]?.usd;
   if (typeof cgPrice === "number" && cgPrice > 0) return cgPrice;
 
   return null;
@@ -364,9 +366,13 @@ async function fetchHoldersPage(
     const timeoutMs = Math.min(12_000, remainingMs);
     const data = await safeFetch(url, {}, "blockscout-holders", timeoutMs);
     if (data) {
+      const page = data as {
+        items?: BlockScoutHolder[];
+        next_page_params?: BlockScoutPageParams | null;
+      };
       return {
-        items: (data as any).items ?? [],
-        next: (data as any).next_page_params ?? null,
+        items: page.items ?? [],
+        next: page.next_page_params ?? null,
         failed: false,
       };
     }

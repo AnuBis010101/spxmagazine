@@ -1,12 +1,27 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function ReadingProgress() {
   const [progress, setProgress] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [hasShownComplete, setHasShownComplete] = useState(false);
+
+  // Seed the completion-burst particles once, so scroll-driven re-renders while
+  // the burst is visible don't re-randomise (and jitter) their trajectories.
+  const burstParticles = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        size: 3 + Math.random() * 4,
+        color: i % 2 === 0 ? '#D4AF37' : '#E1C872',
+        x: -(Math.random() * 200 + 50),
+        y: Math.random() * 80 + 10,
+        duration: 0.8 + Math.random() * 0.5,
+        delay: Math.random() * 0.2,
+      })),
+    []
+  );
 
   const updateProgress = useCallback(() => {
     const scrollTop = window.scrollY;
@@ -79,28 +94,20 @@ export function ReadingProgress() {
             />
 
             {/* Particle burst from the right edge */}
-            {Array.from({ length: 12 }).map((_, i) => (
+            {burstParticles.map((p, i) => (
               <motion.div
                 key={i}
                 className="absolute rounded-full"
                 style={{
-                  width: 3 + Math.random() * 4,
-                  height: 3 + Math.random() * 4,
-                  background: i % 2 === 0 ? '#D4AF37' : '#E1C872',
+                  width: p.size,
+                  height: p.size,
+                  background: p.color,
                   right: 0,
                   top: 0,
                 }}
                 initial={{ x: 0, y: 0, opacity: 1 }}
-                animate={{
-                  x: -(Math.random() * 200 + 50),
-                  y: Math.random() * 80 + 10,
-                  opacity: 0,
-                }}
-                transition={{
-                  duration: 0.8 + Math.random() * 0.5,
-                  delay: Math.random() * 0.2,
-                  ease: 'easeOut',
-                }}
+                animate={{ x: p.x, y: p.y, opacity: 0 }}
+                transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
               />
             ))}
           </motion.div>

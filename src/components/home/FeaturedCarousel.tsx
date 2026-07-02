@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent, animate } from "framer-motion";
 import { formatDate } from "@/lib/utils/format-date";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 import type { Post } from "@/types/content";
@@ -92,16 +92,43 @@ function TiltCard({ post }: { post: Post }) {
 }
 
 export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
-  const constraintsRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
   const [dragWidth, setDragWidth] = useState(0);
+  const [active, setActive] = useState(0);
+  const activeRef = useRef(0);
 
-  function handleMeasure(node: HTMLDivElement | null) {
+  // Recompute the drag range on mount, when posts change, and on resize (the
+  // old ref-callback never updated on viewport changes).
+  const measure = useCallback(() => {
+    const node = trackRef.current;
     if (!node) return;
-    constraintsRef.current = node;
-    const scrollW = node.scrollWidth;
-    const clientW = node.clientWidth;
-    setDragWidth(scrollW - clientW);
-  }
+    setDragWidth(Math.max(0, node.scrollWidth - node.clientWidth));
+  }, []);
+
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [measure, posts.length]);
+
+  // Map the drag offset onto an active dot; only re-render when it changes.
+  useMotionValueEvent(x, "change", (latest) => {
+    const idx =
+      dragWidth <= 0 || posts.length <= 1
+        ? 0
+        : Math.round(Math.min(1, Math.max(0, -latest / dragWidth)) * (posts.length - 1));
+    if (idx !== activeRef.current) {
+      activeRef.current = idx;
+      setActive(idx);
+    }
+  });
+
+  const goTo = (i: number) => {
+    if (posts.length <= 1) return;
+    const target = -(i / (posts.length - 1)) * dragWidth;
+    animate(x, target, { type: "spring", stiffness: 300, damping: 40 });
+  };
 
   if (posts.length === 0) return null;
 
@@ -118,8 +145,9 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
 
       <div className="perspective-1000">
         <motion.div
-          ref={handleMeasure}
+          ref={trackRef}
           drag="x"
+          style={{ x }}
           dragConstraints={{ left: -dragWidth, right: 0 }}
           dragElastic={0.1}
           className="flex gap-5 pl-4 sm:pl-6 lg:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-8 cursor-grab active:cursor-grabbing"
@@ -130,17 +158,27 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
         </motion.div>
       </div>
 
-      {/* Dot indicators */}
-      <div className="flex justify-center gap-2 mt-8">
-        {posts.map((post, i) => (
-          <div
-            key={post.id}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              i === 0 ? "bg-gold-400" : "bg-mag-border"
-            }`}
-          />
-        ))}
-      </div>
+      {/* Dot indicators — click to scroll, reflect the dragged position */}
+      {posts.length > 1 && (
+        <div className="flex justify-center items-center gap-1 mt-8">
+          {posts.map((post, i) => (
+            <button
+              key={post.id}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Go to featured story ${i + 1}`}
+              aria-current={i === active}
+              className="flex h-8 w-8 items-center justify-center"
+            >
+              <span
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === active ? "w-6 bg-gold-400" : "w-2 bg-mag-border hover:bg-gold-400/50"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

@@ -49,8 +49,10 @@ export default function NewsletterStickyBar() {
           : "border-gold-400/15"
       )}
     >
-      {/* Layered backgrounds: dark blur base + gold wash that intensifies when stuck */}
-      <div className="absolute inset-0 bg-mag-black/90 backdrop-blur-xl" />
+      {/* Near-solid dark base + gold wash. No backdrop-blur: at 96% opacity it was
+          invisible but forced a full-width re-blur of the animated hero every
+          scroll frame — a real smoothness cost for zero visual gain. */}
+      <div className="absolute inset-0 bg-mag-black/[0.96]" />
       <div
         className={cn(
           "absolute inset-0 bg-gradient-to-r from-gold-600/15 via-gold-400/10 to-gold-600/15 transition-opacity duration-300",

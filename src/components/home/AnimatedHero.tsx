@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useMotionTemplate, useReducedMotion } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import GoldParticles from "@/components/animations/GoldParticles";
 import TextReveal from "@/components/animations/TextReveal";
 import type { Post } from "@/types/content";
@@ -140,15 +140,11 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
   }, []);
 
   const contentScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.94]);
-  const contentBlurPx = useTransform(scrollYProgress, [0, 0.6], [0, 8]);
-  const contentFilter = useMotionTemplate`blur(${contentBlurPx}px)`;
-  // Blur is the one property that can jank on mobile Safari, so drop it on
-  // touch; skip the whole rack-focus for reduced-motion (final state stands).
-  const rackFocusStyle = reduce
-    ? {}
-    : isTouch
-    ? { scale: contentScale }
-    : { scale: contentScale, filter: contentFilter };
+  // The recede is expressed with scale + opacity + y only (all compositor-cheap).
+  // A scroll-linked filter:blur() was re-rasterising the whole hero every frame —
+  // the biggest cause of scroll stutter — so it's intentionally gone; scale+fade
+  // still reads as a focus pull. Reduced-motion skips the scale entirely.
+  const rackFocusStyle = reduce ? {} : { scale: contentScale };
 
   const terms = glossaryTerms.length > 0 ? glossaryTerms : [
     "Cognisphere", "SPX6900", "Flippening", "Murad", "Polymetric",

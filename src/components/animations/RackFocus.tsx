@@ -1,11 +1,10 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
 import {
   motion,
   useScroll,
   useTransform,
-  useMotionTemplate,
   useReducedMotion,
 } from "framer-motion";
 
@@ -21,18 +20,16 @@ interface RackFocusProps {
  * *out*, it reads as a cinematic focus pull handing the frame from the hero to
  * the first content block. Frame-accurate because Lenis shares Framer's loop.
  *
- * prefers-reduced-motion → renders the final, static state (no transforms, no
- * blur). Touch → keeps the transform/opacity pull but drops the blur, which is
- * the one property prone to jank on mobile Safari (guardrail).
+ * The pull is expressed with opacity + scale + y only — all compositor-cheap.
+ * A scroll-linked filter:blur() used to ride along, but animating a blur radius
+ * per frame forces a full re-rasterisation and was a real scroll-smoothness cost;
+ * scale + fade still read as a focus pull without it.
+ *
+ * prefers-reduced-motion → renders the final, static state (no transforms).
  */
 export default function RackFocus({ children, className }: RackFocusProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
-  const [isTouch, setIsTouch] = useState(false);
-
-  useEffect(() => {
-    setIsTouch("ontouchstart" in window || navigator.maxTouchPoints > 0);
-  }, []);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -44,8 +41,6 @@ export default function RackFocus({ children, className }: RackFocusProps) {
   const opacity = useTransform(scrollYProgress, [0, 0.9], [0.25, 1]);
   const scale = useTransform(scrollYProgress, [0, 1], [0.94, 1]);
   const y = useTransform(scrollYProgress, [0, 1], [64, 0]);
-  const blurPx = useTransform(scrollYProgress, [0, 0.85], [14, 0]);
-  const filter = useMotionTemplate`blur(${blurPx}px)`;
 
   // Static final state for reduced-motion users.
   if (reduce) {
@@ -60,7 +55,6 @@ export default function RackFocus({ children, className }: RackFocusProps) {
         opacity,
         scale,
         y,
-        ...(isTouch ? {} : { filter }),
         willChange: "transform, opacity",
       }}
     >

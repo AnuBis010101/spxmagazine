@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   motion,
-  useMotionValue,
   useReducedMotion,
+  useScroll,
   useSpring,
+  useTransform,
 } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import { EASE, DUR } from "@/lib/motion";
@@ -126,35 +127,37 @@ export default function ChapterSpine({
     return () => observer.disconnect();
   }, [chapters]);
 
-  // Scroll-driven fill. We read the <article> rect on scroll rather than using
-  // useScroll({ target }) because articleRef is resolved via closest() (a DOM
-  // node not attached through a React ref), which Framer's useScroll rejects as
-  // "not hydrated". A manual motion value avoids that entirely.
-  const progress = useMotionValue(0);
-  const scaleY = useSpring(progress, {
+  // Scroll-driven fill, driven by Framer's own scroll loop (the same loop Lenis
+  // feeds) rather than a raw scroll listener + getBoundingClientRect per event —
+  // that thrashed layout every frame. We use document-level useScroll() (no
+  // target ref, so none of the "ref not hydrated" trouble) and remap window
+  // scrollY over the article's region, whose geometry we measure once + on resize.
+  const { scrollY } = useScroll();
+  const [region, setRegion] = useState({ start: 0, end: 1 });
+
+  useEffect(() => {
+    if (prefersReducedMotion || !ready || chapters.length < 2) return;
+    const article = articleRef.current;
+    if (!article) return;
+    const measure = () => {
+      const rect = article.getBoundingClientRect();
+      const start = rect.top + window.scrollY;
+      const span = Math.max(1, article.offsetHeight - window.innerHeight);
+      setRegion({ start, end: start + span });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [prefersReducedMotion, ready, chapters.length]);
+
+  const rawProgress = useTransform(scrollY, [region.start, region.end], [0, 1], {
+    clamp: true,
+  });
+  const scaleY = useSpring(rawProgress, {
     stiffness: 120,
     damping: 28,
     restDelta: 0.001,
   });
-
-  useEffect(() => {
-    if (prefersReducedMotion || !ready) return;
-    const article = articleRef.current;
-    if (!article) return;
-    const onScroll = () => {
-      const rect = article.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      const p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
-      progress.set(p);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [prefersReducedMotion, ready, chapters.length, progress]);
 
   const activeChapter = chapters[activeIndex];
 

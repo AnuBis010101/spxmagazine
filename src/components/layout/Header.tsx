@@ -121,8 +121,12 @@ export function Header() {
     <>
       <motion.header
         className={cn(
-          "sticky top-0 z-50 border-b border-gold-400/20 backdrop-blur-xl transition-colors duration-300",
-          isScrolled ? "bg-mag-black/95" : "bg-mag-black/80"
+          // Perf: backdrop-blur re-rasterises the content behind it every scroll
+          // frame. Once scrolled the bar is 95% opaque and the blur is invisible,
+          // so we only keep it at rest at the very top (over the hero) and drop it
+          // during scroll — which is exactly when smoothness matters.
+          "sticky top-0 z-50 border-b border-gold-400/20 transition-colors duration-300",
+          isScrolled ? "bg-mag-black/95" : "bg-mag-black/80 backdrop-blur-xl"
         )}
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

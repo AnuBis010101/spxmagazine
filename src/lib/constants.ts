@@ -30,6 +30,14 @@ export const NAV_ITEMS: NavItem[] = [
 // External newsletter signup page (Substack).
 export const NEWSLETTER_SIGNUP_URL = "https://spx6900magazine.substack.com/subscribe";
 
+// SPX6900 token contract addresses per chain (single source of truth — mirrored
+// by the holders API). Keeps the how-to-buy page and swap links from drifting.
+export const SPX6900_CONTRACTS = {
+  ethereum: "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c",
+  base: "0x6806411765Af15Bddd26f8f544A34cC40cb9838B",
+  solana: "J3NKxxXZcnNiMjKw9hYb2K4LUxgwB6t1FtPtQVsv3KFr",
+} as const;
+
 export const CONTENT_TYPES = {
   news: { label: "News", slug: "news" },
   article: { label: "Articles", slug: "articles" },

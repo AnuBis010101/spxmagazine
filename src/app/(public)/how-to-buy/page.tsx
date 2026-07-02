@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import { SPX6900_CONTRACTS } from "@/lib/constants";
+
+const PAGE_DESCRIPTION =
+  "A step-by-step guide to buying SPX6900. Learn how to set up a wallet, get ETH, and swap for SPX6900 on Uniswap or Aerodrome.";
 
 export const metadata: Metadata = {
   title: `How to Buy SPX6900`,
-  description:
-    "A step-by-step guide to buying SPX6900. Learn how to set up a wallet, get ETH, and swap for SPX6900 on Uniswap or Aerodrome.",
+  description: PAGE_DESCRIPTION,
+  alternates: { canonical: "/how-to-buy" },
 };
 
 const steps = [
@@ -68,29 +72,20 @@ const steps = [
 ];
 
 const contracts = [
-  {
-    chain: "Ethereum",
-    address: "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c",
-  },
-  {
-    chain: "Base",
-    address: "0x6806411765Af15Bddd26f8f544A34cC40cb9838B",
-  },
-  {
-    chain: "Solana",
-    address: null,
-  },
+  { chain: "Ethereum", address: SPX6900_CONTRACTS.ethereum },
+  { chain: "Base", address: SPX6900_CONTRACTS.base },
+  { chain: "Solana", address: SPX6900_CONTRACTS.solana },
 ];
 
 const quickLinks = [
   {
     label: "Uniswap",
-    href: "https://app.uniswap.org/swap?outputCurrency=0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c",
+    href: `https://app.uniswap.org/swap?outputCurrency=${SPX6900_CONTRACTS.ethereum}`,
     description: "Swap on Ethereum",
   },
   {
     label: "Aerodrome",
-    href: "https://aerodrome.finance/swap?to=0x6806411765Af15Bddd26f8f544A34cC40cb9838B",
+    href: `https://aerodrome.finance/swap?to=${SPX6900_CONTRACTS.base}`,
     description: "Swap on Base",
   },
   {
@@ -100,9 +95,26 @@ const quickLinks = [
   },
 ];
 
+const howToJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Buy SPX6900",
+  description: PAGE_DESCRIPTION,
+  step: steps.map((step) => ({
+    "@type": "HowToStep",
+    position: step.number,
+    name: step.title,
+    text: step.description,
+  })),
+};
+
 export default function HowToBuyPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+      />
       {/* Header */}
       <ScrollReveal direction="up" blur duration={0.6}>
         <div className="mb-16 text-center">
@@ -164,15 +176,9 @@ export default function HowToBuyPage() {
               <span className="font-display font-semibold text-gold-400">
                 {contract.chain}
               </span>
-              {contract.address ? (
-                <code className="break-all rounded bg-mag-black px-3 py-1.5 text-sm text-mag-muted">
-                  {contract.address}
-                </code>
-              ) : (
-                <span className="text-sm italic text-mag-muted">
-                  Coming soon
-                </span>
-              )}
+              <code className="break-all rounded bg-mag-black px-3 py-1.5 text-sm text-mag-muted">
+                {contract.address}
+              </code>
             </div>
           ))}
         </div>

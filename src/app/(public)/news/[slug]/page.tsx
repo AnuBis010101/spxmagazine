@@ -112,7 +112,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
           </div>
         )}
 
-        <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mt-4 leading-tight">
+        <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mt-4 leading-[1.05] tracking-[-0.02em] text-balance">
           {post.title}
         </h1>
 

@@ -206,11 +206,17 @@ html[data-theme="gold"] {
 .prose-magazine a {
   color: var(--color-gold-400);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--color-gold-400) 40%, transparent);
+  transition:
+    color 0.25s ease,
+    text-decoration-color 0.25s ease;
 }
 
 .prose-magazine a:hover {
   color: var(--color-gold-300);
+  text-decoration-color: var(--color-gold-300);
 }
 
 .prose-magazine strong {

@@ -20,7 +20,8 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Learn",
     href: "/learn",
     children: [
-      { label: "Learn", href: "/learn" },
+      { label: "Guides", href: "/learn" },
+      { label: "How to Buy", href: "/how-to-buy" },
       { label: "Glossary", href: "/learn/glossary" },
     ],
   },

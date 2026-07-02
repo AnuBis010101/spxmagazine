@@ -25,7 +25,7 @@ const contentTypePathMap: Record<string, string> = {
 function CategoryBadge({ type }: { type: string }) {
   return (
     <span className="inline-flex rounded bg-gold-400/15 px-2 py-0.5 text-xs font-medium text-gold-400">
-      {type === "article" ? "Articles" : type === "news" ? "News" : type === "learn" ? "Learn" : type}
+      {type === "article" ? "Articles" : type === "news" ? "News" : type === "learn" ? "Guides" : type}
     </span>
   );
 }

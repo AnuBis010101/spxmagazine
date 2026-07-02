@@ -10,10 +10,10 @@ import ScrollReveal from "@/components/animations/ScrollReveal";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Learn`,
+    title: `Guides`,
     description: "Guides and educational resources for the SPX6900 community.",
     openGraph: {
-      images: [{ url: buildOgImageUrl({ title: "Learn", subtitle: "Guides and educational resources" }), width: 1200, height: 630 }],
+      images: [{ url: buildOgImageUrl({ title: "Guides", subtitle: "Guides and educational resources" }), width: 1200, height: 630 }],
     },
   };
 }
@@ -41,7 +41,7 @@ export default async function LearnPage({
         <ScrollReveal direction="up" blur duration={0.6}>
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-bold text-white">
-              Learn
+              Guides
             </h1>
             <div className="w-16 h-0.5 bg-gold-400 mt-3" />
             <p className="text-mag-muted mt-4 text-lg">

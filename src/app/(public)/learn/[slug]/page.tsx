@@ -80,7 +80,7 @@ export default async function LearnArticlePage({ params }: PageProps) {
       <ArticleJsonLd post={post} url={articleUrl} />
       <Breadcrumbs items={[
         { label: "Home", href: "/" },
-        { label: "Learn", href: "/learn" },
+        { label: "Guides", href: "/learn" },
         { label: post.title },
       ]} />
 

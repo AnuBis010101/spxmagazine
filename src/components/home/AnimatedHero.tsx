@@ -256,14 +256,14 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
             className="h-[2px] bg-gradient-to-r from-transparent via-gold-400 to-transparent mt-5 mb-4"
             initial={{ width: 0 }}
             animate={{ width: "min(200px, 60vw)" }}
-            transition={{ duration: 1, delay: 0.6 }}
+            transition={{ duration: 1, delay: 0.35 }}
           />
 
           {/* Typewriter subtitle */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
             className="h-7"
           >
             <TypewriterCycle phrases={typewriterPhrases} />
@@ -278,7 +278,7 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
                 className="inline-flex min-h-[44px] items-center rounded-full border border-gold-400/30 bg-gold-400/[0.04] px-4 py-1.5 text-[10px] sm:text-xs font-display font-semibold text-gold-400/75 tracking-wider uppercase transition-colors hover:border-gold-400/60 hover:text-gold-300"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.0 + i * 0.12, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: 0.65 + i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.95 }}
               >

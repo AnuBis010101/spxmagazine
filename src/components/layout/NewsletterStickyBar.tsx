@@ -45,7 +45,7 @@ export default function NewsletterStickyBar() {
       className={cn(
         "sticky top-[65px] z-40 overflow-hidden border-b transition-all duration-300 lg:top-[81px]",
         stuck
-          ? "border-gold-400/30 shadow-[0_12px_34px_-12px_rgba(212,175,55,0.4)]"
+          ? "border-gold-400/30 shadow-[0_8px_24px_-12px_rgba(212,175,55,0.25)]"
           : "border-gold-400/15"
       )}
     >
@@ -56,15 +56,6 @@ export default function NewsletterStickyBar() {
           "absolute inset-0 bg-gradient-to-r from-gold-600/15 via-gold-400/10 to-gold-600/15 transition-opacity duration-300",
           stuck ? "opacity-100" : "opacity-60"
         )}
-      />
-
-      {/* Slow gold sheen sweep */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 w-1/4 bg-gradient-to-r from-transparent via-gold-200/15 to-transparent"
-        initial={{ x: "-200%" }}
-        animate={{ x: "500%" }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", repeatDelay: 3.5 }}
       />
 
       {/* Content */}

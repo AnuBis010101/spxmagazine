@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import CopyButton from "@/components/ui/CopyButton";
 import { SPX6900_CONTRACTS } from "@/lib/constants";
 
 const PAGE_DESCRIPTION =
@@ -178,17 +179,45 @@ export default function HowToBuyPage() {
           {contracts.map((contract) => (
             <div
               key={contract.chain}
-              className="flex flex-col gap-2 rounded-xl border border-mag-border bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-xl border border-mag-border bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <span className="font-display font-semibold text-gold-400">
                 {contract.chain}
               </span>
-              <code className="break-all rounded bg-mag-black px-3 py-1.5 text-sm text-mag-muted">
-                {contract.address}
-              </code>
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                <code className="break-all rounded bg-mag-black px-3 py-1.5 text-sm text-mag-muted">
+                  {contract.address}
+                </code>
+                <CopyButton
+                  value={contract.address}
+                  label={`Copy ${contract.chain} contract address`}
+                />
+                <a
+                  href={`https://etherscan.io/token/${contract.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-mag-border bg-mag-black px-2.5 py-1.5 text-xs font-medium text-mag-muted transition-colors hover:border-gold-400/40 hover:text-gold-400"
+                >
+                  Verify on Etherscan
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                </a>
+              </div>
             </div>
           ))}
         </div>
+        <p className="mt-3 text-sm text-mag-muted">
+          SPX6900 is multi-chain; the Ethereum contract is shown here. Always confirm the address before swapping.
+        </p>
+        <p className="mt-4 text-sm">
+          <Link href="/learn/glossary" className="inline-flex items-center gap-1 text-gold-400 transition-colors hover:text-gold-300">
+            New to the terms? See the Glossary
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+        </p>
       </div>
       </ScrollReveal>
 

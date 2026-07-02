@@ -23,9 +23,25 @@ export function NewsTicker({ posts }: NewsTickerProps) {
         </span>
       </div>
 
-      {/* Scrolling strip (marquee at >=3, static headline below that) */}
-      <div className="flex-1 overflow-hidden relative">
-        <div className={`flex whitespace-nowrap py-2 ${marquee ? "animate-ticker" : ""}`}>
+      {/* Scrolling strip (marquee at >=3, static headline below that).
+          Edge fade mask + content-proportional duration only in marquee mode. */}
+      <div
+        className="flex-1 overflow-hidden relative"
+        style={
+          marquee
+            ? {
+                maskImage:
+                  "linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent)",
+              }
+            : undefined
+        }
+      >
+        <div
+          className={`flex whitespace-nowrap py-2 ${marquee ? "animate-ticker" : ""}`}
+          style={marquee ? { animationDuration: `${posts.length * 4}s` } : undefined}
+        >
           {items.map((post, i) => (
             <Link
               key={`${post.id}-${i}`}

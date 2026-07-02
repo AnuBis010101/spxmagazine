@@ -21,6 +21,7 @@ import TableOfContents from "@/components/content/TableOfContents";
 import ReactionBar from "@/components/content/ReactionBar";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 import LineReveal from "@/components/animations/LineReveal";
+import ChapterSpine from "@/components/content/ChapterSpine";
 import GlossaryHighlighter from "@/components/content/GlossaryHighlighter";
 import AudioPlayer from "@/components/content/AudioPlayer";
 
@@ -169,12 +170,13 @@ export default async function NewsArticlePage({ params }: PageProps) {
       </div>
 
       <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[1fr_minmax(0,56rem)_16rem] xl:gap-8 xl:px-8">
-        <div className="hidden xl:block" />
+        <ChapterSpine />
 
         <div>
           <div className="rounded-2xl bg-mag-dark border border-mag-border/50 p-6 md:p-10">
             <GlossaryHighlighter>
               <div
+                id="article-body"
                 className="prose-magazine"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.body_html || "") }}
               />

@@ -6,7 +6,6 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { NewsTicker } from "@/components/layout/NewsTicker";
 import NewsletterStickyBar from "@/components/layout/NewsletterStickyBar";
 import EasterEgg from "@/components/layout/EasterEgg";
-import CustomCursor from "@/components/layout/CustomCursor";
 import PageTransition from "@/components/animations/PageTransition";
 import ViewTransitions from "@/components/animations/ViewTransitions";
 import OrbitBackground from "@/components/home/OrbitBackground";
@@ -72,7 +71,6 @@ export default async function PublicLayout({
       <Footer />
       <ScrollToTop />
       <EasterEgg />
-      <CustomCursor />
     </MotionConfig>
   );
 }

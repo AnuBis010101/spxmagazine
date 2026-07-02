@@ -219,6 +219,10 @@ export default function ChapterSpine({
                   type="button"
                   onClick={() => handleJump(c.id)}
                   aria-label={`Jump to section: ${c.text}`}
+                  // Decorative: the whole spine is aria-hidden (the TOC is the
+                  // real nav), so keep these out of the tab order too — otherwise
+                  // keyboard users hit silent, unnamed focus stops (WCAG 4.1.2).
+                  tabIndex={-1}
                   className="group relative flex h-3 w-3 items-center justify-center"
                 >
                   <motion.span

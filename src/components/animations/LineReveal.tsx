@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { EASE, DUR } from "@/lib/motion";
 
@@ -23,12 +24,22 @@ interface LineRevealProps {
  *
  * Under prefers-reduced-motion the component renders a plain static <h1>:
  * no wrappers, no transforms — just the text.
+ *
+ * SSR safety: we must NOT branch the DOM structure on useReducedMotion() during
+ * the first render — it is null on the server but resolves on the client, which
+ * would swap the element tree and trip a hydration mismatch (a headline flash on
+ * exactly the reduced-motion users we care about). So the server and first client
+ * render always emit the plain <h1>; the word-split reveal is a post-mount
+ * enhancement applied only for motion-OK users.
  */
 export default function LineReveal({ title, className }: LineRevealProps) {
   const prefersReduced = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  // Calm static state: identical markup/spacing to a normal heading.
-  if (prefersReduced) {
+  // Server + first client render (and reduced-motion always): plain static <h1>.
+  // Identical on both sides → no hydration mismatch, never an invisible headline.
+  if (!mounted || prefersReduced) {
     return <h1 className={className}>{title}</h1>;
   }
 

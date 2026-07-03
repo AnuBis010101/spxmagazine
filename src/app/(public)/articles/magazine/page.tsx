@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { POSTS_PER_PAGE } from "@/lib/constants";
+import { POSTS_PER_PAGE, MAGAZINE_TAG } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPublishedPosts } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
 import Pagination from "@/components/content/Pagination";
 import ScrollReveal from "@/components/animations/ScrollReveal";
-
-const MAGAZINE_TAG = "spx-magazine";
 
 export function generateMetadata(): Metadata {
   return {

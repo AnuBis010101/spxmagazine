@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { formatDate } from '@/lib/utils/format-date';
+import { MAGAZINE_TAG } from '@/lib/constants';
 import toast from 'react-hot-toast';
 import type { Post } from '@/types/content';
 
@@ -201,9 +202,15 @@ export default function AdminPostsPage() {
                   </Link>
                 </div>
 
-                {/* Content Type */}
+                {/* Content Type — articles split into Community / SPX Magazine */}
                 <div>
-                  <Badge variant="gold">{post.content_type}</Badge>
+                  <Badge variant="gold">
+                    {post.content_type === 'article'
+                      ? post.tags?.includes(MAGAZINE_TAG)
+                        ? 'magazine'
+                        : 'community'
+                      : post.content_type}
+                  </Badge>
                 </div>
 
                 {/* Status */}

@@ -45,5 +45,11 @@ export const CONTENT_TYPES = {
   learn: { label: "Learn", slug: "learn" },
 } as const;
 
+// Reserved tag that marks an `article` post as SPX Magazine editorial rather than
+// a community submission. Single source of truth for the discriminator that the
+// /articles (community) and /articles/magazine routes filter on, and that the
+// admin PostForm's "Article Type" selector toggles. Absent = community.
+export const MAGAZINE_TAG = "spx-magazine";
+
 export const POSTS_PER_PAGE = 12;
 export const FEATURED_COUNT = 3;

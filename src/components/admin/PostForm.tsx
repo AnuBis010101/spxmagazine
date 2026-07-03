@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { slugify } from '@/lib/utils/slugify';
+import { MAGAZINE_TAG } from '@/lib/constants';
 
 const RichTextEditor = dynamic(() => import('@/components/admin/RichTextEditor'), { ssr: false });
 import type { Post, Category, ContentType, PostStatus } from '@/types/content';
@@ -69,12 +70,38 @@ export default function PostForm({ post, categories }: PostFormProps) {
     }
   };
 
+  // Community vs SPX Magazine is encoded by the reserved MAGAZINE_TAG on
+  // `article` posts (the /articles and /articles/magazine routes filter on it).
+  // Surface it as an explicit selector instead of a hand-typed tag.
+  const isMagazine = tags.includes(MAGAZINE_TAG);
+
+  const handleContentTypeChange = (value: ContentType) => {
+    setContentType(value);
+    // The magazine discriminator only applies to articles — drop it otherwise
+    // so a stray reserved tag can't linger on news/learn posts.
+    if (value !== 'article') {
+      setTags((prev) => prev.filter((t) => t !== MAGAZINE_TAG));
+    }
+  };
+
+  const handleArticleTypeChange = (value: 'community' | 'magazine') => {
+    if (value === 'magazine') {
+      setTags((prev) =>
+        prev.includes(MAGAZINE_TAG) ? prev : [...prev, MAGAZINE_TAG]
+      );
+    } else {
+      setTags((prev) => prev.filter((t) => t !== MAGAZINE_TAG));
+    }
+  };
+
   // Tag management
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const tag = tagInput.trim().toLowerCase();
-      if (tag && !tags.includes(tag)) {
+      // MAGAZINE_TAG is reserved for the Article Type selector — don't let it be
+      // added as a free-form tag.
+      if (tag && tag !== MAGAZINE_TAG && !tags.includes(tag)) {
         setTags([...tags, tag]);
       }
       setTagInput('');
@@ -84,6 +111,10 @@ export default function PostForm({ post, categories }: PostFormProps) {
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter((t) => t !== tagToRemove));
   };
+
+  // The reserved discriminator tag is managed by the Article Type selector, so
+  // keep it out of the free-form tag chips.
+  const visibleTags = tags.filter((t) => t !== MAGAZINE_TAG);
 
   // Image upload via dropzone — uses server route to bypass Storage RLS
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -229,6 +260,11 @@ export default function PostForm({ post, categories }: PostFormProps) {
     { value: 'learn', label: 'Learn' },
   ];
 
+  const articleTypeOptions = [
+    { value: 'community', label: 'Community Article' },
+    { value: 'magazine', label: 'SPX Magazine Article' },
+  ];
+
   const statusOptions = [
     { value: 'draft', label: 'Draft' },
     { value: 'published', label: 'Published' },
@@ -357,13 +393,35 @@ export default function PostForm({ post, categories }: PostFormProps) {
           </div>
 
           {/* Content Type */}
-          <div className="bg-mag-dark border border-mag-border rounded-xl p-5">
+          <div className="bg-mag-dark border border-mag-border rounded-xl p-5 space-y-4">
             <Select
               label="Content Type"
               value={contentType}
-              onChange={(e) => setContentType(e.target.value as ContentType)}
+              onChange={(e) =>
+                handleContentTypeChange(e.target.value as ContentType)
+              }
               options={contentTypeOptions}
             />
+
+            {contentType === 'article' && (
+              <div>
+                <Select
+                  label="Article Type"
+                  value={isMagazine ? 'magazine' : 'community'}
+                  onChange={(e) =>
+                    handleArticleTypeChange(
+                      e.target.value as 'community' | 'magazine'
+                    )
+                  }
+                  options={articleTypeOptions}
+                />
+                <p className="text-xs text-mag-muted mt-1.5">
+                  {isMagazine
+                    ? 'Shows under SPX Magazine Articles.'
+                    : 'Shows under Community Articles.'}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Category */}
@@ -438,9 +496,9 @@ export default function PostForm({ post, categories }: PostFormProps) {
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={handleAddTag}
             />
-            {tags.length > 0 && (
+            {visibleTags.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
+                {visibleTags.map((tag) => (
                   <span
                     key={tag}
                     className="inline-flex items-center gap-1 px-2.5 py-1 bg-mag-border/50 text-mag-light rounded-full text-xs"

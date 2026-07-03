@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SITE_URL } from "@/lib/constants";
+import { SITE_URL, MAGAZINE_TAG } from "@/lib/constants";
 import { getAuthorByName } from "@/lib/authors";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPostBySlug, getRelatedPosts } from "@/lib/queries/articles";
@@ -73,7 +73,15 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const relatedPosts = await getRelatedPosts(post.id, post.category_id, 3, post.tags);
+  const isMagazine = post.tags?.includes(MAGAZINE_TAG) ?? false;
+  // Keep the reserved discriminator out of relatedness matching (getRelatedPosts
+  // overlaps on tags for uncategorized posts).
+  const relatedPosts = await getRelatedPosts(
+    post.id,
+    post.category_id,
+    3,
+    post.tags?.filter((t) => t !== MAGAZINE_TAG)
+  );
   const readingTime = post.body_html ? estimateReadingTime(post.body_html) : null;
   const articleUrl = `${SITE_URL}/articles/${post.slug}`;
 
@@ -110,10 +118,17 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         )}
 
         <ScrollReveal direction="up" blur duration={0.6}>
-        {/* Category badge */}
-        {post.category && (
-          <div className="mt-6">
-            <CategoryBadge name={post.category.name} color={post.category.color} />
+        {/* Tier + category badges */}
+        {(isMagazine || post.category) && (
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {isMagazine && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border border-gold-400 text-gold-400">
+                SPX Magazine
+              </span>
+            )}
+            {post.category && (
+              <CategoryBadge name={post.category.name} color={post.category.color} />
+            )}
           </div>
         )}
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { POSTS_PER_PAGE } from "@/lib/constants";
+import { POSTS_PER_PAGE, MAGAZINE_TAG } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
 import { getPublishedPosts, getAllTags } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
@@ -8,7 +8,7 @@ import Pagination from "@/components/content/Pagination";
 import { TagFilter } from "@/components/content/TagFilter";
 import ScrollReveal from "@/components/animations/ScrollReveal";
 
-const COMMUNITY_EXCLUDE_TAG = "spx-magazine";
+const COMMUNITY_EXCLUDE_TAG = MAGAZINE_TAG;
 
 export function generateMetadata(): Metadata {
   return {

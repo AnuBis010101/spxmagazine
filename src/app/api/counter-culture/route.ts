@@ -25,6 +25,7 @@ interface Metric {
 interface CounterCulturePayload {
   metrics: Metric[];
   lastUpdated: string;
+  version?: number;
 }
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -36,6 +37,12 @@ export const maxDuration = 60;
 const STALE_AFTER_MS = 31 * 24 * 60 * 60 * 1000; // 31 days
 
 const DB_KEY = "counter_culture";
+
+// Bump whenever the curated STATIC_METRICS values change. On the next request
+// after deploy the stored copy is re-seeded from code instead of preserving the
+// now-stale DB values. Manual Supabase edits are still preserved *between*
+// version bumps.
+const SEED_VERSION = 2;
 
 // ── Curated metrics (update via Supabase or bump STATIC_METRICS) ────────────
 //
@@ -92,9 +99,9 @@ const STATIC_METRICS: Metric[] = [
     category: "loneliness",
     label: "US households of one person",
     value: "29%",
-    context: "Up from 13% in 1960 — record high.",
+    context: "38.5M one-person households — up from ~13% in 1960, a record high.",
     source: "US Census ACS",
-    asOf: "2023",
+    asOf: "2024",
     direction: "up",
   },
 
@@ -113,10 +120,10 @@ const STATIC_METRICS: Metric[] = [
     id: "wrong-track",
     category: "doomerism",
     label: "US \"on the wrong track\"",
-    value: "~65%",
-    context: "Two-thirds of Americans say the country is headed the wrong way.",
+    value: "~67%",
+    context: "More than two-thirds say the country is on the wrong track.",
     source: "Reuters / Ipsos",
-    asOf: "2024",
+    asOf: "2025",
     direction: "up",
   },
   {
@@ -145,10 +152,10 @@ const STATIC_METRICS: Metric[] = [
     id: "religious-nones",
     category: "meaning",
     label: "US religious \"nones\"",
-    value: "28%",
-    context: "Unaffiliated now rivals largest Christian denominations.",
+    value: "29%",
+    context: "Up from 16% in 2007 — now rivals the largest Christian groups.",
     source: "Pew Research",
-    asOf: "2023",
+    asOf: "2024",
     direction: "up",
   },
   {
@@ -177,10 +184,10 @@ const STATIC_METRICS: Metric[] = [
     id: "ai-concern",
     category: "ai",
     label: "More concerned than excited about AI",
-    value: "52%",
-    context: "Majority of US adults fear AI outweighs its benefits.",
+    value: "50%",
+    context: "Concern outweighs excitement nearly 3 to 1 — only 10% are more excited.",
     source: "Pew Research",
-    asOf: "2023",
+    asOf: "2025",
     direction: "up",
   },
   {
@@ -219,20 +226,20 @@ const STATIC_METRICS: Metric[] = [
     id: "trust-government",
     category: "trust",
     label: "Trust in US federal government",
-    value: "~20%",
-    context: "Near historic lows since 1958.",
+    value: "17%",
+    context: "Near the lowest ever measured since 1958.",
     source: "Pew Research",
-    asOf: "2024",
+    asOf: "2025",
     direction: "down",
   },
   {
     id: "trust-media",
     category: "trust",
     label: "Trust in mass media (US)",
-    value: "32%",
-    context: "Record low in Gallup's 50+ year series.",
+    value: "28%",
+    context: "New record low — 70% now have little or no trust in the media.",
     source: "Gallup",
-    asOf: "2023",
+    asOf: "2025",
     direction: "down",
   },
   {
@@ -251,20 +258,20 @@ const STATIC_METRICS: Metric[] = [
     id: "overdose-deaths",
     category: "despair",
     label: "US overdose deaths (annual)",
-    value: "~107,500",
-    context: "Nearly 300 Americans die from overdose every day.",
+    value: "~80,400",
+    context: "Down ~27% from 2023 — the steepest one-year drop on record, though still ~220 a day.",
     source: "CDC National Center for Health Statistics",
-    asOf: "2023",
-    direction: "up",
+    asOf: "2024",
+    direction: "down",
   },
   {
     id: "suicide-rate",
     category: "despair",
     label: "US suicide rate per 100k",
-    value: "14.3",
-    context: "Near the highest rate since WWII.",
+    value: "14.1",
+    context: "Near the highest rate since WWII — essentially unchanged from 2022.",
     source: "CDC WONDER",
-    asOf: "2022",
+    asOf: "2023",
     direction: "up",
   },
   {
@@ -293,20 +300,20 @@ const STATIC_METRICS: Metric[] = [
     id: "marriage-rate",
     category: "fragmentation",
     label: "US marriage rate per 1,000",
-    value: "6.2",
-    context: "Lowest on record.",
+    value: "6.1",
+    context: "Lowest on record outside the 2020 COVID dip.",
     source: "CDC National Center for Health Statistics",
-    asOf: "2022",
+    asOf: "2023",
     direction: "down",
   },
   {
     id: "birth-rate",
     category: "fragmentation",
     label: "US fertility rate",
-    value: "1.62",
-    context: "Below 2.1 replacement — demographic decline.",
+    value: "1.6",
+    context: "Below the 2.1 replacement rate — a new all-time low in 2024.",
     source: "CDC National Vital Statistics",
-    asOf: "2023",
+    asOf: "2024",
     direction: "down",
   },
   {
@@ -372,16 +379,20 @@ async function doRefresh(): Promise<void> {
   console.log("[counter-culture] ═══ Refresh started ═══");
 
   const previous = await loadFromDatabase();
+  // Within the same seed version, preserve manual DB edits. On a version bump
+  // (a curated code update to STATIC_METRICS) re-seed values from code so the
+  // fresh numbers actually reach production.
+  const sameVersion = previous?.version === SEED_VERSION;
   const previousById = new Map<string, Metric>(
     (previous?.metrics ?? []).map((m) => [m.id, m])
   );
 
-  // Merge: keep DB edits, add new metrics, remove any deleted ones
+  // Merge: keep same-version DB edits, add new metrics, remove any deleted ones
   const merged: Metric[] = STATIC_METRICS.map((base) => {
     const existing = previousById.get(base.id);
-    // If an admin edited it in DB, keep their edit — but always refresh `source`
-    // and structural fields from code (so rename in code propagates).
-    if (existing) {
+    // Same version + existing DB edit → keep it, but always refresh `source`
+    // and structural fields from code (so a rename in code propagates).
+    if (existing && sameVersion) {
       return {
         ...base,
         value: existing.value,
@@ -396,6 +407,7 @@ async function doRefresh(): Promise<void> {
   const payload: CounterCulturePayload = {
     metrics: merged,
     lastUpdated: new Date().toISOString(),
+    version: SEED_VERSION,
   };
 
   await saveToDatabase(payload);
@@ -437,11 +449,14 @@ export async function GET(request: NextRequest) {
 
     const dbData = await loadFromDatabase();
     if (dbData) {
-      if (!wantRefresh && dbData.lastUpdated) {
-        const age = Date.now() - new Date(dbData.lastUpdated).getTime();
-        if (age > STALE_AFTER_MS) {
+      if (!wantRefresh) {
+        const stale =
+          !!dbData.lastUpdated &&
+          Date.now() - new Date(dbData.lastUpdated).getTime() > STALE_AFTER_MS;
+        const outdatedSeed = dbData.version !== SEED_VERSION;
+        if (stale || outdatedSeed) {
           console.log(
-            `[counter-culture] Data is ${(age / (24 * 3600000)).toFixed(1)}d old — scheduling post-response refresh`
+            `[counter-culture] Scheduling post-response refresh (stale=${stale}, seed=${dbData.version ?? "none"}→${SEED_VERSION})`
           );
           after(refreshCounterCulture);
         }

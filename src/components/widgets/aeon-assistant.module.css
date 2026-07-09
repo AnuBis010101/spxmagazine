@@ -15,6 +15,10 @@
 }
 
 /* ---------- character stage (pseudo-3D) ---------- */
+/* The 150x190 internal coordinate space (and every keyframe distance) is kept
+   as-is; the whole stage is scaled to half so all motion stays proportional.
+   The negative margin collapses the now-empty right half of the box so the
+   speech bubble still sits right beside her. */
 .stage {
   position: relative;
   width: 150px;
@@ -24,6 +28,9 @@
   cursor: pointer;
   flex-shrink: 0;
   filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+  transform: scale(0.5);
+  transform-origin: bottom left;
+  margin-right: -75px;
 }
 .shadow {
   position: absolute;
@@ -218,7 +225,7 @@
   position: relative;
   pointer-events: auto;
   width: 172px;
-  margin-bottom: 110px;
+  margin-bottom: 56px;
   background: linear-gradient(168deg, #1c1f28 0%, #101219 100%);
   border: 1px solid rgba(212, 175, 55, 0.34);
   border-radius: 13px;

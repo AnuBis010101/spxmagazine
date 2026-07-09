@@ -12,12 +12,31 @@ import styles from "./aeon-assistant.module.css";
 
 type Anim =
   | "wave" | "knock" | "flip" | "think" | "pointL" | "pointR" | "pointU"
-  | "celebrate" | "alert" | "write" | "search";
+  | "celebrate" | "alert" | "write" | "search"
+  // funny move set
+  | "spin" | "backflip" | "roll" | "vibrate" | "glitch" | "boing" | "moonwalk"
+  | "zoomies" | "tornado" | "hopHop" | "wiggle" | "teleport" | "peekaboo"
+  | "faint" | "dizzy" | "dance" | "headbang" | "sneeze" | "laugh" | "love"
+  | "cry" | "angry" | "shocked" | "sleepy" | "shrug" | "flex";
 
 const ANIM_MS: Record<Anim, number> = {
   wave: 2300, knock: 2300, flip: 1000, think: 2400, pointL: 2200, pointR: 2200,
   pointU: 2200, celebrate: 1700, alert: 700, write: 2100, search: 1900,
+  spin: 900, backflip: 1000, roll: 900, vibrate: 600, glitch: 700, boing: 700,
+  moonwalk: 1400, zoomies: 1200, tornado: 1200, hopHop: 1760, wiggle: 900,
+  teleport: 1100, peekaboo: 1200, faint: 1600, dizzy: 1600, dance: 1800,
+  headbang: 1200, sneeze: 1300, laugh: 1600, love: 1800, cry: 1700, angry: 1000,
+  shocked: 900, sleepy: 2200, shrug: 1200, flex: 1500,
 };
+
+/** The pool she pulls from on her own to keep fidgeting — variety = chaos. */
+const ANTICS: Anim[] = [
+  "spin", "boing", "wiggle", "vibrate", "glitch", "dance", "headbang", "zoomies",
+  "dizzy", "hopHop", "laugh", "love", "shrug", "flex", "peekaboo", "tornado",
+  "sneeze", "roll", "moonwalk", "backflip", "teleport", "wave", "celebrate",
+  "think", "search", "pointU", "pointL", "pointR", "shocked", "sleepy", "angry",
+  "cry", "knock", "write",
+];
 
 interface Tip { content: ReactNode; anim?: Anim }
 
@@ -169,6 +188,24 @@ export default function AeonAssistant() {
     };
   }, [enabled, dismissed, visible, armIdle]);
 
+  /* -- ambient antics: she never quite sits still (a bit unhinged) -- */
+  useEffect(() => {
+    if (!enabled || dismissed || !visible) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let t: ReturnType<typeof setTimeout>;
+    const loop = () => {
+      const delay = 1400 + Math.random() * 3200; // ~1.4s–4.6s between gags
+      t = setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          play(ANTICS[Math.floor(Math.random() * ANTICS.length)]);
+        }
+        loop();
+      }, delay);
+    };
+    loop();
+    return () => clearTimeout(t);
+  }, [enabled, dismissed, visible, play]);
+
   useEffect(() => () => {
     if (animTimer.current) clearTimeout(animTimer.current);
     if (idleTimer.current) clearTimeout(idleTimer.current);
@@ -183,7 +220,11 @@ export default function AeonAssistant() {
   };
 
   const onCharClick = () => {
-    const fun: Anim[] = ["flip", "wave", "knock", "celebrate", "alert"];
+    const fun: Anim[] = [
+      "flip", "spin", "backflip", "tornado", "dizzy", "boing", "vibrate",
+      "glitch", "laugh", "love", "shocked", "celebrate", "roll", "teleport",
+      "wiggle", "hopHop", "headbang", "faint",
+    ];
     play(fun[Math.floor(Math.random() * fun.length)]);
     setTip({ content: <>{MANTRAS[Math.floor(Math.random() * MANTRAS.length)]}</> });
     armIdle();
@@ -438,6 +479,38 @@ function AeonSvg() {
           <circle cx="113" cy="41" r="4.2" fill="#ffffff" stroke="#c2ccdd" strokeWidth="0.8"/>
           <circle cx="127" cy="28" r="5.6" fill="#ffffff" stroke="#c2ccdd" strokeWidth="0.8"/>
           <circle cx="139" cy="16" r="7" fill="#ffffff" stroke="#c2ccdd" strokeWidth="0.8"/>
+        </g>
+
+        {/* ---- extra reaction FX (hidden until a gag calls them) ---- */}
+        <g className={styles.fxHearts} aria-hidden>
+          <path transform="translate(96,36)" d="M0,2.6 C-3.4,-0.8 -3.4,-4 -1.5,-4 C-0.5,-4 0,-3.2 0,-2.5 C0,-3.2 0.5,-4 1.5,-4 C3.4,-4 3.4,-0.8 0,2.6 Z" fill="#ff7d9c"/>
+          <path transform="translate(110,24) scale(1.35)" d="M0,2.6 C-3.4,-0.8 -3.4,-4 -1.5,-4 C-0.5,-4 0,-3.2 0,-2.5 C0,-3.2 0.5,-4 1.5,-4 C3.4,-4 3.4,-0.8 0,2.6 Z" fill="#ff4f78"/>
+          <path transform="translate(124,12) scale(0.9)" d="M0,2.6 C-3.4,-0.8 -3.4,-4 -1.5,-4 C-0.5,-4 0,-3.2 0,-2.5 C0,-3.2 0.5,-4 1.5,-4 C3.4,-4 3.4,-0.8 0,2.6 Z" fill="#ffd76b"/>
+        </g>
+        <g className={styles.fxNotes} aria-hidden>
+          <text x="18" y="44" fontSize="15" fontWeight="700" fill="#f4c14e">♪</text>
+          <text x="112" y="30" fontSize="18" fontWeight="700" fill="#f4c14e">♫</text>
+          <text x="128" y="54" fontSize="13" fontWeight="700" fill="#ffd76b">♪</text>
+        </g>
+        <g className={styles.fxDrop} aria-hidden>
+          <path transform="translate(101,60)" d="M0,-4.5 C3,-1.2 3,3 0,4.6 C-3,3 -3,-1.2 0,-4.5 Z" fill="#8fd0ff"/>
+          <ellipse cx="99.6" cy="57.6" rx="0.9" ry="1.5" fill="#ffffff" opacity="0.85"/>
+        </g>
+        <g className={styles.fxZzz} aria-hidden>
+          <text x="104" y="36" fontSize="10" fontWeight="700" fontStyle="italic" fill="#cfd6e6">z</text>
+          <text x="112" y="25" fontSize="13" fontWeight="700" fontStyle="italic" fill="#dfe5f0">z</text>
+          <text x="122" y="14" fontSize="17" fontWeight="700" fontStyle="italic" fill="#eef2f8">Z</text>
+        </g>
+        <g className={styles.fxAnger} aria-hidden>
+          <path transform="translate(97,30)" d="M-4,-2 L4,-2 M-4,1.4 L4,1.4 M-1.6,-5 L-2.6,4.2 M2.6,-5 L1.6,4.2" stroke="#ff3b3b" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+        </g>
+        <g className={styles.fxDizzy} aria-hidden>
+          <path transform="translate(58,12)" d="M0,-4 L1,-1 L4,0 L1,1 L0,4 L-1,1 L-4,0 L-1,-1 Z" fill="#ffe79a"/>
+          <path transform="translate(75,5) scale(1.25)" d="M0,-4 L1,-1 L4,0 L1,1 L0,4 L-1,1 L-4,0 L-1,-1 Z" fill="#7BE0FF"/>
+          <path transform="translate(92,12)" d="M0,-4 L1,-1 L4,0 L1,1 L0,4 L-1,1 L-4,0 L-1,-1 Z" fill="#ffe79a"/>
+        </g>
+        <g className={styles.fxBang} aria-hidden>
+          <text x="75" y="6" fontSize="22" fontWeight="800" fill="#ffd76b" stroke="#7a4b00" strokeWidth="0.6" textAnchor="middle">!</text>
         </g>
       </g>
     </svg>

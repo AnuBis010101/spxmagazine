@@ -237,9 +237,15 @@ export default function AeonAssistant() {
           </div>
           <div className={styles.body}>
             <svg className={styles.icon} viewBox="0 0 32 32" aria-hidden>
-              <circle cx="16" cy="16" r="15" fill="#2158d8" />
-              <circle cx="16" cy="16" r="15" fill="none" stroke="#0a246a" />
-              <text x="16" y="22" textAnchor="middle" fontSize="17" fontWeight="700" fill="#fff" fontFamily="Georgia, serif">i</text>
+              <defs>
+                <linearGradient id="aeIconGold" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="#ffe79a" />
+                  <stop offset="0.5" stopColor="#f4c14e" />
+                  <stop offset="1" stopColor="#d3941f" />
+                </linearGradient>
+              </defs>
+              <path d="M16 2 L19 12.5 L30 13 L21.2 19.6 L24.3 30 L16 23.7 L7.7 30 L10.8 19.6 L2 13 L13 12.5 Z" fill="url(#aeIconGold)" stroke="#b9791a" strokeWidth="0.7" strokeLinejoin="round" />
+              <path d="M17 8 L11.6 16.8 L15.2 16.8 L13.2 23 L20 13.4 L16.1 13.4 L18.8 8 Z" fill="#17181c" />
             </svg>
             <div className={styles.msg}>{tip.content}</div>
           </div>
@@ -254,172 +260,184 @@ export default function AeonAssistant() {
 }
 
 /* ------------------------------------------------------------------ *
- * The character. Elegant anime "Aeon" model: silver hair in a high bun,
- * gold lightning-star ornament, sleek black high-neck top. SFW & premium.
- * Rig groups keep their module classes so the CSS animations still drive
- * head / arms / eyes / hair etc.
+ * The character. Ultra-premium anime "Aeon": platinum silver hair with
+ * strand highlights, huge multi-layer jewel eyes, gold lightning-star
+ * ornament, sleek black high-neck top with gold trim. SFW, chibi-premium,
+ * legible down to favicon size. Rig groups keep their module classes so
+ * the CSS animations still drive head / arms / eyes / hair / mouth.
+ *
+ * Layer order: back-hair (static) -> torso -> head+face+bangs+ornament ->
+ * side locks (sway) -> arms (ON TOP so raised gestures stay visible) -> fx.
  * ------------------------------------------------------------------ */
 function AeonSvg() {
   return (
     <svg viewBox="0 0 150 190" width="150" height="190" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="aeHair" x1="0.1" y1="0" x2="0.5" y2="1">
-          <stop offset="0" stopColor="#FCFDFF" />
-          <stop offset="0.5" stopColor="#D6DAE2" />
-          <stop offset="1" stopColor="#A7ADBA" />
+        <linearGradient id="chibi_hair" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f8fbff"/>
+          <stop offset="0.5" stopColor="#dbe2ee"/>
+          <stop offset="1" stopColor="#bcc7da"/>
         </linearGradient>
-        <linearGradient id="aeRim" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
-          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.95" />
-          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        <linearGradient id="chibi_hairBack" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#d3dbe9"/>
+          <stop offset="1" stopColor="#a3aec4"/>
         </linearGradient>
-        <radialGradient id="aeSkin" cx="0.5" cy="0.38" r="0.72">
-          <stop offset="0" stopColor="#FDEFE4" />
-          <stop offset="1" stopColor="#F0CEB6" />
+        <linearGradient id="chibi_skin" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffece0"/>
+          <stop offset="1" stopColor="#ffd1bb"/>
+        </linearGradient>
+        <linearGradient id="chibi_iris" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2f8bc6"/>
+          <stop offset="0.5" stopColor="#6dc0e8"/>
+          <stop offset="1" stopColor="#dff5fd"/>
+        </linearGradient>
+        <linearGradient id="chibi_gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe79a"/>
+          <stop offset="0.5" stopColor="#f4c14e"/>
+          <stop offset="1" stopColor="#d3941f"/>
+        </linearGradient>
+        <linearGradient id="chibi_top" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2d2d39"/>
+          <stop offset="1" stopColor="#0e0e16"/>
+        </linearGradient>
+        <radialGradient id="chibi_blush" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#ff9c9c" stopOpacity="0.85"/>
+          <stop offset="1" stopColor="#ff9c9c" stopOpacity="0"/>
         </radialGradient>
-        <linearGradient id="aeTop" x1="0.15" y1="0" x2="0.4" y2="1">
-          <stop offset="0" stopColor="#282C34" />
-          <stop offset="1" stopColor="#090B0F" />
-        </linearGradient>
-        <linearGradient id="aeBolt" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFE24E" />
-          <stop offset="1" stopColor="#E8A400" />
-        </linearGradient>
-        <radialGradient id="aeGlow" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#D4AF37" stopOpacity="0.16" />
-          <stop offset="1" stopColor="#D4AF37" stopOpacity="0" />
+        <radialGradient id="chibi_cheek" cx="0.5" cy="0.4" r="0.6">
+          <stop offset="0" stopColor="#fff4ec"/>
+          <stop offset="1" stopColor="#ffd8c6"/>
         </radialGradient>
-        <linearGradient id="aeIris" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#5A616E" />
-          <stop offset="1" stopColor="#15181D" />
-        </linearGradient>
+        <radialGradient id="chibi_eyeGlow" cx="0.5" cy="0.85" r="0.65">
+          <stop offset="0" stopColor="#c4f1ff" stopOpacity="0.95"/>
+          <stop offset="1" stopColor="#c4f1ff" stopOpacity="0"/>
+        </radialGradient>
       </defs>
-
       <g className={styles.floaty}>
-        {/* premium soft glow */}
-        <ellipse cx="75" cy="100" rx="58" ry="74" fill="url(#aeGlow)" />
-
-        {/* ---- side hair locks (behind, sway) ---- */}
+        <g>
+          <path d="M33,72 C27,37 49,13 75,13 C101,13 123,37 117,72 C121,110 113,150 104,180 L98,180 C100,142 100,110 95,97 L55,97 C50,110 50,142 52,180 L46,180 C37,150 29,110 33,72 Z" fill="url(#chibi_hairBack)"/>
+          <path d="M40,120 C42,140 46,160 50,178" fill="none" stroke="#7b879f" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.65"/>
+          <path d="M110,120 C108,140 104,160 100,178" fill="none" stroke="#7b879f" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.65"/>
+          <path d="M36,100 C36,130 40,158 47,180" fill="none" stroke="#94a0b7" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.5"/>
+          <path d="M114,100 C114,130 110,158 103,180" fill="none" stroke="#94a0b7" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.5"/>
+          <path d="M33,72 C27,37 49,13 75,13 C99,14 118,34 118,64" fill="none" stroke="#f2f8ff" strokeWidth="1.7" strokeLinecap="round" strokeOpacity="0.7"/>
+        </g>
+        <g>
+          <path d="M52,107 C50,122 47,150 45,190 L105,190 C103,150 100,122 98,107 C89,116 61,116 52,107 Z" fill="url(#chibi_top)"/>
+          <path d="M75,116 C84,116 92,113 96,108 C97,130 98,160 99,190 L75,190 Z" fill="#000000" opacity="0.16"/>
+          <path d="M53,108 C61,116 89,116 97,108" fill="none" stroke="url(#chibi_gold)" strokeWidth="2.2" strokeLinecap="round"/>
+          <path d="M75,116 L75,150" fill="none" stroke="#e6b34d" strokeWidth="1.1" strokeOpacity="0.5"/>
+          <path d="M52,107 C54,116 56,124 57,132" fill="none" stroke="#6f7d99" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.85"/>
+          <path d="M98,107 C96,116 94,124 93,132" fill="none" stroke="#3f3f4c" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+        </g>
+        <g className={styles.head}>
+          <path d="M66,92 C66,102 68,110 75,111 C82,110 84,102 84,92 Z" fill="url(#chibi_skin)"/>
+          <path d="M66,94 C69,100 81,100 84,94 L84,99 C80,104 70,104 66,99 Z" fill="#eaa98f" fillOpacity="0.6"/>
+          <path d="M45,58 C45,39 57,27 75,27 C93,27 105,39 105,58 C105,79 94,97 75,99 C56,97 45,79 45,58 Z" fill="url(#chibi_skin)"/>
+          <ellipse cx="75" cy="70" rx="26" ry="24" fill="url(#chibi_cheek)" opacity="0.35"/>
+          <path d="M99,56 C103,70 99,86 87,95 C96,86 99,73 98,58 Z" fill="#e8ac92" opacity="0.5"/>
+          <path d="M46,56 C50,44 62,36 75,36 C88,36 100,44 104,56 C98,52 90,52 84,58 C80,54 70,54 66,58 C60,52 52,52 46,56 Z" fill="#f2c1a9" opacity="0.75"/>
+          <path d="M50,80 C58,92 68,96 75,97 C82,96 92,92 100,80 C94,90 84,94 75,94 C66,94 56,90 50,80 Z" fill="#f2c1a9" opacity="0.45"/>
+          <path d="M46,58 C46,72 52,86 61,93" fill="none" stroke="#fff2e8" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.55"/>
+          <path d="M44,63 C40,62 39,68 43,72 C45,74 47,73 47,70 Z" fill="url(#chibi_skin)"/>
+          <path d="M42,65 C41,67 42,70 44,71" fill="none" stroke="#e8a488" strokeWidth="0.8" strokeLinecap="round" strokeOpacity="0.7"/>
+          <path d="M106,63 C110,62 111,68 107,72 C105,74 103,73 103,70 Z" fill="url(#chibi_skin)"/>
+          <path d="M108,65 C109,67 108,70 106,71" fill="none" stroke="#e8a488" strokeWidth="0.8" strokeLinecap="round" strokeOpacity="0.7"/>
+          <ellipse cx="57" cy="76" rx="7.5" ry="5" fill="url(#chibi_blush)"/>
+          <ellipse cx="93" cy="76" rx="7.5" ry="5" fill="url(#chibi_blush)"/>
+          <path d="M52,53 Q60,49 69,52" fill="none" stroke="#b9aac2" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M81,52 Q90,49 98,53" fill="none" stroke="#b9aac2" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M50,61 Q56,50 61,50 Q68,50 71,61 Q66,56 61,56 Q54,56 50,61 Z" fill="#241d2c"/>
+          <path d="M79,61 Q86,50 89,50 Q94,50 100,61 Q95,56 89,56 Q84,56 79,61 Z" fill="#241d2c"/>
+          <path d="M50,60 L44.5,57.5" stroke="#241d2c" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M100,60 L105.5,57.5" stroke="#241d2c" strokeWidth="1.8" strokeLinecap="round"/>
+          <g className={styles.eyes}>
+            <ellipse cx="61" cy="64" rx="9" ry="10.6" fill="#fdfeff"/>
+            <ellipse cx="89" cy="64" rx="9" ry="10.6" fill="#fdfeff"/>
+            <path d="M52.4,60 A9 10.6 0 0 1 69.6,60 C65,63 57,63 52.4,60 Z" fill="#d9c3cf" opacity="0.5"/>
+            <path d="M80.4,60 A9 10.6 0 0 1 97.6,60 C93,63 85,63 80.4,60 Z" fill="#d9c3cf" opacity="0.5"/>
+          </g>
+          <g className={styles.pupils}>
+            <ellipse cx="61" cy="65" rx="7.2" ry="9.2" fill="url(#chibi_iris)"/>
+            <ellipse cx="61" cy="69" rx="6" ry="5.6" fill="url(#chibi_eyeGlow)"/>
+            <path d="M53.8,60 A7.2 9.2 0 0 1 68.2,60 C64,64 58,64 53.8,60 Z" fill="#1c5c8c" opacity="0.75"/>
+            <ellipse cx="61" cy="66" rx="3.7" ry="5.2" fill="#142838"/>
+            <path d="M57.6,67.6 A3.7 5.2 0 0 0 64.4,67.6" fill="none" stroke="#63cbf2" strokeWidth="0.8" strokeLinecap="round" opacity="0.75"/>
+            <ellipse cx="58.2" cy="60.6" rx="2.9" ry="3.8" fill="#ffffff"/>
+            <circle cx="63.6" cy="68.4" r="1.7" fill="#ffffff"/>
+            <path transform="translate(64.6,62)" d="M0,-2.3 L0.6,-0.6 L2.3,0 L0.6,0.6 L0,2.3 L-0.6,0.6 L-2.3,0 L-0.6,-0.6 Z" fill="#ffffff" opacity="0.92"/>
+            <ellipse cx="89" cy="65" rx="7.2" ry="9.2" fill="url(#chibi_iris)"/>
+            <ellipse cx="89" cy="69" rx="6" ry="5.6" fill="url(#chibi_eyeGlow)"/>
+            <path d="M81.8,60 A7.2 9.2 0 0 1 96.2,60 C92,64 86,64 81.8,60 Z" fill="#1c5c8c" opacity="0.75"/>
+            <ellipse cx="89" cy="66" rx="3.7" ry="5.2" fill="#142838"/>
+            <path d="M85.6,67.6 A3.7 5.2 0 0 0 92.4,67.6" fill="none" stroke="#63cbf2" strokeWidth="0.8" strokeLinecap="round" opacity="0.75"/>
+            <ellipse cx="86.2" cy="60.6" rx="2.9" ry="3.8" fill="#ffffff"/>
+            <circle cx="91.6" cy="68.4" r="1.7" fill="#ffffff"/>
+            <path transform="translate(92.6,62)" d="M0,-2.3 L0.6,-0.6 L2.3,0 L0.6,0.6 L0,2.3 L-0.6,0.6 L-2.3,0 L-0.6,-0.6 Z" fill="#ffffff" opacity="0.92"/>
+          </g>
+          <path d="M74.2,78.5 Q75,80.6 76.3,79.4" fill="none" stroke="#e8a488" strokeWidth="1" strokeLinecap="round" opacity="0.65"/>
+          <g className={styles.mouth}>
+            <path d="M70,83 Q75,89 80,83 Q75,85.4 70,83 Z" fill="#b34f47"/>
+            <path d="M71.4,83.6 Q75,86.4 78.6,83.6" fill="none" stroke="#8f3a34" strokeWidth="0.7" strokeLinecap="round"/>
+            <path d="M72.6,86.4 Q75,88 77.4,86.4" fill="#d97b6c"/>
+            <path d="M71,84 Q75,85.6 79,84" fill="none" stroke="#ffd8cc" strokeWidth="0.7" strokeLinecap="round" opacity="0.7"/>
+          </g>
+          <path d="M42,60 C39,42 50,26 75,25 C100,26 111,42 108,60 C104,51 99,52 95,61 C95,50 89,48 85,59 C85,49 79,47 75,58 C71,47 65,49 65,59 C61,48 55,50 55,61 C51,52 46,51 42,60 Z" fill="url(#chibi_hair)"/>
+          <path d="M45,58 C50,48 60,44 75,43 C90,44 100,48 105,58 C99,54 90,53 85,58 C80,53 70,53 65,58 C60,53 51,54 45,58 Z" fill="#b3bdd0" opacity="0.55"/>
+          <path d="M85,59 C85,51 89,48 92,50 C90,54 92,58 95,61 C91,58 87,58 85,59 Z" fill="#a7b2c8" opacity="0.5"/>
+          <path d="M65,59 C63,53 60,50 57,52 C60,55 58,59 55,61 C59,58 63,58 65,59 Z" fill="#c6cfe0" opacity="0.4"/>
+          <path d="M62,33 C58,42 56,50 57,59" fill="none" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.8"/>
+          <path d="M88,33 C92,42 94,50 93,59" fill="none" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.65"/>
+          <path d="M75,29 L75,55" fill="none" stroke="#f8fbff" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6"/>
+          <path d="M69,31 C67,40 66,49 67,57" fill="none" stroke="#eef3fb" strokeWidth="1" strokeLinecap="round" strokeOpacity="0.55"/>
+          <path d="M81,31 C83,40 84,49 83,57" fill="none" stroke="#d7deec" strokeWidth="1" strokeLinecap="round" strokeOpacity="0.5"/>
+          <g>
+            <path d="M75,9 L77.6,16.4 L85.5,16.6 L79.3,21.4 L81.5,28.9 L75,24.5 L68.5,28.9 L70.7,21.4 L64.5,16.6 L72.4,16.4 Z" fill="url(#chibi_gold)" stroke="#b9791a" strokeWidth="0.6" strokeLinejoin="round"/>
+            <path d="M76.5,13 L71.6,20.6 L74.7,20.6 L73,26 L79,17.6 L75.6,17.6 L78,13 Z" fill="#241d2c"/>
+            <circle cx="72" cy="14.5" r="1" fill="#fff3c4"/>
+          </g>
+        </g>
         <g className={styles.tailL}>
-          <path d="M53 58 C40 78 40 104 47 124 C51 117 53 96 60 76 Z" fill="url(#aeHair)" />
-          <path d="M54 62 C47 80 47 102 50 118" fill="none" stroke="#ffffff55" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M47,42 C36,60 33,102 39,142 C40,150 45,151 47,146 C44,110 47,72 55,50 C54,43 50,40 47,42 Z" fill="url(#chibi_hair)"/>
+          <path d="M52,52 C46,80 46,114 45,142 C47,144 46,120 50,84 C52,68 54,56 55,50 Z" fill="#aab4c8" opacity="0.45"/>
+          <path d="M48,48 C41,66 39,102 42,134" fill="none" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+          <path d="M52,52 C48,80 48,114 45,142" fill="none" stroke="#98a3ba" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.7"/>
         </g>
         <g className={styles.tailR}>
-          <path d="M97 58 C110 78 110 104 103 124 C99 117 97 96 90 76 Z" fill="url(#aeHair)" />
-          <path d="M96 62 C103 80 103 102 100 118" fill="none" stroke="#ffffff55" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M103,42 C114,60 117,102 111,142 C110,150 105,151 103,146 C106,110 103,72 95,50 C96,43 100,40 103,42 Z" fill="url(#chibi_hair)"/>
+          <path d="M98,52 C104,80 104,114 105,142 C103,144 104,120 100,84 C98,68 96,56 95,50 Z" fill="#98a3ba" opacity="0.5"/>
+          <path d="M102,48 C109,66 111,102 108,134" fill="none" stroke="#eef3fb" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.55"/>
+          <path d="M98,52 C102,80 102,114 105,142" fill="none" stroke="#8a95ad" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.7"/>
         </g>
-
-        {/* ---- torso / black high-neck top ---- */}
-        <g>
-          {/* bare shoulders + upper chest */}
-          <path d="M40 122 C40 108 55 100 75 100 C95 100 110 108 110 122 L114 190 L36 190 Z" fill="url(#aeSkin)" />
-          {/* the top */}
-          <path d="M56 108 C56 100 63 96 75 96 C87 96 94 100 94 108 C101 113 106 124 108 138 L112 190 L38 190 L42 138 C44 124 49 113 56 108 Z" fill="url(#aeTop)" />
-          {/* vertical sheen */}
-          <path d="M63 118 C64 148 65 176 65 190" fill="none" stroke="#ffffff12" strokeWidth="6" strokeLinecap="round" />
-          {/* keyhole cutout (skin) + subtle maroon lining */}
-          <path d="M75 116 C80 121 80 130 75 137 C70 130 70 121 75 116 Z" fill="url(#aeSkin)" />
-          <path d="M75 116 C80 121 80 130 75 137 C70 130 70 121 75 116 Z" fill="none" stroke="#5a1f22" strokeWidth="1.2" opacity="0.6" />
-          {/* gold collar trim */}
-          <path d="M56 108 C56 100 63 96 75 96 C87 96 94 100 94 108" fill="none" stroke="#D4AF37" strokeWidth="1.5" opacity="0.75" />
-        </g>
-
-        {/* ---- arms (slender) ---- */}
         <g className={styles.armL}>
-          <path d="M44 116 C36 132 33 154 34 172 C40 174 45 172 46 168 C46 150 50 130 56 118 Z" fill="url(#aeSkin)" />
-          <ellipse cx="38" cy="173" rx="6.4" ry="6" fill="url(#aeSkin)" />
+          <path d="M52,110 C43,116 38,140 39,166 C39,174 48,176 52,170 C55,148 57,126 58,114 C57,110 55,108 52,110 Z" fill="url(#chibi_top)"/>
+          <path d="M52,111 C46,118 43,138 43,160" fill="none" stroke="#6b7590" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.75"/>
+          <path d="M40,163 C39,170 47,173 51,168" fill="none" stroke="url(#chibi_gold)" strokeWidth="1.8" strokeLinecap="round"/>
+          <ellipse cx="45.5" cy="172" rx="5.2" ry="4.6" fill="url(#chibi_skin)"/>
+          <path d="M43,170 a5.2 4.6 0 0 0 5,4" fill="#000000" opacity="0.12"/>
+          <path d="M42,171 q3.5,3 7,0" fill="none" stroke="#f0b49b" strokeWidth="0.9" strokeLinecap="round"/>
         </g>
         <g className={styles.armR}>
-          <path d="M106 116 C114 132 117 154 116 172 C110 174 105 172 104 168 C104 150 100 130 94 118 Z" fill="url(#aeSkin)" />
-          <ellipse cx="112" cy="173" rx="6.4" ry="6" fill="url(#aeSkin)" />
+          <path d="M98,110 C107,116 112,140 111,166 C111,174 102,176 98,170 C95,148 93,126 92,114 C93,110 95,108 98,110 Z" fill="url(#chibi_top)"/>
+          <path d="M98,111 C104,118 107,138 107,160" fill="none" stroke="#43434f" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.7"/>
+          <path d="M110,163 C111,170 103,173 99,168" fill="none" stroke="url(#chibi_gold)" strokeWidth="1.8" strokeLinecap="round"/>
+          <ellipse cx="104.5" cy="172" rx="5.2" ry="4.6" fill="url(#chibi_skin)"/>
+          <path d="M107,170 a5.2 4.6 0 0 1 -5,4" fill="#000000" opacity="0.14"/>
+          <path d="M101,171 q3.5,3 7,0" fill="none" stroke="#f0b49b" strokeWidth="0.9" strokeLinecap="round"/>
         </g>
-
-        {/* ---- head ---- */}
-        <g className={styles.head}>
-          {/* neck + high collar */}
-          <path d="M67 88 L67 100 C67 104 83 104 83 100 L83 88 Z" fill="url(#aeSkin)" />
-          <path d="M67 96 C70 100 80 100 83 96" fill="none" stroke="#e6b199" strokeWidth="1.6" opacity="0.5" />
-          <path d="M61 91 C61 85 67 83 75 83 C83 83 89 85 89 91 L89 98 C82 102 68 102 61 98 Z" fill="url(#aeTop)" />
-
-          {/* ears */}
-          <ellipse cx="49" cy="70" rx="4" ry="6" fill="url(#aeSkin)" />
-          <ellipse cx="101" cy="70" rx="4" ry="6" fill="url(#aeSkin)" />
-
-          {/* face */}
-          <ellipse cx="75" cy="66" rx="27" ry="31" fill="url(#aeSkin)" />
-          <path d="M53 74 C59 90 91 90 97 74" fill="none" stroke="#eec2a8" strokeWidth="2.6" opacity="0.35" />
-
-          {/* brows */}
-          <path d="M60 58 C64 55.5 69 55.5 72 57.5" fill="none" stroke="#c3c6cd" strokeWidth="1.7" strokeLinecap="round" />
-          <path d="M78 57.5 C81 55.5 86 55.5 90 58" fill="none" stroke="#c3c6cd" strokeWidth="1.7" strokeLinecap="round" />
-
-          {/* eyes */}
-          <g className={styles.eyes}>
-            <path d="M58 66 C60.5 62 68 62 71 65.5 C68.5 70 60 70.5 58 66 Z" fill="#fff" />
-            <path d="M79 65.5 C82 62 89.5 62 92 66 C90 70.5 81.5 70 79 65.5 Z" fill="#fff" />
-            <g className={styles.pupils}>
-              <ellipse cx="65" cy="66" rx="4.3" ry="5.6" fill="url(#aeIris)" />
-              <ellipse cx="85" cy="66" rx="4.3" ry="5.6" fill="url(#aeIris)" />
-              <circle cx="65" cy="67" r="2.1" fill="#0c0e12" />
-              <circle cx="85" cy="67" r="2.1" fill="#0c0e12" />
-              <circle cx="66.6" cy="63.6" r="1.7" fill="#fff" />
-              <circle cx="86.6" cy="63.6" r="1.7" fill="#fff" />
-              <circle cx="63.4" cy="68.6" r="0.9" fill="#ffffffaa" />
-              <circle cx="83.4" cy="68.6" r="0.9" fill="#ffffffaa" />
-            </g>
-            {/* eyeliner + outer flick */}
-            <path d="M57 65 C60 61 69 61 72 64.5" fill="none" stroke="#26282e" strokeWidth="1.9" strokeLinecap="round" />
-            <path d="M78 64.5 C81 61 90 61 93 65" fill="none" stroke="#26282e" strokeWidth="1.9" strokeLinecap="round" />
-            <path d="M57 65 l-2.4 -1" stroke="#26282e" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M93 65 l2.4 -1" stroke="#26282e" strokeWidth="1.5" strokeLinecap="round" />
-          </g>
-
-          {/* nose + mouth + blush */}
-          <path d="M74 74 l1.4 3 -2.6 0 Z" fill="#e6b39a" opacity="0.75" />
-          <ellipse cx="60" cy="77" rx="4.4" ry="2.5" fill="#f3a89f" opacity="0.4" />
-          <ellipse cx="90" cy="77" rx="4.4" ry="2.5" fill="#f3a89f" opacity="0.4" />
-          <g className={styles.mouth}>
-            <path d="M70 82 C73 85 78 85 81 82" fill="none" stroke="#c07a72" strokeWidth="1.7" strokeLinecap="round" />
-            <path d="M71.5 82.6 C74 84 77 84 79.5 82.6" fill="none" stroke="#e79a90" strokeWidth="0.9" opacity="0.6" />
-          </g>
-
-          {/* ---- front bangs (silver, swept) ---- */}
-          <path d="M48 62 C46 44 58 34 75 34 C92 34 104 44 102 62 C99 52 90 48 84 50 C80 44 76 52 75 60 C74 52 70 44 66 50 C60 48 51 52 48 62 Z" fill="url(#aeHair)" />
-          <path d="M75 38 C73.5 47 74 55 75 60" fill="none" stroke="#ffffff66" strokeWidth="1.3" />
-          <path d="M64 45 C60 52 58 58 58 62" fill="none" stroke="#0000001a" strokeWidth="1.5" />
-          <path d="M86 45 C90 52 92 58 92 62" fill="none" stroke="#0000001a" strokeWidth="1.5" />
-
-          {/* ---- high bun (updo) ---- */}
-          <ellipse cx="75" cy="31" rx="22" ry="15.5" fill="url(#aeHair)" />
-          <path d="M56 31 C64 23 86 23 94 31" fill="none" stroke="#ffffff55" strokeWidth="1.8" strokeLinecap="round" />
-          <path d="M59 35 C67 29 83 29 91 35" fill="none" stroke="#0000001a" strokeWidth="1.8" />
-          {/* hair band */}
-          <path d="M66 40 C70 44 80 44 84 40 L82 46 C79 48 71 48 68 46 Z" fill="#191b21" />
-          {/* rim light on bun */}
-          <path d="M55 29 C61 21 74 18 83 19" fill="none" stroke="url(#aeRim)" strokeWidth="2.4" strokeLinecap="round" />
-
-          {/* ---- lightning-star ornament ---- */}
-          <g transform="translate(75 12)">
-            <rect x="-5" y="-5" width="10" height="10" rx="2" fill="#17181c" />
-            <path d="M-13 2 L-4.5 -3 L-4.5 5 Z" fill="#141414" />
-            <path d="M13 2 L4.5 -3 L4.5 5 Z" fill="#141414" />
-            <path d="M0 -11 C1.4 -4 4 -1.4 11 0 C4 1.4 1.4 4 0 11 C-1.4 4 -4 1.4 -11 0 C-4 -1.4 -1.4 -4 0 -11 Z" fill="url(#aeBolt)" />
-            <path d="M0 -6 C0.8 -2.2 2.2 -0.8 6 0 C2.2 0.8 0.8 2.2 0 6 C-0.8 2.2 -2.2 0.8 -6 0 C-2.2 -0.8 -0.8 -2.2 0 -6 Z" fill="#FFF0A8" />
-          </g>
+        <g className={styles.fx}>
+          <path transform="translate(27,42)" d="M0,-5 L1.3,-1.3 L5,0 L1.3,1.3 L0,5 L-1.3,1.3 L-5,0 L-1.3,-1.3 Z" fill="#ffe79a"/>
+          <path transform="translate(123,48) scale(1.2)" d="M0,-5 L1.3,-1.3 L5,0 L1.3,1.3 L0,5 L-1.3,1.3 L-5,0 L-1.3,-1.3 Z" fill="#fff3c4"/>
+          <path transform="translate(120,108)" d="M0,-5 L1.3,-1.3 L5,0 L1.3,1.3 L0,5 L-1.3,1.3 L-5,0 L-1.3,-1.3 Z" fill="#ffe79a"/>
+          <path transform="translate(30,116) scale(0.85)" d="M0,-5 L1.3,-1.3 L5,0 L1.3,1.3 L0,5 L-1.3,1.3 L-5,0 L-1.3,-1.3 Z" fill="#fff3c4"/>
+          <circle cx="112" cy="30" r="1.3" fill="#ffffff"/>
+          <circle cx="38" cy="90" r="1.3" fill="#ffffff"/>
         </g>
-
-        {/* ---- fx: sparkles (celebrate) & thought (think) ---- */}
-        <g className={styles.fx} aria-hidden>
-          <path d="M32 44 l1.4 3 3 1.4 -3 1.4 -1.4 3 -1.4 -3 -3 -1.4 3 -1.4 Z" fill="#FFD76B" />
-          <path d="M120 48 l1.4 3 3 1.4 -3 1.4 -1.4 3 -1.4 -3 -3 -1.4 3 -1.4 Z" fill="#FFD76B" />
-          <path d="M116 96 l1.2 2.6 2.6 1.2 -2.6 1.2 -1.2 2.6 -1.2 -2.6 -2.6 -1.2 2.6 -1.2 Z" fill="#FFE24E" />
-          <path d="M30 92 l1.2 2.6 2.6 1.2 -2.6 1.2 -1.2 2.6 -1.2 -2.6 -2.6 -1.2 2.6 -1.2 Z" fill="#7BE0FF" />
-        </g>
-        <g className={styles.thought} aria-hidden>
-          <circle cx="112" cy="34" r="3" fill="#fff" opacity="0.9" />
-          <circle cx="120" cy="26" r="4.5" fill="#fff" opacity="0.9" />
-          <circle cx="130" cy="18" r="6.5" fill="#fff" opacity="0.95" />
-          <text x="130" y="21" textAnchor="middle" fontSize="7" fill="#2158d8" fontWeight="700">?</text>
+        <g className={styles.thought}>
+          <circle cx="101" cy="52" r="3" fill="#ffffff" stroke="#c2ccdd" strokeWidth="0.8"/>
+          <circle cx="113" cy="41" r="4.2" fill="#ffffff" stroke="#c2ccdd" strokeWidth="0.8"/>
+          <circle cx="127" cy="28" r="5.6" fill="#ffffff" stroke="#c2ccdd" strokeWidth="0.8"/>
+          <circle cx="139" cy="16" r="7" fill="#ffffff" stroke="#c2ccdd" strokeWidth="0.8"/>
         </g>
       </g>
     </svg>

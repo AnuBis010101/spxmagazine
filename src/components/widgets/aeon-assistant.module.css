@@ -104,8 +104,7 @@
 /* flip / tumble (signature) */
 .char[data-anim="flip"] { animation: flip 1s cubic-bezier(0.4, 0, 0.3, 1); }
 
-/* thinking */
-.char[data-anim="think"] .armR { animation: chinArm 0.5s ease-out forwards; }
+/* thinking (head tilt + thought bubble + eyes up; arm stays relaxed) */
 .char[data-anim="think"] .head { animation: thinkTilt 2.4s ease-in-out; }
 .char[data-anim="think"] .thought { animation: thought 2.4s ease-in-out; }
 .char[data-anim="think"] .eyes { animation: lookUp 2.4s ease-in-out; }
@@ -151,12 +150,14 @@
 @keyframes swayL { 0%,100% { transform: rotate(1.5deg) } 50% { transform: rotate(-3deg) } }
 @keyframes swayR { 0%,100% { transform: rotate(-1.5deg) } 50% { transform: rotate(3deg) } }
 
+/* arm raised up beside the head, hand waving (angles tuned to keep the long
+   chibi arm inside the frame and clear of the face) */
 @keyframes waveArm {
   0%,100% { transform: rotate(0) }
-  15% { transform: rotate(-118deg) }
-  40% { transform: rotate(-100deg) }
-  65% { transform: rotate(-125deg) }
-  90% { transform: rotate(-105deg) }
+  15% { transform: rotate(-158deg) }
+  40% { transform: rotate(-142deg) }
+  65% { transform: rotate(-160deg) }
+  90% { transform: rotate(-146deg) }
 }
 @keyframes nodTiny { 0%,100% { transform: rotate(0) } 50% { transform: rotate(4deg) } }
 
@@ -166,8 +167,8 @@
   60% { transform: rotateX(6deg) translateZ(55px) scale(1.07) }
 }
 @keyframes knockArm {
-  0%,100% { transform: rotate(-42deg) translateX(0) }
-  50% { transform: rotate(-42deg) translateX(9px) translateY(-3px) }
+  0%,100% { transform: rotate(-142deg) }
+  50% { transform: rotate(-152deg) }
 }
 @keyframes ripple {
   0% { transform: scale(0.3); opacity: 0.9; border-width: 4px }
@@ -182,14 +183,13 @@
   100% { transform: rotateY(360deg) translateY(0) }
 }
 
-@keyframes chinArm { 0% { transform: rotate(0) } 100% { transform: rotate(-58deg) translateX(2px) } }
 @keyframes thinkTilt { 0%,100% { transform: rotate(0) } 30%,70% { transform: rotate(-7deg) } }
 @keyframes thought { 0%,100% { opacity: 0; transform: translateY(6px) scale(.7) } 25%,75% { opacity: 1; transform: translateY(0) scale(1) } }
 @keyframes lookUp { 0%,100% { transform: translateY(0) } 30%,70% { transform: translateY(-3px) } }
 
-@keyframes pointLeft { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(128deg) } }
-@keyframes pointRight { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-128deg) } }
-@keyframes pointUp { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-165deg) } }
+@keyframes pointLeft { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(120deg) } }
+@keyframes pointRight { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-120deg) } }
+@keyframes pointUp { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-158deg) } }
 @keyframes leanL { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(6deg) } }
 @keyframes leanR { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-6deg) } }
 
@@ -202,7 +202,7 @@
 @keyframes eyesWide { 0%,100% { transform: scale(1) } 30%,70% { transform: scale(1.28) } }
 @keyframes shakeHead { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-6deg) } 75% { transform: rotate(6deg) } }
 
-@keyframes writeArm { 0%,100% { transform: rotate(-30deg) } 50% { transform: rotate(-30deg) translate(6px, 4px) } }
+@keyframes writeArm { 0%,100% { transform: rotate(-150deg) } 50% { transform: rotate(-143deg) } }
 @keyframes dart { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-3px) } 75% { transform: translateX(3px) } }
 @keyframes scan { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-5deg) } 75% { transform: rotate(5deg) } }
 
@@ -217,86 +217,115 @@
 .bubble {
   position: relative;
   pointer-events: auto;
-  width: 152px;
-  margin-bottom: 116px;
-  background: #ece9d8;
-  border: 1px solid #0a246a;
-  border-radius: 6px;
-  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-  color: #1a1a1a;
-  overflow: hidden;
+  width: 172px;
+  margin-bottom: 110px;
+  background: linear-gradient(168deg, #1c1f28 0%, #101219 100%);
+  border: 1px solid rgba(212, 175, 55, 0.34);
+  border-radius: 13px;
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.55),
+    0 0 22px rgba(212, 175, 55, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #e7eaf1;
   transform-origin: bottom left;
-  animation: bubbleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: bubbleIn 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bubble::before { /* soft gold sheen along the top */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 38px;
+  border-radius: 13px 13px 0 0;
+  background: radial-gradient(120% 90% at 22% 0%, rgba(212, 175, 55, 0.18), transparent 68%);
+  pointer-events: none;
 }
 .bubble::after { /* tail on the LEFT edge, toward the character */
   content: "";
   position: absolute;
   left: -6px;
-  bottom: 18px;
+  bottom: 20px;
   width: 11px;
   height: 11px;
-  background: #ece9d8;
-  border-left: 1px solid #0a246a;
-  border-bottom: 1px solid #0a246a;
+  background: linear-gradient(135deg, #191c24, #12141b);
+  border-left: 1px solid rgba(212, 175, 55, 0.34);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.34);
   transform: rotate(45deg);
 }
 .titlebar {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 3px 2px 5px;
-  background: linear-gradient(180deg, #3b7ff0 0%, #2158d8 48%, #1a49c4 100%);
-  color: #fff;
-  font-size: 8.5px;
+  gap: 6px;
+  padding: 6px 6px 6px 9px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.16), rgba(212, 175, 55, 0.02));
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  color: #f3e6c4;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
-.titlebar .dot { width: 8px; height: 8px; border-radius: 2px; background: radial-gradient(circle at 30% 30%, #ffd76b, #d4af37); flex-shrink: 0; }
+.titlebar .dot {
+  width: 10px; height: 10px; flex-shrink: 0;
+  background: radial-gradient(circle at 32% 28%, #ffe79a, #d4a017);
+  filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.6));
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
 .titlebar .grow { flex: 1; }
 .xbtn {
-  width: 12px; height: 11px; border-radius: 2px;
-  background: linear-gradient(180deg, #f37b6e, #c23a28);
-  border: 1px solid #7a1c10;
-  color: #fff; font-size: 7.5px; line-height: 1;
+  width: 16px; height: 16px; border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #c9cfda; font-size: 8px; line-height: 1;
   display: grid; place-items: center; cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
 }
-.xbtn:hover { filter: brightness(1.08); }
+.xbtn:hover { background: rgba(224, 74, 58, 0.85); border-color: #e04a3a; color: #fff; }
 .body {
   display: flex;
-  gap: 5px;
-  padding: 7px 8px 3px;
+  gap: 7px;
+  padding: 9px 10px 4px;
   align-items: flex-start;
 }
 .icon {
   flex-shrink: 0;
-  width: 16px; height: 16px;
+  width: 17px; height: 17px;
   margin-top: 1px;
+  filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.4));
 }
-.msg { font-size: 9.5px; line-height: 1.34; color: #1c1c1c; }
-.msg b { color: #12308f; }
+.msg { font-size: 10px; line-height: 1.42; color: #d7dce6; }
+.msg b { color: #f4c14e; font-weight: 700; }
+.msg i { color: #cbd2df; }
 .btnrow {
   display: flex;
   justify-content: flex-end;
-  gap: 5px;
-  padding: 3px 8px 7px;
+  gap: 6px;
+  padding: 4px 10px 10px;
 }
 .xpbtn {
   font-family: inherit;
-  font-size: 9px;
-  padding: 2px 7px;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 3px 11px;
   min-width: 0;
-  color: #111;
-  background: linear-gradient(180deg, #fdfdfd, #e3e3d6);
-  border: 1px solid #8a8a78;
-  border-radius: 3px;
-  box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgba(0,0,0,.12);
+  color: #d7dce6;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
   cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .1s ease;
 }
-.xpbtn:hover { border-color: #2158d8; background: linear-gradient(180deg, #fff, #eef3ff); }
-.xpbtn:active { box-shadow: inset 0 1px 3px rgba(0,0,0,.25); }
-.xpbtn.primary { font-weight: 700; border-color: #2158d8; }
+.xpbtn:hover { border-color: rgba(212, 175, 55, 0.6); color: #fff; background: rgba(212, 175, 55, 0.1); }
+.xpbtn:active { transform: translateY(1px); }
+.xpbtn.primary {
+  color: #1a1408;
+  font-weight: 700;
+  background: linear-gradient(180deg, #ffe79a, #f0c14e);
+  border-color: #e0ad3a;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
+}
+.xpbtn.primary:hover { filter: brightness(1.05); color: #1a1408; background: linear-gradient(180deg, #ffedb0, #f4c65a); }
 
 @keyframes bubbleIn { 0% { opacity: 0; transform: translateY(8px) scale(0.92) } 100% { opacity: 1; transform: translateY(0) scale(1) } }
 
@@ -306,18 +335,19 @@
   position: fixed;
   left: 0; bottom: 26px;
   z-index: 60;
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 12px 8px 10px;
-  background: linear-gradient(180deg, #2158d8, #1a49c4);
-  color: #fff; font-size: 11px; font-weight: 700;
-  border: 1px solid #0a246a; border-left: none;
-  border-radius: 0 10px 10px 0;
-  box-shadow: 0 6px 18px rgba(0,0,0,.45);
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 13px 9px 11px;
+  background: linear-gradient(180deg, #1c1f28, #101219);
+  color: #f3e6c4; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(212, 175, 55, 0.4); border-left: none;
+  border-radius: 0 11px 11px 0;
+  box-shadow: 0 6px 18px rgba(0,0,0,.5), 0 0 16px rgba(212, 175, 55, 0.08);
   cursor: pointer;
   transform: translateX(-4px);
-  transition: transform .2s ease;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
-.reopen:hover { transform: translateX(0); }
+.reopen:hover { transform: translateX(0); box-shadow: 0 6px 22px rgba(0,0,0,.5), 0 0 22px rgba(212, 175, 55, 0.18); }
 
 /* ---------- reduced motion: keep it calm ---------- */
 @media (prefers-reduced-motion: reduce) {

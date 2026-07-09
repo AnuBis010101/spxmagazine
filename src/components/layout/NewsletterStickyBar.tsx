@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { NEWSLETTER_SIGNUP_URL } from "@/lib/constants";
 
 /**
  * Slim newsletter signup bar shown at the very top of the homepage, directly
@@ -29,13 +28,9 @@ export default function NewsletterStickyBar() {
   // Homepage only.
   if (pathname !== "/") return null;
 
-  // Until a real external signup URL is supplied, fall back to the working
-  // on-page newsletter form instead of opening a blank "#" tab.
-  const isExternal = /^https?:\/\//.test(NEWSLETTER_SIGNUP_URL);
-  const href = isExternal ? NEWSLETTER_SIGNUP_URL : "#newsletter";
-  const externalProps = isExternal
-    ? { target: "_blank" as const, rel: "noopener noreferrer" }
-    : {};
+  // Scroll to the on-page Substack embed instead of opening a new tab — the
+  // signup happens seamlessly right there.
+  const href = "#newsletter";
 
   return (
     <motion.div
@@ -78,7 +73,6 @@ export default function NewsletterStickyBar() {
 
         <a
           href={href}
-          {...externalProps}
           className="group inline-flex h-6 flex-shrink-0 items-center gap-1 rounded-full bg-gold-400 px-3 text-[11px] font-semibold text-mag-black transition-colors hover:bg-gold-500 sm:text-xs"
         >
           Subscribe

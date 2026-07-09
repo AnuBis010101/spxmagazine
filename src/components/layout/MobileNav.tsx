@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -16,10 +16,43 @@ interface MobileNavProps {
   onClose: () => void;
 }
 
+/* Springy glide-in, then a smooth accelerating fade-and-slide on the way out
+   so the panel gets out of the way and reveals the new page cleanly. */
+const panelTransition = {
+  enter: { type: "spring", damping: 32, stiffness: 340, mass: 0.9 },
+  exit: { duration: 0.42, ease: "circIn" },
+} as const;
+
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(isOpen, panelRef);
+
+  // Backstop: if a tap navigates before onClose lands (or the click is missed),
+  // dismiss the overlay as soon as the route actually changes so it never sits
+  // on top of the new page.
+  const routeAtRender = useRef(pathname);
+  useEffect(() => {
+    if (pathname !== routeAtRender.current) {
+      routeAtRender.current = pathname;
+      if (isOpen) onClose();
+    }
+  }, [pathname, isOpen, onClose]);
+
+  // Escape closes; lock the page scroll while the menu owns the screen.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -29,10 +62,9 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Site navigation"
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          initial={{ x: "100%", opacity: 0.4 }}
+          animate={{ x: 0, opacity: 1, transition: panelTransition.enter }}
+          exit={{ x: "100%", opacity: 0, transition: panelTransition.exit }}
           className="fixed inset-0 z-[60] flex flex-col bg-mag-black/95 backdrop-blur-xl focus:outline-none"
         >
           {/* Top bar */}
@@ -64,6 +96,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   key={item.href}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: "easeIn" } }}
                   transition={{ delay: 0.1 + index * 0.05 }}
                   className="flex flex-col items-center gap-3"
                 >
@@ -123,6 +156,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8, transition: { duration: 0.18, ease: "easeIn" } }}
               transition={{ delay: 0.1 + NAV_ITEMS.length * 0.05 }}
             >
               <Link

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
   ArrowDownRight,
+  ArrowRight,
   ArrowUpRight,
   Compass,
   Cpu,
@@ -36,6 +37,7 @@ interface Metric {
   asOf: string;
   direction: "up" | "down" | "flat";
   improving?: boolean;
+  past?: { value: string; year: string };
 }
 
 interface CounterCultureData {
@@ -220,6 +222,46 @@ function StatusChip({ metric }: { metric: Metric }) {
   return <TrendPill direction={metric.direction} />;
 }
 
+/** Order within a category so the most alarming (record) stats lead, and the
+ *  rare improving outlier sinks to the end. */
+function metricRank(m: Metric): number {
+  if (m.improving) return 2;
+  return RECORD_RE.test(m.context) ? 0 : 1;
+}
+
+// Deaths of despair (overdose + suicide + alcohol) per year, matched to the
+// cards above — powers the live "this year, and counting" counter.
+const DESPAIR_PER_YEAR = 80_400 + 49_500 + 178_000;
+function despairYearToDate(): number {
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1).getTime();
+  const perMs = DESPAIR_PER_YEAR / (365.25 * 24 * 60 * 60 * 1000);
+  return Math.floor((now.getTime() - yearStart) * perMs);
+}
+
+function DespairTicker() {
+  const [n, setN] = useState(despairYearToDate);
+  useEffect(() => {
+    const id = setInterval(() => setN(despairYearToDate()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/[0.07] px-3 py-1.5">
+      <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-400" />
+      <span className="text-xs text-mag-muted">
+        Deaths of despair in the U.S. this year:{" "}
+        <span
+          suppressHydrationWarning
+          className="font-display font-bold tabular-nums text-red-300"
+        >
+          {n.toLocaleString()}
+        </span>{" "}
+        <span className="text-white/40">and counting</span>
+      </span>
+    </span>
+  );
+}
+
 function MetricCard({
   metric,
   accent,
@@ -284,6 +326,18 @@ function MetricCard({
             style={{ color: accent, textShadow: `0 0 26px ${accent}33` }}
           />
         </div>
+
+        {/* then → now trajectory */}
+        {metric.past && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-white/45">
+            <span className="tabular-nums">{metric.past.value}</span>
+            <span className="text-white/30">&rsquo;{metric.past.year.slice(-2)}</span>
+            <ArrowRight className="h-3 w-3 shrink-0" style={{ color: accent }} aria-hidden />
+            <span className="font-semibold tabular-nums" style={{ color: accent }}>
+              {metric.value}
+            </span>
+          </div>
+        )}
 
         <p className="mt-2.5 line-clamp-3 text-xs leading-relaxed text-mag-muted">
           {metric.context}
@@ -425,9 +479,39 @@ export default function CounterCulture() {
     if (!grouped.has(m.category)) grouped.set(m.category, []);
     grouped.get(m.category)!.push(m);
   }
+  // Lead each category with its most alarming (record) stats.
+  for (const list of grouped.values()) {
+    list.sort((a, b) => metricRank(a) - metricRank(b));
+  }
+
+  const recordCount = data.metrics.filter(
+    (m) => !m.improving && RECORD_RE.test(m.context)
+  ).length;
 
   return (
     <div className="space-y-12">
+      {/* Opening hook + at-a-glance severity */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.045] to-transparent p-6 md:p-7"
+      >
+        <p className="max-w-3xl font-display text-xl font-semibold leading-snug text-white md:text-2xl">
+          The average person is lonelier, poorer, and more anxious than at almost
+          any point in living memory.
+        </p>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-mag-muted">
+            <span className="font-display text-lg font-bold tabular-nums text-red-300">
+              {recordCount}
+            </span>{" "}
+            of {data.metrics.length} signals below sit at or near all-time records.
+          </p>
+          <DespairTicker />
+        </div>
+      </motion.div>
       {CATEGORY_ORDER.map((cat) => {
         const metrics = grouped.get(cat);
         if (!metrics || metrics.length === 0) return null;

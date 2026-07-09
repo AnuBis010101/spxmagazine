@@ -23,6 +23,8 @@ interface Metric {
   /** Set for the rare metric moving in the *better* direction — suppresses the
    *  trend/alarm indicator so it doesn't read as good news in a doom board. */
   improving?: boolean;
+  /** Historical anchor for a "then → now" delta chip. */
+  past?: { value: string; year: string };
 }
 
 interface CounterCulturePayload {
@@ -45,7 +47,7 @@ const DB_KEY = "counter_culture";
 // after deploy the stored copy is re-seeded from code instead of preserving the
 // now-stale DB values. Manual Supabase edits are still preserved *between*
 // version bumps.
-const SEED_VERSION = 3;
+const SEED_VERSION = 4;
 
 // ── Curated metrics (update via Supabase or bump STATIC_METRICS) ────────────
 //
@@ -82,10 +84,11 @@ const STATIC_METRICS: Metric[] = [
     category: "loneliness",
     label: "Men with no close friends",
     value: "15%",
-    context: "Up from 3% in 1990 — 5× in one generation.",
+    context: "A fivefold jump in a single generation.",
     source: "Survey Center on American Life",
     asOf: "2021",
     direction: "up",
+    past: { value: "3%", year: "1990" },
   },
   {
     id: "loneliness-health-risk",
@@ -102,10 +105,11 @@ const STATIC_METRICS: Metric[] = [
     category: "loneliness",
     label: "US households of one person",
     value: "29%",
-    context: "38.5M one-person households — up from ~13% in 1960, a record high.",
+    context: "A record 38.5M Americans now live alone.",
     source: "US Census ACS",
     asOf: "2024",
     direction: "up",
+    past: { value: "13%", year: "1960" },
   },
 
   // ══════════════ DOOMERISM RISING ══════════════
@@ -156,20 +160,22 @@ const STATIC_METRICS: Metric[] = [
     category: "meaning",
     label: "US religious \"nones\"",
     value: "29%",
-    context: "Up from 16% in 2007 — now rivals the largest Christian groups.",
+    context: "Now rivals the largest Christian groups in America.",
     source: "Pew Research",
     asOf: "2024",
     direction: "up",
+    past: { value: "16%", year: "2007" },
   },
   {
     id: "life-has-meaning",
     category: "meaning",
     label: "Life has clear meaning (US)",
     value: "64%",
-    context: "Down from 79% in 2007 — steepest drop on record.",
+    context: "The steepest drop Pew has ever recorded.",
     source: "Pew Research Global Attitudes",
     asOf: "2021",
     direction: "down",
+    past: { value: "79%", year: "2007" },
   },
   {
     id: "antinatalism",
@@ -192,6 +198,7 @@ const STATIC_METRICS: Metric[] = [
     source: "Pew Research",
     asOf: "2025",
     direction: "up",
+    past: { value: "37%", year: "2021" },
   },
   {
     id: "tech-layoffs",
@@ -234,6 +241,7 @@ const STATIC_METRICS: Metric[] = [
     source: "Pew Research",
     asOf: "2025",
     direction: "down",
+    past: { value: "73%", year: "1958" },
   },
   {
     id: "trust-media",
@@ -244,6 +252,7 @@ const STATIC_METRICS: Metric[] = [
     source: "Gallup",
     asOf: "2025",
     direction: "down",
+    past: { value: "40%", year: "2019" },
   },
   {
     id: "edelman-trust",
@@ -273,7 +282,7 @@ const STATIC_METRICS: Metric[] = [
     category: "despair",
     label: "US suicide rate per 100k",
     value: "14.1",
-    context: "Near the highest rate since WWII — essentially unchanged from 2022.",
+    context: "Near the highest rate since WWII — roughly 130 deaths a day.",
     source: "CDC WONDER",
     asOf: "2023",
     direction: "up",
@@ -283,7 +292,7 @@ const STATIC_METRICS: Metric[] = [
     category: "despair",
     label: "Alcohol-related deaths (US/yr)",
     value: "~178,000",
-    context: "Deaths of despair triad: drugs, alcohol, suicide.",
+    context: "About 488 alcohol-related deaths in America every day.",
     source: "CDC",
     asOf: "2021-2022",
     direction: "up",
@@ -299,6 +308,7 @@ const STATIC_METRICS: Metric[] = [
     source: "US Census",
     asOf: "2023",
     direction: "up",
+    past: { value: "23 / 20", year: "1960" },
   },
   {
     id: "marriage-rate",
@@ -309,6 +319,7 @@ const STATIC_METRICS: Metric[] = [
     source: "CDC National Center for Health Statistics",
     asOf: "2023",
     direction: "down",
+    past: { value: "8.2", year: "2000" },
   },
   {
     id: "birth-rate",
@@ -325,7 +336,7 @@ const STATIC_METRICS: Metric[] = [
     category: "fragmentation",
     label: "US adults with no romantic partner",
     value: "30%",
-    context: "Including 63% of men under 30 who are single.",
+    context: "63% of men under 30 have no romantic partner at all.",
     source: "Pew Research",
     asOf: "2022",
     direction: "up",

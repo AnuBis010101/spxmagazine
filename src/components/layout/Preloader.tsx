@@ -9,7 +9,12 @@ const CRITICAL_ASSETS = [
 export default function Preloader() {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"loading" | "finishing" | "done">(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("spx-loaded")) return "done";
+    try {
+      if (typeof window !== "undefined" && sessionStorage.getItem("spx-loaded"))
+        return "done";
+    } catch {
+      /* sessionStorage blocked — show the loader; it self-dismisses */
+    }
     return "loading";
   });
   const rafRef = useRef<number>(0);
@@ -24,10 +29,17 @@ export default function Preloader() {
   }, []);
 
   useEffect(() => {
-    // Skip entirely if we've already loaded this session.
-    if (typeof window !== "undefined" && sessionStorage.getItem("spx-loaded")) {
-      return;
+    // Skip entirely if we've already loaded this session. Guarded — sessionStorage
+    // throws in some privacy/sandboxed contexts, and an uncaught throw here would
+    // abort the effect and leave the overlay stuck forever.
+    let alreadyLoaded = false;
+    try {
+      alreadyLoaded =
+        typeof window !== "undefined" && !!sessionStorage.getItem("spx-loaded");
+    } catch {
+      /* ignore */
     }
+    if (alreadyLoaded) return;
 
     let cancelled = false;
     let current = 0;
@@ -37,7 +49,7 @@ export default function Preloader() {
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const minTime = reduce ? 200 : 1400; // minimum on-screen time
-    const maxTime = 5000; // absolute failsafe — never hang
+    const maxTime = reduce ? 800 : 4000; // absolute failsafe — never hang
 
     const bump = (t: number) => {
       target = Math.max(target, t);
@@ -66,12 +78,33 @@ export default function Preloader() {
       window.setTimeout(() => setPhase("done"), reduce ? 200 : 700);
     };
 
-    // Hard failsafe: dismiss no matter what (covers throttled rAF / missing events).
+    // Failsafe 1 — dismiss no matter what after maxTime (hung font/asset signals).
     const failsafe = window.setTimeout(finish, maxTime);
+
+    // Failsafe 2 — rAF and timers are paused/throttled in background tabs, which
+    // is the usual "stuck at 0%" cause when a page is opened in an unfocused tab.
+    // On return to the foreground, finish immediately if we've shown long enough.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible" && Date.now() - start >= minTime) {
+        finish();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    // Failsafe 3 — back/forward-cache restore: the page is already fully loaded.
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) finish();
+    };
+    window.addEventListener("pageshow", onPageShow);
 
     const animate = () => {
       if (cancelled) return;
       const elapsed = Date.now() - start;
+      // rAF resumed after a long background pause → jump straight to done.
+      if (elapsed >= maxTime) {
+        finish();
+        return;
+      }
       current += (target - current) * 0.1;
       // Guaranteed wall-clock progress so the bar always fills to 100% by
       // minTime, even if no asset/font/load signal ever arrives.
@@ -93,6 +126,8 @@ export default function Preloader() {
       window.clearTimeout(failsafe);
       window.clearTimeout(reachTimer);
       window.removeEventListener("load", onLoad);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, [preloadImage]);
 
@@ -103,7 +138,15 @@ export default function Preloader() {
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-700 ${
         phase === "finishing" ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
-      style={{ backgroundColor: "#0A0A0A" }}
+      style={{
+        backgroundColor: "#0A0A0A",
+        // Pure-CSS last resort: if the JS finishers never run (e.g. hydration
+        // fails on a direct page load), fade the overlay out and stop blocking
+        // after 4.5s — no JavaScript required.
+        ...(phase === "loading"
+          ? { animation: "preloader-bail 450ms ease-in 4500ms forwards" }
+          : {}),
+      }}
     >
       {/* Radial glow behind logo */}
       <div
@@ -219,6 +262,10 @@ export default function Preloader() {
         @keyframes preloader-shimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
+        }
+        @keyframes preloader-bail {
+          0% { opacity: 1; pointer-events: none; }
+          100% { opacity: 0; visibility: hidden; pointer-events: none; }
         }
       `}</style>
     </div>

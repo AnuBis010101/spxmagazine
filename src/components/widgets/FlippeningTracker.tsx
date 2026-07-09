@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { usePrice } from "@/hooks/usePrice";
@@ -13,13 +13,19 @@ import { cn } from "@/lib/utils/cn";
 
 const CELEBRATED_TIER_KEY = "spx-flippening-tier";
 
-const TIERS = [
+interface Tier {
+  label: string;
+  value: number;
+}
+
+// Fixed waypoints toward the flippening. The final tier is appended at runtime
+// from the *live* S&P 500 market cap (see buildTiers) so the target adapts.
+const FIXED_TIERS: Tier[] = [
   { label: "$1B", value: 1_000_000_000 },
   { label: "$10B", value: 10_000_000_000 },
   { label: "$100B", value: 100_000_000_000 },
   { label: "$1T", value: 1_000_000_000_000 },
   { label: "$10T", value: 10_000_000_000_000 },
-  { label: "$50T", value: 50_000_000_000_000 },
 ];
 
 function formatCurrency(value: number): string {
@@ -37,20 +43,30 @@ function formatMultiplier(value: number): string {
   return value.toFixed(1);
 }
 
-function getTierProgress(marketCap: number) {
+/** Milestones with the final tier pinned to the live S&P 500 market cap, so the
+ *  flippening target tracks the real index rather than a frozen $50T. */
+function buildTiers(sp500MarketCap: number): Tier[] {
+  const top: Tier =
+    sp500MarketCap > 10_000_000_000_000
+      ? { label: formatCurrency(sp500MarketCap), value: sp500MarketCap }
+      : { label: "$50T", value: 50_000_000_000_000 };
+  return [...FIXED_TIERS, top];
+}
+
+function getTierProgress(marketCap: number, tiers: Tier[]) {
   let currentTierIdx = 0;
-  for (let i = 0; i < TIERS.length; i++) {
-    if (marketCap < TIERS[i].value) {
+  for (let i = 0; i < tiers.length; i++) {
+    if (marketCap < tiers[i].value) {
       currentTierIdx = i;
       break;
     }
-    if (i === TIERS.length - 1) {
-      currentTierIdx = TIERS.length - 1;
+    if (i === tiers.length - 1) {
+      currentTierIdx = tiers.length - 1;
     }
   }
 
-  const tierFloor = currentTierIdx === 0 ? 0 : TIERS[currentTierIdx - 1].value;
-  const tierCeiling = TIERS[currentTierIdx].value;
+  const tierFloor = currentTierIdx === 0 ? 0 : tiers[currentTierIdx - 1].value;
+  const tierCeiling = tiers[currentTierIdx].value;
   const progressInTier =
     marketCap >= tierCeiling
       ? 100
@@ -61,8 +77,8 @@ function getTierProgress(marketCap: number) {
     tierFloor,
     tierCeiling,
     progressInTier: Math.max(0, Math.min(100, progressInTier)),
-    currentTierLabel: TIERS[currentTierIdx].label,
-    previousTierLabel: currentTierIdx > 0 ? TIERS[currentTierIdx - 1].label : "$0",
+    currentTierLabel: tiers[currentTierIdx].label,
+    previousTierLabel: currentTierIdx > 0 ? tiers[currentTierIdx - 1].label : "$0",
   };
 }
 
@@ -316,10 +332,13 @@ export default function FlippeningTracker({
   const multiplierNeeded =
     marketCap > 0 ? sp500MarketCap / marketCap : Infinity;
 
-  const { currentTierIdx, progressInTier, currentTierLabel, previousTierLabel } =
-    getTierProgress(marketCap);
+  // Final milestone tracks the live S&P 500 market cap (updated once a day).
+  const tiers = useMemo(() => buildTiers(sp500MarketCap), [sp500MarketCap]);
 
-  const lockedCount = TIERS.length - currentTierIdx - 1;
+  const { currentTierIdx, progressInTier, currentTierLabel, previousTierLabel } =
+    getTierProgress(marketCap, tiers);
+
+  const lockedCount = tiers.length - currentTierIdx - 1;
 
   // ── Milestone celebration ───────────────────────────────────────────────────
   // Fire once per browser when the tier advances past what we last recorded, so
@@ -343,12 +362,16 @@ export default function FlippeningTracker({
       return;
     }
     if (observedTier > stored && observedTier > 0) {
-      setCelebrateLabel(TIERS[observedTier - 1].label);
+      // Deliberate: fire the one-time milestone celebration when the tier
+      // advances past the stored baseline (depends on localStorage, so it can't
+      // be derived during render).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCelebrateLabel(tiers[observedTier - 1].label);
       try {
         localStorage.setItem(CELEBRATED_TIER_KEY, String(observedTier));
       } catch {}
     }
-  }, [loading, error, currentTierIdx]);
+  }, [loading, error, currentTierIdx, tiers]);
 
   // Market-cap comparison header — only shown without the gauge (homepage). On
   // the Data page the gauge's centre already carries the market cap + S&P target,
@@ -415,14 +438,14 @@ export default function FlippeningTracker({
 
           {/* Completed + Current tier bars (always visible) */}
           <div className="space-y-3 sm:space-y-4">
-            {TIERS.slice(0, currentTierIdx + 1).map((tier, idx) => (
+            {tiers.slice(0, currentTierIdx + 1).map((tier, idx) => (
               <TierBar
                 key={tier.label}
                 tierIdx={idx}
                 currentTierIdx={currentTierIdx}
                 progressInTier={progressInTier}
                 label={tier.label}
-                previousLabel={idx === 0 ? "$0" : TIERS[idx - 1].label}
+                previousLabel={idx === 0 ? "$0" : tiers[idx - 1].label}
               />
             ))}
           </div>
@@ -438,7 +461,7 @@ export default function FlippeningTracker({
                 className="overflow-hidden"
               >
                 <div className="space-y-3 sm:space-y-4 pt-1">
-                  {TIERS.slice(currentTierIdx + 1).map((tier, i) => {
+                  {tiers.slice(currentTierIdx + 1).map((tier, i) => {
                     const idx = currentTierIdx + 1 + i;
                     return (
                       <TierBar
@@ -447,7 +470,7 @@ export default function FlippeningTracker({
                         currentTierIdx={currentTierIdx}
                         progressInTier={progressInTier}
                         label={tier.label}
-                        previousLabel={TIERS[idx - 1].label}
+                        previousLabel={tiers[idx - 1].label}
                       />
                     );
                   })}

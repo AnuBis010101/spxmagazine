@@ -74,10 +74,10 @@ export default function ArticleCard({
   }
 
   return (
-    <TiltCard>
+    <TiltCard className="h-full">
       <Link
         href={href}
-        className="group rounded-xl overflow-hidden bg-mag-dark border border-mag-border hover:border-gold-400/40 transition-all duration-300 block hover:shadow-[0_8px_32px_rgba(212,175,55,0.12)]"
+        className="group rounded-xl overflow-hidden bg-mag-dark border border-mag-border hover:border-gold-400/40 transition-all duration-300 flex flex-col h-full hover:shadow-[0_8px_32px_rgba(212,175,55,0.12)]"
       >
         <div data-vt-cover className="aspect-video relative overflow-hidden">
           {post.cover_image ? (
@@ -97,8 +97,8 @@ export default function ArticleCard({
             </span>
           )}
         </div>
-        <div className="p-5">
-          <h3 className="font-display font-bold text-lg text-white line-clamp-2 group-hover:text-gold-400 transition-colors">
+        <div className="p-5 flex flex-col flex-1">
+          <h3 className="font-display font-bold text-lg text-white line-clamp-2 min-h-[3.5rem] group-hover:text-gold-400 transition-colors">
             {post.title}
           </h3>
           {post.excerpt && (
@@ -106,8 +106,9 @@ export default function ArticleCard({
               {post.excerpt}
             </p>
           )}
+          <div className="mt-auto pt-4">
           {post.author_name && (
-            <p className="text-xs text-gold-400/80 font-medium mt-2">
+            <p className="text-xs text-gold-400/80 font-medium">
               By {post.author_name}
             </p>
           )}
@@ -135,6 +136,7 @@ export default function ArticleCard({
             <span aria-hidden className="translate-x-0 transition-transform duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1">
               &rarr;
             </span>
+          </div>
           </div>
         </div>
       </Link>

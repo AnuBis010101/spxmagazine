@@ -14,8 +14,8 @@ export default function ArticleGrid({
     <div
       className={
         columns === 2
-          ? "grid gap-6 grid-cols-1 md:grid-cols-2"
-          : "grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          ? "grid gap-6 grid-cols-1 md:grid-cols-2 auto-rows-fr"
+          : "grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 auto-rows-fr"
       }
     >
       {posts.map((post) => (

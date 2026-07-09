@@ -20,6 +20,9 @@ interface Metric {
   source: string;
   asOf: string;
   direction: "up" | "down" | "flat";
+  /** Set for the rare metric moving in the *better* direction — suppresses the
+   *  trend/alarm indicator so it doesn't read as good news in a doom board. */
+  improving?: boolean;
 }
 
 interface CounterCulturePayload {
@@ -42,7 +45,7 @@ const DB_KEY = "counter_culture";
 // after deploy the stored copy is re-seeded from code instead of preserving the
 // now-stale DB values. Manual Supabase edits are still preserved *between*
 // version bumps.
-const SEED_VERSION = 2;
+const SEED_VERSION = 3;
 
 // ── Curated metrics (update via Supabase or bump STATIC_METRICS) ────────────
 //
@@ -259,10 +262,11 @@ const STATIC_METRICS: Metric[] = [
     category: "despair",
     label: "US overdose deaths (annual)",
     value: "~80,400",
-    context: "Down ~27% from 2023 — the steepest one-year drop on record, though still ~220 a day.",
+    context: "About 220 Americans still die from a drug overdose every single day.",
     source: "CDC National Center for Health Statistics",
     asOf: "2024",
     direction: "down",
+    improving: true,
   },
   {
     id: "suicide-rate",

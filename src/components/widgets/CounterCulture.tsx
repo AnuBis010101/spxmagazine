@@ -35,6 +35,7 @@ interface Metric {
   source: string;
   asOf: string;
   direction: "up" | "down" | "flat";
+  improving?: boolean;
 }
 
 interface CounterCultureData {
@@ -190,6 +191,35 @@ function TrendPill({ direction }: { direction: Metric["direction"] }) {
   );
 }
 
+// Flag the stats sitting at unprecedented levels — the loudest "this is a
+// problem" signal on the board.
+const RECORD_RE =
+  /record|all-time|steepest|lowest|highest|historic|new low|multi-decade low|since \d{3,4}|since wwii/i;
+
+function RecordBadge({ direction }: { direction: Metric["direction"] }) {
+  const label =
+    direction === "up" ? "Record high" : direction === "down" ? "Record low" : "Record";
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-500/15 px-2 py-[3px] ring-1 ring-red-500/40"
+      aria-label={label}
+    >
+      <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-red-400" />
+      <span className="whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.1em] text-red-300">
+        {label}
+      </span>
+    </span>
+  );
+}
+
+/** Improving outliers show nothing; record-setters get the RECORD badge;
+ *  everything else keeps a red trend arrow. */
+function StatusChip({ metric }: { metric: Metric }) {
+  if (metric.improving) return null;
+  if (RECORD_RE.test(metric.context)) return <RecordBadge direction={metric.direction} />;
+  return <TrendPill direction={metric.direction} />;
+}
+
 function MetricCard({
   metric,
   accent,
@@ -244,7 +274,7 @@ function MetricCard({
           <p className="min-w-0 flex-1 font-body text-[11px] uppercase leading-snug tracking-wider text-mag-muted">
             {metric.label}
           </p>
-          <TrendPill direction={metric.direction} />
+          <StatusChip metric={metric} />
         </div>
 
         <div className="mt-4">

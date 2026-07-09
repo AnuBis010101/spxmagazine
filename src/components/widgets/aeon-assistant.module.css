@@ -1,0 +1,327 @@
+/* Aeon Assistant — a Clippy-style desktop helper.
+   Pseudo-3D SVG character: each rig part animates via `data-anim` on .char.
+   All motion is transform/opacity only (GPU) — no layout thrash, no blur. */
+
+.wrap {
+  position: fixed;
+  left: 24px;
+  bottom: 20px;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none; /* children re-enable */
+  font-family: "Segoe UI", Tahoma, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---------- character stage (pseudo-3D) ---------- */
+.stage {
+  position: relative;
+  width: 150px;
+  height: 190px;
+  perspective: 950px;
+  pointer-events: auto;
+  cursor: pointer;
+  flex-shrink: 0;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+}
+.shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 92px;
+  height: 16px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.5), transparent 70%);
+  animation: shadowPulse 3.4s ease-in-out infinite;
+  z-index: 0;
+}
+/* show/hide poof lives on the wrapper so it never competes with the
+   whole-body data-anim moves (flip/knock/hop) on .char */
+.charWrap {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform-style: preserve-3d;
+  will-change: opacity, transform;
+}
+.charWrap[data-state="in"] { opacity: 1; animation: poofIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.charWrap[data-state="out"] { opacity: 0; animation: poofOut 0.45s ease-in forwards; }
+.char {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 92%;
+  will-change: transform;
+}
+.char svg { overflow: visible; display: block; }
+
+/* per-part transform origins */
+.part { transform-box: fill-box; }
+.head { transform-box: fill-box; transform-origin: 50% 100%; }
+.earL, .earR { transform-box: fill-box; transform-origin: 50% 100%; }
+.tailL, .tailR { transform-box: fill-box; transform-origin: 50% 0%; }
+.armL { transform-box: fill-box; transform-origin: 82% 8%; }
+.armR { transform-box: fill-box; transform-origin: 18% 8%; }
+.eyes { transform-box: fill-box; transform-origin: 50% 50%; }
+.pupils { transform-box: fill-box; transform-origin: 50% 50%; }
+.mouth { transform-box: fill-box; transform-origin: 50% 50%; }
+.blush { opacity: 0.9; }
+
+/* ---------- idle (always-on breathing / life) ---------- */
+.floaty { animation: bob 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.eyes { animation: blink 5.2s infinite; }
+.earL { animation: earTwitch 6s ease-in-out infinite; }
+.earR { animation: earTwitch 6s ease-in-out 0.4s infinite; }
+.tailL { animation: swayL 4.2s ease-in-out infinite; }
+.tailR { animation: swayR 4.2s ease-in-out infinite; }
+
+/* effects layers (hidden until an anim needs them) */
+.fx, .thought { opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; }
+.ripple {
+  position: absolute; inset: 0; margin: auto;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 3px solid rgba(212, 175, 55, 0.9);
+  opacity: 0; pointer-events: none; z-index: 3;
+  left: 46%; top: 40%;
+}
+
+/* ============================================================
+   ANIMATION STATES  (the Clippy move set)
+   ============================================================ */
+
+/* greeting / wave */
+.char[data-anim="wave"] .armR { animation: waveArm 1.1s ease-in-out 2; }
+.char[data-anim="wave"] .head { animation: nodTiny 1.1s ease-in-out; }
+
+/* getAttention — knock on the glass (iconic) */
+.char[data-anim="knock"] { animation: knockLean 1.15s ease-in-out 2; }
+.char[data-anim="knock"] .armR { animation: knockArm 0.38s ease-in-out 5; }
+.char[data-anim="knock"] .ripple { animation: ripple 0.38s ease-out 5; }
+.char[data-anim="knock"] .eyes { animation: blinkFast 0.38s 5; }
+
+/* flip / tumble (signature) */
+.char[data-anim="flip"] { animation: flip 1s cubic-bezier(0.4, 0, 0.3, 1); }
+
+/* thinking */
+.char[data-anim="think"] .armR { animation: chinArm 0.5s ease-out forwards; }
+.char[data-anim="think"] .head { animation: thinkTilt 2.4s ease-in-out; }
+.char[data-anim="think"] .thought { animation: thought 2.4s ease-in-out; }
+.char[data-anim="think"] .eyes { animation: lookUp 2.4s ease-in-out; }
+
+/* pointing (gesture) — left / right / up */
+.char[data-anim="pointL"] .armL { animation: pointLeft 2.2s ease-in-out; }
+.char[data-anim="pointL"] .head { animation: leanL 2.2s ease-in-out; }
+.char[data-anim="pointR"] .armR { animation: pointRight 2.2s ease-in-out; }
+.char[data-anim="pointR"] .head { animation: leanR 2.2s ease-in-out; }
+.char[data-anim="pointU"] .armR { animation: pointUp 2.2s ease-in-out; }
+.char[data-anim="pointU"] .eyes { animation: lookUp 2.2s ease-in-out; }
+
+/* congratulate / celebrate */
+.char[data-anim="celebrate"] { animation: hop 0.55s ease-in-out 3; }
+.char[data-anim="celebrate"] .armL { animation: raiseL 1.65s ease-in-out; }
+.char[data-anim="celebrate"] .armR { animation: raiseR 1.65s ease-in-out; }
+.char[data-anim="celebrate"] .fx { animation: sparkle 1.65s ease-out; }
+
+/* alert / surprised */
+.char[data-anim="alert"] { animation: alertJump 0.6s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.char[data-anim="alert"] .eyes { animation: eyesWide 0.6s ease-out; }
+.char[data-anim="alert"] .head { animation: shakeHead 0.6s ease-in-out; }
+
+/* writing / explain */
+.char[data-anim="write"] .armR { animation: writeArm 0.5s ease-in-out 4; }
+.char[data-anim="write"] .head { animation: nodTiny 2s ease-in-out; }
+
+/* look around (searching) */
+.char[data-anim="search"] .pupils { animation: dart 1.8s ease-in-out; }
+.char[data-anim="search"] .head { animation: scan 1.8s ease-in-out; }
+
+/* reduce arm reset between states */
+.armL, .armR, .head, .pupils, .eyes { will-change: transform; }
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+@keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes shadowPulse { 0%,100% { transform: translateX(-50%) scale(1); opacity: .5 } 50% { transform: translateX(-50%) scale(.86); opacity: .38 } }
+@keyframes blink { 0%,93%,100% { transform: scaleY(1) } 96% { transform: scaleY(0.08) } }
+@keyframes blinkFast { 0%,100% { transform: scaleY(1) } 50% { transform: scaleY(0.1) } }
+@keyframes earTwitch { 0%,88%,100% { transform: rotate(0) } 92% { transform: rotate(-9deg) } 96% { transform: rotate(4deg) } }
+@keyframes swayL { 0%,100% { transform: rotate(1.5deg) } 50% { transform: rotate(-3deg) } }
+@keyframes swayR { 0%,100% { transform: rotate(-1.5deg) } 50% { transform: rotate(3deg) } }
+
+@keyframes waveArm {
+  0%,100% { transform: rotate(0) }
+  15% { transform: rotate(-118deg) }
+  40% { transform: rotate(-100deg) }
+  65% { transform: rotate(-125deg) }
+  90% { transform: rotate(-105deg) }
+}
+@keyframes nodTiny { 0%,100% { transform: rotate(0) } 50% { transform: rotate(4deg) } }
+
+@keyframes knockLean {
+  0%,100% { transform: rotateX(0) rotateY(0) translateZ(0) scale(1) }
+  25% { transform: rotateX(9deg) translateZ(60px) scale(1.09) }
+  60% { transform: rotateX(6deg) translateZ(55px) scale(1.07) }
+}
+@keyframes knockArm {
+  0%,100% { transform: rotate(-42deg) translateX(0) }
+  50% { transform: rotate(-42deg) translateX(9px) translateY(-3px) }
+}
+@keyframes ripple {
+  0% { transform: scale(0.3); opacity: 0.9; border-width: 4px }
+  100% { transform: scale(2.6); opacity: 0; border-width: 1px }
+}
+
+@keyframes flip {
+  0% { transform: rotateY(0) translateY(0) }
+  35% { transform: rotateY(0) translateY(-46px) rotateX(8deg) }
+  50% { transform: rotateY(180deg) translateY(-52px) }
+  70% { transform: rotateY(360deg) translateY(-30px) }
+  100% { transform: rotateY(360deg) translateY(0) }
+}
+
+@keyframes chinArm { 0% { transform: rotate(0) } 100% { transform: rotate(-58deg) translateX(2px) } }
+@keyframes thinkTilt { 0%,100% { transform: rotate(0) } 30%,70% { transform: rotate(-7deg) } }
+@keyframes thought { 0%,100% { opacity: 0; transform: translateY(6px) scale(.7) } 25%,75% { opacity: 1; transform: translateY(0) scale(1) } }
+@keyframes lookUp { 0%,100% { transform: translateY(0) } 30%,70% { transform: translateY(-3px) } }
+
+@keyframes pointLeft { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(128deg) } }
+@keyframes pointRight { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-128deg) } }
+@keyframes pointUp { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-165deg) } }
+@keyframes leanL { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(6deg) } }
+@keyframes leanR { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-6deg) } }
+
+@keyframes hop { 0%,100% { transform: translateY(0) } 45% { transform: translateY(-22px) } }
+@keyframes raiseL { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(140deg) } }
+@keyframes raiseR { 0%,100% { transform: rotate(0) } 20%,80% { transform: rotate(-140deg) } }
+@keyframes sparkle { 0% { opacity: 0; transform: scale(.4) } 30% { opacity: 1 } 100% { opacity: 0; transform: scale(1.5) rotate(30deg) } }
+
+@keyframes alertJump { 0% { transform: translateY(0) scale(1) } 30% { transform: translateY(-30px) scale(1.06, .96) } 60% { transform: translateY(0) scale(.98, 1.03) } 100% { transform: translateY(0) scale(1) } }
+@keyframes eyesWide { 0%,100% { transform: scale(1) } 30%,70% { transform: scale(1.28) } }
+@keyframes shakeHead { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-6deg) } 75% { transform: rotate(6deg) } }
+
+@keyframes writeArm { 0%,100% { transform: rotate(-30deg) } 50% { transform: rotate(-30deg) translate(6px, 4px) } }
+@keyframes dart { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-3px) } 75% { transform: translateX(3px) } }
+@keyframes scan { 0%,100% { transform: rotate(0) } 25% { transform: rotate(-5deg) } 75% { transform: rotate(5deg) } }
+
+@keyframes poofIn { 0% { opacity: 0; transform: translateY(24px) scale(0.4) } 100% { opacity: 1; transform: translateY(0) scale(1) } }
+@keyframes poofOut { 0% { opacity: 1; transform: translateY(0) scale(1) } 100% { opacity: 0; transform: translateY(18px) scale(0.5) } }
+
+/* ============================================================
+   SPEECH BUBBLE — retro Windows dialog (Clippy / SPX error meme)
+   ============================================================ */
+.bubble {
+  position: relative;
+  pointer-events: auto;
+  width: 268px;
+  margin-bottom: 96px;
+  background: #ece9d8;
+  border: 1px solid #0a246a;
+  border-radius: 8px 8px 8px 2px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  color: #1a1a1a;
+  overflow: hidden;
+  transform-origin: bottom left;
+  animation: bubbleIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bubble::after { /* little tail toward the character */
+  content: "";
+  position: absolute;
+  left: 14px;
+  bottom: -9px;
+  width: 16px;
+  height: 16px;
+  background: #ece9d8;
+  border-right: 1px solid #0a246a;
+  border-bottom: 1px solid #0a246a;
+  transform: rotate(45deg);
+}
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 7px;
+  background: linear-gradient(180deg, #3b7ff0 0%, #2158d8 48%, #1a49c4 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+.titlebar .dot { width: 12px; height: 12px; border-radius: 3px; background: radial-gradient(circle at 30% 30%, #ffd76b, #d4af37); flex-shrink: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
+.titlebar .grow { flex: 1; }
+.xbtn {
+  width: 17px; height: 15px; border-radius: 3px;
+  background: linear-gradient(180deg, #f37b6e, #c23a28);
+  border: 1px solid #7a1c10;
+  color: #fff; font-size: 10px; line-height: 1;
+  display: grid; place-items: center; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+}
+.xbtn:hover { filter: brightness(1.08); }
+.body {
+  display: flex;
+  gap: 9px;
+  padding: 12px 12px 6px;
+  align-items: flex-start;
+}
+.icon {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  margin-top: 1px;
+}
+.msg { font-size: 12.5px; line-height: 1.42; color: #1c1c1c; }
+.msg b { color: #12308f; }
+.btnrow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 6px 12px 12px;
+}
+.xpbtn {
+  font-family: inherit;
+  font-size: 11.5px;
+  padding: 3px 12px;
+  min-width: 66px;
+  color: #111;
+  background: linear-gradient(180deg, #fdfdfd, #e3e3d6);
+  border: 1px solid #8a8a78;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgba(0,0,0,.12);
+  cursor: pointer;
+}
+.xpbtn:hover { border-color: #2158d8; background: linear-gradient(180deg, #fff, #eef3ff); }
+.xpbtn:active { box-shadow: inset 0 1px 3px rgba(0,0,0,.25); }
+.xpbtn.primary { font-weight: 700; border-color: #2158d8; }
+
+@keyframes bubbleIn { 0% { opacity: 0; transform: translateY(8px) scale(0.92) } 100% { opacity: 1; transform: translateY(0) scale(1) } }
+
+/* reopen tab when hidden */
+.reopen {
+  pointer-events: auto;
+  position: fixed;
+  left: 0; bottom: 26px;
+  z-index: 60;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px 8px 10px;
+  background: linear-gradient(180deg, #2158d8, #1a49c4);
+  color: #fff; font-size: 11px; font-weight: 700;
+  border: 1px solid #0a246a; border-left: none;
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 6px 18px rgba(0,0,0,.45);
+  cursor: pointer;
+  transform: translateX(-4px);
+  transition: transform .2s ease;
+}
+.reopen:hover { transform: translateX(0); }
+
+/* ---------- reduced motion: keep it calm ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .floaty, .earL, .earR, .tailL, .tailR, .shadow { animation: none; }
+  .eyes { animation: blink 6s infinite; }
+  .char[data-anim] { animation: none !important; }
+  .char[data-anim] * { animation: none !important; }
+  .char[data-anim="knock"] .ripple { animation: none; opacity: 0; }
+}

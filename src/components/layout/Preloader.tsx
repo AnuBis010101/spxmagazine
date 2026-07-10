@@ -49,7 +49,7 @@ export default function Preloader() {
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const minTime = reduce ? 200 : 1400; // minimum on-screen time
-    const maxTime = reduce ? 800 : 4000; // absolute failsafe — never hang
+    const maxTime = reduce ? 700 : 3500; // JS failsafe — just before the CSS bail
 
     const bump = (t: number) => {
       target = Math.max(target, t);
@@ -144,7 +144,7 @@ export default function Preloader() {
         // fails on a direct page load), fade the overlay out and stop blocking
         // after 4.5s — no JavaScript required.
         ...(phase === "loading"
-          ? { animation: "preloader-bail 450ms ease-in 4500ms forwards" }
+          ? { animation: "preloader-bail 500ms ease-in 4000ms forwards" }
           : {}),
       }}
     >
@@ -248,26 +248,6 @@ export default function Preloader() {
           {progress}%
         </span>
       </div>
-
-      {/* CSS animations */}
-      <style jsx>{`
-        @keyframes preloader-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes preloader-pulse {
-          0%, 100% { transform: scale(1); opacity: 0.9; }
-          50% { transform: scale(1.05); opacity: 1; }
-        }
-        @keyframes preloader-shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @keyframes preloader-bail {
-          0% { opacity: 1; pointer-events: none; }
-          100% { opacity: 0; visibility: hidden; pointer-events: none; }
-        }
-      `}</style>
     </div>
   );
 }

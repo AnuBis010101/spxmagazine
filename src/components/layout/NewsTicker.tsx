@@ -26,7 +26,7 @@ export function NewsTicker({ posts }: NewsTickerProps) {
       {/* Label */}
       <div className="flex-shrink-0 flex items-center gap-2 bg-gold-400 px-4 py-2 z-10">
         <span className="w-1.5 h-1.5 rounded-full bg-mag-black animate-pulse" />
-        <span className="text-xs font-bold text-mag-black uppercase tracking-widest whitespace-nowrap">
+        <span className="text-[8px] sm:text-xs font-bold text-mag-black uppercase tracking-widest whitespace-nowrap">
           Breaking
         </span>
       </div>
@@ -48,13 +48,22 @@ export function NewsTicker({ posts }: NewsTickerProps) {
       >
         <div
           className={`flex whitespace-nowrap py-2 ${marquee ? "animate-ticker" : ""}`}
-          style={marquee ? { animationDuration: `${posts.length * 2}s` } : undefined}
+          style={
+            marquee
+              ? ({
+                  // Mobile scrolls 3× faster than desktop (consumed in globals
+                  // by .animate-ticker + its sm breakpoint override).
+                  "--tk-dur-m": `${((posts.length * 2) / 3).toFixed(2)}s`,
+                  "--tk-dur-d": `${posts.length * 2}s`,
+                } as React.CSSProperties)
+              : undefined
+          }
         >
           {items.map((post, i) => (
             <Link
               key={`${post.id}-${i}`}
               href={`${CONTENT_PATH[post.content_type] ?? '/articles/'}${post.slug}`}
-              className="inline-flex items-center gap-2 px-6 text-sm text-mag-muted hover:text-white transition-colors flex-shrink-0"
+              className="inline-flex items-center gap-2 px-6 text-[9px] sm:text-sm text-mag-muted hover:text-white transition-colors flex-shrink-0"
             >
               <span className="w-1 h-1 rounded-full bg-gold-400/60 flex-shrink-0" />
               {post.title}

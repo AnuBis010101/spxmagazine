@@ -407,10 +407,19 @@ html[data-theme="gold"] {
 
 .animate-ticker {
   animation: ticker-scroll 30s linear infinite;
+  /* Duration is supplied inline (content-proportional). Mobile scrolls faster;
+     the sm override below restores the desktop pace. */
+  animation-duration: var(--tk-dur-m, 30s);
 }
 
 .animate-ticker:hover {
   animation-play-state: paused;
+}
+
+@media (min-width: 640px) {
+  .animate-ticker {
+    animation-duration: var(--tk-dur-d, var(--tk-dur-m, 30s));
+  }
 }
 
 /* Line Clamp Utilities */

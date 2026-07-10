@@ -87,6 +87,9 @@
    by the specific data-anim rules while a move is playing) */
 .head { animation: idleHeadSway 6.5s ease-in-out infinite; }
 .pupils { animation: idleGaze 8s ease-in-out infinite; }
+/* angelic wings gently beat; halo softly breathes */
+.wings { transform-box: fill-box; transform-origin: 50% 94%; animation: wingBeat 3.6s ease-in-out infinite; will-change: transform; }
+.halo { transform-box: fill-box; transform-origin: 50% 50%; animation: haloPulse 5s ease-in-out infinite; }
 
 /* effects layers (hidden until an anim needs them) */
 .fx, .thought, .fxHearts, .fxNotes, .fxDrop, .fxZzz, .fxAnger, .fxDizzy, .fxBang {
@@ -156,6 +159,8 @@
    KEYFRAMES
    ============================================================ */
 @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes wingBeat { 0%,100% { transform: scaleY(1) scaleX(1) } 50% { transform: scaleY(1.07) scaleX(0.93) } }
+@keyframes haloPulse { 0%,100% { opacity: 0.7; transform: scale(1) } 50% { opacity: 1; transform: scale(1.05) } }
 @keyframes shadowPulse { 0%,100% { transform: translateX(-50%) scale(1); opacity: .5 } 50% { transform: translateX(-50%) scale(.86); opacity: .38 } }
 @keyframes blink { 0%,93%,100% { transform: scaleY(1) } 96% { transform: scaleY(0.08) } }
 @keyframes blinkFast { 0%,100% { transform: scaleY(1) } 50% { transform: scaleY(0.1) } }
@@ -524,7 +529,7 @@
 
 /* ---------- reduced motion: keep it calm ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .floaty, .earL, .earR, .tailL, .tailR, .shadow, .head, .pupils, .mouth { animation: none; }
+  .floaty, .earL, .earR, .tailL, .tailR, .shadow, .head, .pupils, .mouth, .wings, .halo { animation: none; }
   .eyes { animation: blink 6s infinite; }
   .char[data-anim] { animation: none !important; }
   .char[data-anim] * { animation: none !important; }

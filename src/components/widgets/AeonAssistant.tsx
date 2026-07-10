@@ -353,8 +353,38 @@ function AeonSvg() {
           <stop offset="0" stopColor="#c4f1ff" stopOpacity="0.95"/>
           <stop offset="1" stopColor="#c4f1ff" stopOpacity="0"/>
         </radialGradient>
+        {/* ---- angelic wings ---- */}
+        <linearGradient id="chibi_wing" x1="0.15" y1="0.05" x2="0.75" y2="1">
+          <stop offset="0" stopColor="#ffffff"/>
+          <stop offset="0.55" stopColor="#e9f0fb"/>
+          <stop offset="1" stopColor="#c6d6ef"/>
+        </linearGradient>
+        <linearGradient id="chibi_wingLite" x1="0.2" y1="0" x2="0.7" y2="1">
+          <stop offset="0" stopColor="#ffffff"/>
+          <stop offset="1" stopColor="#eef4fc"/>
+        </linearGradient>
+        <radialGradient id="chibi_halo" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#fff6dc" stopOpacity="0.4"/>
+          <stop offset="0.55" stopColor="#eae1ff" stopOpacity="0.13"/>
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0"/>
+        </radialGradient>
+        {/* One wing (character's right); the left is this same shape mirrored. */}
+        <g id="chibi_wing_shape">
+          <path d="M84,113 C78,94 80,70 96,53 C106,42 119,37 128,43 C122,48 120,53 123,59 C116,58 113,64 115,72 C108,69 104,76 106,85 C98,81 94,89 95,99 C90,94 86,103 84,113 Z" fill="url(#chibi_wing)"/>
+          <path d="M88,109 C85,94 89,78 99,68 C106,61 114,58 121,62 C115,65 113,70 115,76 C109,73 105,78 106,85 C100,82 96,87 97,95 C92,91 90,100 88,109 Z" fill="url(#chibi_wingLite)"/>
+          <path d="M84,113 C78,94 80,70 96,53 C106,42 119,37 128,43" fill="none" stroke="#f6e6bd" strokeWidth="1.3" strokeOpacity="0.75" strokeLinecap="round"/>
+          <path d="M94,60 C98,74 101,88 99,101 M104,54 C109,68 112,82 111,95 M115,50 C119,62 121,74 118,85" fill="none" stroke="#ffffff" strokeWidth="0.8" strokeOpacity="0.5" strokeLinecap="round"/>
+        </g>
       </defs>
       <g className={styles.floaty}>
+        {/* ---- angelic halo + wings (behind everything) ---- */}
+        <ellipse className={styles.halo} cx="75" cy="74" rx="66" ry="82" fill="url(#chibi_halo)" aria-hidden />
+        <g className={styles.wings} aria-hidden>
+          <g transform="translate(75 108) scale(1.18) translate(-75 -108)">
+            <use href="#chibi_wing_shape" />
+            <use href="#chibi_wing_shape" transform="translate(150 0) scale(-1 1)" />
+          </g>
+        </g>
         <g>
           <path d="M33,72 C27,37 49,13 75,13 C101,13 123,37 117,72 C121,110 113,150 104,180 L98,180 C100,142 100,110 95,97 L55,97 C50,110 50,142 52,180 L46,180 C37,150 29,110 33,72 Z" fill="url(#chibi_hairBack)"/>
           <path d="M40,120 C42,140 46,160 50,178" fill="none" stroke="#7b879f" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.65"/>

@@ -47,6 +47,12 @@ export const metadata: Metadata = {
   },
 };
 
+// Runs at HTML parse time — independent of React hydration or even the app
+// bundle loading — so the preloader overlay can be force-dismissed no matter
+// what goes wrong client-side. This is the outermost guarantee that it can
+// never block the page (see Preloader.tsx for the full four-layer story).
+const PRELOADER_FAILSAFE = `(function(){var I="spx-preloader";function h(){var e=document.getElementById(I);if(!e||e.__spxHidden)return;e.__spxHidden=1;e.style.pointerEvents="none";e.style.transition="opacity .45s ease";e.style.opacity="0";setTimeout(function(){var x=document.getElementById(I);if(x)x.style.display="none";},480);}try{var seen=false;try{seen=!!sessionStorage.getItem("spx-loaded");}catch(_){}if(seen){var e=document.getElementById(I);if(e)e.style.display="none";return;}setTimeout(h,3800);window.addEventListener("load",function(){setTimeout(h,1200);});document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")setTimeout(h,1200);});window.addEventListener("pageshow",function(ev){if(ev&&ev.persisted)h();});}catch(_){setTimeout(h,3800);}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,6 +68,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col">
         <Preloader />
+        <script dangerouslySetInnerHTML={{ __html: PRELOADER_FAILSAFE }} />
         <SmoothScroll />
         {children}
         <Toaster

@@ -1,148 +1,108 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 
-const CRITICAL_ASSETS = [
-  "/spxlogo.png",
-];
+/**
+ * Preloader — deliberately impossible to leave on screen.
+ *
+ * Dismissal is guaranteed by FOUR independent mechanisms, in order of nicety:
+ *  1. React (this component) fades it out after a short hold — the happy path.
+ *  2. A hard JS cap here (3.5s) in case timers were throttled.
+ *  3. An inline failsafe <script> in the root layout that force-hides the
+ *     overlay by id — runs at HTML parse time, independent of React hydration
+ *     or even the app bundle loading at all.
+ *  4. A pure-CSS keyframe (`preloader-bail`) baked into the SSR markup that
+ *     fades it out with zero JavaScript.
+ *
+ * This component only needs to drive the pretty progress bar; if every bit of
+ * its own logic failed, #3 and #4 would still clear the screen.
+ */
+const PRELOADER_ID = "spx-preloader";
 
 export default function Preloader() {
-  const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState<"loading" | "finishing" | "done">(() => {
+  const [phase, setPhase] = useState<"loading" | "leaving" | "done">(() => {
     try {
-      if (typeof window !== "undefined" && sessionStorage.getItem("spx-loaded"))
+      if (typeof window !== "undefined" && sessionStorage.getItem("spx-loaded")) {
         return "done";
+      }
     } catch {
-      /* sessionStorage blocked — show the loader; it self-dismisses */
+      /* sessionStorage blocked — show it; the failsafes still dismiss it */
     }
     return "loading";
   });
-  const rafRef = useRef<number>(0);
-
-  const preloadImage = useCallback((src: string): Promise<void> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve();
-      img.src = src;
-    });
-  }, []);
+  const [progress, setProgress] = useState(8);
 
   useEffect(() => {
-    // Skip entirely if we've already loaded this session. Guarded — sessionStorage
-    // throws in some privacy/sandboxed contexts, and an uncaught throw here would
-    // abort the effect and leave the overlay stuck forever.
-    let alreadyLoaded = false;
-    try {
-      alreadyLoaded =
-        typeof window !== "undefined" && !!sessionStorage.getItem("spx-loaded");
-    } catch {
-      /* ignore */
-    }
-    if (alreadyLoaded) return;
+    if (phase !== "loading") return;
 
-    let cancelled = false;
-    let current = 0;
-    let target = 12; // never sit at a dead 0%
-    const start = Date.now();
     const reduce =
       typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const minTime = reduce ? 200 : 1400; // minimum on-screen time
-    const maxTime = reduce ? 700 : 3500; // JS failsafe — just before the CSS bail
+      (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
+    const hold = reduce ? 250 : 1300; // minimum on-screen time
+    const cap = reduce ? 800 : 3500; // hard JS cap — never sit past this
+    const start = Date.now();
 
-    const bump = (t: number) => {
-      target = Math.max(target, t);
-    };
-
-    // Load signals nudge the target upward — but they can NEVER block completion.
-    Promise.all(CRITICAL_ASSETS.map((src) => preloadImage(src))).then(() => bump(80));
-    if (document.fonts?.ready) document.fonts.ready.then(() => bump(92));
-    else bump(92);
-
-    const onLoad = () => bump(100);
-    if (document.readyState === "complete") bump(100);
-    else window.addEventListener("load", onLoad, { once: true });
-    const reachTimer = window.setTimeout(() => bump(100), reduce ? 100 : 1600);
+    const timers: Array<ReturnType<typeof setTimeout>> = [];
+    let done = false;
 
     const finish = () => {
-      if (cancelled) return;
-      cancelled = true;
+      if (done) return;
+      done = true;
       setProgress(100);
-      setPhase("finishing");
       try {
         sessionStorage.setItem("spx-loaded", "1");
       } catch {
-        /* sessionStorage may be unavailable */
+        /* ignore */
       }
-      window.setTimeout(() => setPhase("done"), reduce ? 200 : 700);
+      setPhase("leaving");
+      timers.push(setTimeout(() => setPhase("done"), reduce ? 200 : 550));
     };
 
-    // Failsafe 1 — dismiss no matter what after maxTime (hung font/asset signals).
-    const failsafe = window.setTimeout(finish, maxTime);
+    // Wall-clock progress via setInterval (independent of requestAnimationFrame,
+    // which is paused in background tabs). Finishes purely on elapsed time, so no
+    // asset/font/load signal can ever hold it open.
+    const iv = setInterval(() => {
+      if (done) return;
+      const p = Math.min(100, Math.round(((Date.now() - start) / hold) * 100));
+      setProgress(Math.max(8, p));
+      if (Date.now() - start >= hold) finish();
+    }, 80);
 
-    // Failsafe 2 — rAF and timers are paused/throttled in background tabs, which
-    // is the usual "stuck at 0%" cause when a page is opened in an unfocused tab.
-    // On return to the foreground, finish immediately if we've shown long enough.
-    const onVisibility = () => {
-      if (document.visibilityState === "visible" && Date.now() - start >= minTime) {
+    timers.push(setTimeout(finish, cap)); // hard cap
+    // Returning to a backgrounded tab (timers were throttled) → dismiss now.
+    const onVis = () => {
+      if (document.visibilityState === "visible" && Date.now() - start >= hold) {
         finish();
       }
     };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    // Failsafe 3 — back/forward-cache restore: the page is already fully loaded.
-    const onPageShow = (e: PageTransitionEvent) => {
+    // Back/forward-cache restore → page is already loaded.
+    const onShow = (e: PageTransitionEvent) => {
       if (e.persisted) finish();
     };
-    window.addEventListener("pageshow", onPageShow);
-
-    const animate = () => {
-      if (cancelled) return;
-      const elapsed = Date.now() - start;
-      // rAF resumed after a long background pause → jump straight to done.
-      if (elapsed >= maxTime) {
-        finish();
-        return;
-      }
-      current += (target - current) * 0.1;
-      // Guaranteed wall-clock progress so the bar always fills to 100% by
-      // minTime, even if no asset/font/load signal ever arrives.
-      current = Math.max(current, Math.min(100, (elapsed / minTime) * 100));
-
-      setProgress(Math.min(Math.round(current), 100));
-
-      if (current >= 99.5 && elapsed >= minTime) {
-        finish();
-        return;
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    rafRef.current = requestAnimationFrame(animate);
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pageshow", onShow);
 
     return () => {
-      cancelled = true;
-      cancelAnimationFrame(rafRef.current);
-      window.clearTimeout(failsafe);
-      window.clearTimeout(reachTimer);
-      window.removeEventListener("load", onLoad);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("pageshow", onPageShow);
+      clearInterval(iv);
+      timers.forEach(clearTimeout);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pageshow", onShow);
     };
-  }, [preloadImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (phase === "done") return null;
 
   return (
     <div
+      id={PRELOADER_ID}
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-700 ${
-        phase === "finishing" ? "opacity-0 pointer-events-none" : "opacity-100"
+        phase === "leaving" ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
       style={{
         backgroundColor: "#0A0A0A",
-        // Pure-CSS last resort: if the JS finishers never run (e.g. hydration
-        // fails on a direct page load), fade the overlay out and stop blocking
-        // after 4.5s — no JavaScript required.
+        // Pure-CSS last resort: even with zero JS / failed hydration this fades
+        // the overlay out and drops pointer-events after 4s.
         ...(phase === "loading"
           ? { animation: "preloader-bail 500ms ease-in 4000ms forwards" }
           : {}),
@@ -154,7 +114,8 @@ export default function Preloader() {
         style={{
           width: 400,
           height: 400,
-          background: "radial-gradient(circle, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.03) 40%, transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.03) 40%, transparent 70%)",
         }}
       />
 
@@ -163,9 +124,7 @@ export default function Preloader() {
         {/* Outer ring */}
         <div
           className="absolute inset-[-20px] rounded-full border border-gold-400/20"
-          style={{
-            animation: "preloader-spin 3s linear infinite",
-          }}
+          style={{ animation: "preloader-spin 3s linear infinite" }}
         >
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-gold-400"
@@ -178,17 +137,13 @@ export default function Preloader() {
         {/* Inner ring */}
         <div
           className="absolute inset-[-8px] rounded-full border border-gold-400/10"
-          style={{
-            animation: "preloader-spin 5s linear infinite reverse",
-          }}
+          style={{ animation: "preloader-spin 5s linear infinite reverse" }}
         />
 
         {/* Logo with pulse */}
         <div
           className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px]"
-          style={{
-            animation: "preloader-pulse 2s ease-in-out infinite",
-          }}
+          style={{ animation: "preloader-pulse 2s ease-in-out infinite" }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -197,16 +152,13 @@ export default function Preloader() {
             width={120}
             height={120}
             className="w-full h-full object-contain"
-            style={{
-              filter: "drop-shadow(0 0 20px rgba(212,175,55,0.3))",
-            }}
+            style={{ filter: "drop-shadow(0 0 20px rgba(212,175,55,0.3))" }}
           />
         </div>
       </div>
 
       {/* Progress bar */}
       <div className="w-[220px] sm:w-[260px] flex flex-col items-center gap-4">
-        {/* Bar track */}
         <div
           className="relative w-full h-[3px] rounded-full overflow-hidden"
           style={{ backgroundColor: "rgba(212,175,55,0.1)" }}
@@ -223,13 +175,12 @@ export default function Preloader() {
               transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           />
-
           {/* Glow at tip */}
           <div
             className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full pointer-events-none"
             style={{
               left: `${progress}%`,
-              transform: `translate(-50%, -50%)`,
+              transform: "translate(-50%, -50%)",
               background: "radial-gradient(circle, rgba(212,175,55,0.6) 0%, transparent 70%)",
               opacity: progress > 0 && progress < 100 ? 1 : 0,
               transition: "left 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",

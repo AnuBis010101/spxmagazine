@@ -380,7 +380,7 @@ function AeonSvg() {
         {/* ---- angelic halo + wings (behind everything) ---- */}
         <ellipse className={styles.halo} cx="75" cy="74" rx="66" ry="82" fill="url(#chibi_halo)" aria-hidden />
         <g className={styles.wings} aria-hidden>
-          <g transform="translate(75 108) scale(1.18) translate(-75 -108)">
+          <g transform="translate(75 146) scale(1.40) translate(-75 -78)">
             <use href="#chibi_wing_shape" />
             <use href="#chibi_wing_shape" transform="translate(150 0) scale(-1 1)" />
           </g>

@@ -337,10 +337,22 @@ function AeonSvg() {
           <stop offset="0.5" stopColor="#f4c14e"/>
           <stop offset="1" stopColor="#d3941f"/>
         </linearGradient>
-        <linearGradient id="chibi_top" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#2d2d39"/>
-          <stop offset="1" stopColor="#0e0e16"/>
+        {/* robe of light — luminous white with a cool-blue drape and a warm halo sheen */}
+        <linearGradient id="chibi_top" x1="0.15" y1="0" x2="0.85" y2="1">
+          <stop offset="0" stopColor="#ffffff"/>
+          <stop offset="0.42" stopColor="#f4f8ff"/>
+          <stop offset="0.8" stopColor="#e4eeff"/>
+          <stop offset="1" stopColor="#d3e2fb"/>
         </linearGradient>
+        <radialGradient id="chibi_robeSheen" cx="0.5" cy="0.28" r="0.75">
+          <stop offset="0" stopColor="#fffdf3" stopOpacity="0.9"/>
+          <stop offset="0.55" stopColor="#ffffff" stopOpacity="0"/>
+        </radialGradient>
+        <radialGradient id="chibi_robeGlow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#fff6de" stopOpacity="0.62"/>
+          <stop offset="0.5" stopColor="#e8f2ff" stopOpacity="0.32"/>
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0"/>
+        </radialGradient>
         <radialGradient id="chibi_blush" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor="#ff9c9c" stopOpacity="0.85"/>
           <stop offset="1" stopColor="#ff9c9c" stopOpacity="0"/>
@@ -385,7 +397,7 @@ function AeonSvg() {
             <use href="#chibi_wing_shape" transform="translate(150 0) scale(-1 1)" />
           </g>
         </g>
-        <g>
+        <g className={styles.headSync}>
           <path d="M33,72 C27,37 49,13 75,13 C101,13 123,37 117,72 C121,110 113,150 104,180 L98,180 C100,142 100,110 95,97 L55,97 C50,110 50,142 52,180 L46,180 C37,150 29,110 33,72 Z" fill="url(#chibi_hairBack)"/>
           <path d="M40,120 C42,140 46,160 50,178" fill="none" stroke="#7b879f" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.65"/>
           <path d="M110,120 C108,140 104,160 100,178" fill="none" stroke="#7b879f" strokeWidth="1.8" strokeLinecap="round" strokeOpacity="0.65"/>
@@ -393,13 +405,34 @@ function AeonSvg() {
           <path d="M114,100 C114,130 110,158 103,180" fill="none" stroke="#94a0b7" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.5"/>
           <path d="M33,72 C27,37 49,13 75,13 C99,14 118,34 118,64" fill="none" stroke="#f2f8ff" strokeWidth="1.7" strokeLinecap="round" strokeOpacity="0.7"/>
         </g>
-        <g>
-          <path d="M52,107 C50,122 47,150 45,190 L105,190 C103,150 100,122 98,107 C89,116 61,116 52,107 Z" fill="url(#chibi_top)"/>
-          <path d="M75,116 C84,116 92,113 96,108 C97,130 98,160 99,190 L75,190 Z" fill="#000000" opacity="0.16"/>
+        <ellipse className={styles.robeAura} cx="75" cy="152" rx="53" ry="58" fill="url(#chibi_robeGlow)" aria-hidden />
+        <g className={styles.robe}>
+          {/* flared robe of light */}
+          <path d="M52,107 C49,130 42,161 38,191 C56,197 94,197 112,191 C108,161 101,130 98,107 C89,116 61,116 52,107 Z" fill="url(#chibi_top)"/>
+          {/* soft cool drape on the shadow side */}
+          <path d="M75,116 C84,116 92,113 96,108 C100,140 106,170 110,192 C98,196 84,195 75,194 Z" fill="#c3d6f4" opacity="0.5"/>
+          {/* inner luminous sheen */}
+          <path d="M52,107 C49,130 42,161 38,191 C56,197 94,197 112,191 C108,161 101,130 98,107 C89,116 61,116 52,107 Z" fill="url(#chibi_robeSheen)"/>
+          {/* luminous rim on the lit side */}
+          <path d="M50,109 C47,133 41,164 38,190" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.5"/>
+          {/* drape fold lines (cool blue on white) */}
+          <path d="M52,107 C50,132 46,162 42,190" fill="none" stroke="#a9bde3" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+          <path d="M98,107 C100,132 104,162 108,190" fill="none" stroke="#9fb4dd" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.6"/>
+          <path d="M63,120 C61,150 60,174 60,193" fill="none" stroke="#c4d3ee" strokeWidth="1" strokeLinecap="round" strokeOpacity="0.55"/>
+          <path d="M88,120 C90,150 91,174 91,193" fill="none" stroke="#b7c8e8" strokeWidth="1" strokeLinecap="round" strokeOpacity="0.5"/>
+          {/* white light streak */}
+          <path d="M60,116 C57,145 55,172 56,193" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeOpacity="0.7"/>
+          {/* gold neckline, center seam + curved hem trim */}
           <path d="M53,108 C61,116 89,116 97,108" fill="none" stroke="url(#chibi_gold)" strokeWidth="2.2" strokeLinecap="round"/>
-          <path d="M75,116 L75,150" fill="none" stroke="#e6b34d" strokeWidth="1.1" strokeOpacity="0.5"/>
-          <path d="M52,107 C54,116 56,124 57,132" fill="none" stroke="#6f7d99" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.85"/>
-          <path d="M98,107 C96,116 94,124 93,132" fill="none" stroke="#3f3f4c" strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.7"/>
+          <path d="M75,116 L75,192" fill="none" stroke="#e9c876" strokeWidth="1.1" strokeOpacity="0.55"/>
+          <path d="M39,189 C57,195 93,195 111,189" fill="none" stroke="url(#chibi_gold)" strokeWidth="1.7" strokeLinecap="round" strokeOpacity="0.9"/>
+          {/* gold waist sash + kawaii bow */}
+          <path d="M45,133 C58,140 92,140 105,133" fill="none" stroke="url(#chibi_gold)" strokeWidth="3.2" strokeLinecap="round"/>
+          <path d="M73,137 C72,147 71,154 70,161" fill="none" stroke="url(#chibi_gold)" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M77,137 C78,147 79,154 80,161" fill="none" stroke="url(#chibi_gold)" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M75,137 L66.5,132 C64.5,135 64.5,139 66.5,142 Z" fill="url(#chibi_gold)" stroke="#c8981f" strokeWidth="0.4"/>
+          <path d="M75,137 L83.5,132 C85.5,135 85.5,139 83.5,142 Z" fill="url(#chibi_gold)" stroke="#c8981f" strokeWidth="0.4"/>
+          <circle cx="75" cy="137" r="2.1" fill="#ffe79a" stroke="#c8981f" strokeWidth="0.5"/>
         </g>
         <g className={styles.head}>
           <path d="M66,92 C66,102 68,110 75,111 C82,110 84,102 84,92 Z" fill="url(#chibi_skin)"/>
@@ -468,6 +501,7 @@ function AeonSvg() {
             <circle cx="72" cy="14.5" r="1" fill="#fff3c4"/>
           </g>
         </g>
+        <g className={styles.headSync}>
         <g className={styles.tailL}>
           <path d="M47,42 C36,60 33,102 39,142 C40,150 45,151 47,146 C44,110 47,72 55,50 C54,43 50,40 47,42 Z" fill="url(#chibi_hair)"/>
           <path d="M52,52 C46,80 46,114 45,142 C47,144 46,120 50,84 C52,68 54,56 55,50 Z" fill="#aab4c8" opacity="0.45"/>
@@ -480,9 +514,10 @@ function AeonSvg() {
           <path d="M102,48 C109,66 111,102 108,134" fill="none" stroke="#eef3fb" strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.55"/>
           <path d="M98,52 C102,80 102,114 105,142" fill="none" stroke="#8a95ad" strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.7"/>
         </g>
+        </g>
         <g className={styles.armL}>
           <path d="M52,110 C43,116 38,140 39,166 C39,174 48,176 52,170 C55,148 57,126 58,114 C57,110 55,108 52,110 Z" fill="url(#chibi_top)"/>
-          <path d="M52,111 C46,118 43,138 43,160" fill="none" stroke="#6b7590" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.75"/>
+          <path d="M52,111 C46,118 43,138 43,160" fill="none" stroke="#a9bde3" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.75"/>
           <path d="M40,163 C39,170 47,173 51,168" fill="none" stroke="url(#chibi_gold)" strokeWidth="1.8" strokeLinecap="round"/>
           <ellipse cx="45.5" cy="172" rx="5.2" ry="4.6" fill="url(#chibi_skin)"/>
           <path d="M43,170 a5.2 4.6 0 0 0 5,4" fill="#000000" opacity="0.12"/>
@@ -490,7 +525,7 @@ function AeonSvg() {
         </g>
         <g className={styles.armR}>
           <path d="M98,110 C107,116 112,140 111,166 C111,174 102,176 98,170 C95,148 93,126 92,114 C93,110 95,108 98,110 Z" fill="url(#chibi_top)"/>
-          <path d="M98,111 C104,118 107,138 107,160" fill="none" stroke="#43434f" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.7"/>
+          <path d="M98,111 C104,118 107,138 107,160" fill="none" stroke="#9fb4dd" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.7"/>
           <path d="M110,163 C111,170 103,173 99,168" fill="none" stroke="url(#chibi_gold)" strokeWidth="1.8" strokeLinecap="round"/>
           <ellipse cx="104.5" cy="172" rx="5.2" ry="4.6" fill="url(#chibi_skin)"/>
           <path d="M107,170 a5.2 4.6 0 0 1 -5,4" fill="#000000" opacity="0.14"/>

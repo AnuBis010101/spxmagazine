@@ -67,6 +67,7 @@
 /* per-part transform origins */
 .part { transform-box: fill-box; }
 .head { transform-box: fill-box; transform-origin: 50% 100%; }
+.headSync { transform-box: view-box; transform-origin: 75px 111px; }
 .earL, .earR { transform-box: fill-box; transform-origin: 50% 100%; }
 .tailL, .tailR { transform-box: fill-box; transform-origin: 50% 0%; }
 .armL { transform-box: fill-box; transform-origin: 82% 8%; }
@@ -85,11 +86,14 @@
 .tailR { animation: swayR 4.2s ease-in-out infinite; }
 /* subtle head sway + wandering gaze so she's alive between gags (overridden
    by the specific data-anim rules while a move is playing) */
-.head { animation: idleHeadSway 6.5s ease-in-out infinite; }
+.head, .headSync { animation: idleHeadSway 6.5s ease-in-out infinite; }
 .pupils { animation: idleGaze 8s ease-in-out infinite; }
 /* angelic wings gently beat; halo softly breathes */
 .wings { transform-box: fill-box; transform-origin: 50% 94%; animation: wingBeat 3.6s ease-in-out infinite; will-change: transform; }
 .halo { transform-box: fill-box; transform-origin: 50% 50%; animation: haloPulse 5s ease-in-out infinite; }
+/* robe of light: hem drifts like cloth from the shoulders; its aura softly glows */
+.robe { transform-box: fill-box; transform-origin: 50% 3%; animation: robeSway 5.6s ease-in-out infinite; will-change: transform; }
+.robeAura { transform-box: fill-box; transform-origin: 50% 50%; animation: robeGlow 4.6s ease-in-out infinite; }
 
 /* effects layers (hidden until an anim needs them) */
 .fx, .thought, .fxHearts, .fxNotes, .fxDrop, .fxZzz, .fxAnger, .fxDizzy, .fxBang {
@@ -109,7 +113,7 @@
 
 /* greeting / wave */
 .char[data-anim="wave"] .armR { animation: waveArm 1.1s ease-in-out 2; }
-.char[data-anim="wave"] .head { animation: nodTiny 1.1s ease-in-out; }
+.char[data-anim="wave"] .head, .char[data-anim="wave"] .headSync { animation: nodTiny 1.1s ease-in-out; }
 
 /* getAttention — knock on the glass (iconic) */
 .char[data-anim="knock"] { animation: knockLean 1.15s ease-in-out 2; }
@@ -121,15 +125,15 @@
 .char[data-anim="flip"] { animation: flip 1s cubic-bezier(0.4, 0, 0.3, 1); }
 
 /* thinking (head tilt + thought bubble + eyes up; arm stays relaxed) */
-.char[data-anim="think"] .head { animation: thinkTilt 2.4s ease-in-out; }
+.char[data-anim="think"] .head, .char[data-anim="think"] .headSync { animation: thinkTilt 2.4s ease-in-out; }
 .char[data-anim="think"] .thought { animation: thought 2.4s ease-in-out; }
 .char[data-anim="think"] .eyes { animation: lookUp 2.4s ease-in-out; }
 
 /* pointing (gesture) — left / right / up */
 .char[data-anim="pointL"] .armL { animation: pointLeft 2.2s ease-in-out; }
-.char[data-anim="pointL"] .head { animation: leanL 2.2s ease-in-out; }
+.char[data-anim="pointL"] .head, .char[data-anim="pointL"] .headSync { animation: leanL 2.2s ease-in-out; }
 .char[data-anim="pointR"] .armR { animation: pointRight 2.2s ease-in-out; }
-.char[data-anim="pointR"] .head { animation: leanR 2.2s ease-in-out; }
+.char[data-anim="pointR"] .head, .char[data-anim="pointR"] .headSync { animation: leanR 2.2s ease-in-out; }
 .char[data-anim="pointU"] .armR { animation: pointUp 2.2s ease-in-out; }
 .char[data-anim="pointU"] .eyes { animation: lookUp 2.2s ease-in-out; }
 
@@ -142,18 +146,18 @@
 /* alert / surprised */
 .char[data-anim="alert"] { animation: alertJump 0.6s cubic-bezier(0.3, 1.6, 0.5, 1); }
 .char[data-anim="alert"] .eyes { animation: eyesWide 0.6s ease-out; }
-.char[data-anim="alert"] .head { animation: shakeHead 0.6s ease-in-out; }
+.char[data-anim="alert"] .head, .char[data-anim="alert"] .headSync { animation: shakeHead 0.6s ease-in-out; }
 
 /* writing / explain */
 .char[data-anim="write"] .armR { animation: writeArm 0.5s ease-in-out 4; }
-.char[data-anim="write"] .head { animation: nodTiny 2s ease-in-out; }
+.char[data-anim="write"] .head, .char[data-anim="write"] .headSync { animation: nodTiny 2s ease-in-out; }
 
 /* look around (searching) */
 .char[data-anim="search"] .pupils { animation: dart 1.8s ease-in-out; }
-.char[data-anim="search"] .head { animation: scan 1.8s ease-in-out; }
+.char[data-anim="search"] .head, .char[data-anim="search"] .headSync { animation: scan 1.8s ease-in-out; }
 
 /* reduce arm reset between states */
-.armL, .armR, .head, .pupils, .eyes { will-change: transform; }
+.armL, .armR, .head, .headSync, .pupils, .eyes { will-change: transform; }
 
 /* ============================================================
    KEYFRAMES
@@ -161,6 +165,9 @@
 @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
 @keyframes wingBeat { 0%,100% { transform: scaleY(1) scaleX(1) } 50% { transform: scaleY(1.07) scaleX(0.93) } }
 @keyframes haloPulse { 0%,100% { opacity: 0.7; transform: scale(1) } 50% { opacity: 1; transform: scale(1.05) } }
+/* gentle cloth drift — hem sways + breathes, pivoting from the shoulders so the robe stays wired to her */
+@keyframes robeSway { 0%,100% { transform: rotate(-1.1deg) skewX(0.6deg) } 50% { transform: rotate(1.2deg) skewX(-0.7deg) } }
+@keyframes robeGlow { 0%,100% { opacity: 0.75; transform: scale(0.98) } 50% { opacity: 1; transform: scale(1.04) } }
 @keyframes shadowPulse { 0%,100% { transform: translateX(-50%) scale(1); opacity: .5 } 50% { transform: translateX(-50%) scale(.86); opacity: .38 } }
 @keyframes blink { 0%,93%,100% { transform: scaleY(1) } 96% { transform: scaleY(0.08) } }
 @keyframes blinkFast { 0%,100% { transform: scaleY(1) } 50% { transform: scaleY(0.1) } }
@@ -259,49 +266,49 @@
 
 /* dizzy — loll around with orbiting stars */
 .char[data-anim="dizzy"] { animation: dizzyBody 1.6s ease-in-out; }
-.char[data-anim="dizzy"] .head { animation: dizzyHead 1.6s ease-in-out; }
+.char[data-anim="dizzy"] .head, .char[data-anim="dizzy"] .headSync { animation: dizzyHead 1.6s ease-in-out; }
 .char[data-anim="dizzy"] .eyes { animation: squint 1.6s ease-in-out; }
 .char[data-anim="dizzy"] .fxDizzy { animation: dizzyStars 1.6s linear; }
 
 /* dance — sway + arms + music notes */
 .char[data-anim="dance"] { animation: danceBody 1.8s ease-in-out; }
-.char[data-anim="dance"] .head { animation: danceHead 1.8s ease-in-out; }
+.char[data-anim="dance"] .head, .char[data-anim="dance"] .headSync { animation: danceHead 1.8s ease-in-out; }
 .char[data-anim="dance"] .armL { animation: danceArmL 1.8s ease-in-out; }
 .char[data-anim="dance"] .armR { animation: danceArmR 1.8s ease-in-out; }
 .char[data-anim="dance"] .fxNotes { animation: notesFloat 1.8s ease-out; }
 
 /* headbang */
 .char[data-anim="headbang"] { animation: headbangBody 1.2s ease-in-out; }
-.char[data-anim="headbang"] .head { animation: headbangHead 0.2s ease-in-out 6; }
+.char[data-anim="headbang"] .head, .char[data-anim="headbang"] .headSync { animation: headbangHead 0.2s ease-in-out 6; }
 .char[data-anim="headbang"] .fxNotes { animation: notesFloat 1.2s ease-out; }
 
 /* sneeze — build-up, ACHOO */
 .char[data-anim="sneeze"] { animation: sneezeBody 1.3s ease-in-out; }
-.char[data-anim="sneeze"] .head { animation: sneezeHead 1.3s ease-in-out; }
+.char[data-anim="sneeze"] .head, .char[data-anim="sneeze"] .headSync { animation: sneezeHead 1.3s ease-in-out; }
 .char[data-anim="sneeze"] .eyes { animation: squint 1.3s ease-in-out; }
 .char[data-anim="sneeze"] .fxBang { animation: bangPop 0.5s ease-out .52s; }
 
 /* laugh — cracking up, tears of joy */
 .char[data-anim="laugh"] { animation: laughBody 1.6s ease-in-out; }
-.char[data-anim="laugh"] .head { animation: laughHead 1.6s ease-in-out; }
+.char[data-anim="laugh"] .head, .char[data-anim="laugh"] .headSync { animation: laughHead 1.6s ease-in-out; }
 .char[data-anim="laugh"] .mouth { animation: mouthOpen 1.6s ease-in-out; }
 .char[data-anim="laugh"] .fxDrop { animation: dropFall 1.6s ease-out; }
 
 /* love — heart eyes + floating hearts */
 .char[data-anim="love"] { animation: loveBody 1.8s ease-in-out; }
-.char[data-anim="love"] .head { animation: leanBobHappy 1.8s ease-in-out; }
+.char[data-anim="love"] .head, .char[data-anim="love"] .headSync { animation: leanBobHappy 1.8s ease-in-out; }
 .char[data-anim="love"] .eyes { animation: eyeSquishHappy 1.8s ease-in-out; }
 .char[data-anim="love"] .fxHearts { animation: heartsFloat 1.8s ease-out; }
 
 /* cry — waterworks */
 .char[data-anim="cry"] { animation: cryBody 1.7s ease-in-out; }
-.char[data-anim="cry"] .head { animation: cryHead 1.7s ease-in-out; }
+.char[data-anim="cry"] .head, .char[data-anim="cry"] .headSync { animation: cryHead 1.7s ease-in-out; }
 .char[data-anim="cry"] .mouth { animation: mouthFrown 1.7s ease-in-out; }
 .char[data-anim="cry"] .fxDrop { animation: tearStream 0.85s ease-in 2; }
 
 /* angry — puff up, anger vein */
 .char[data-anim="angry"] { animation: angryBody 1s ease-in-out; }
-.char[data-anim="angry"] .head { animation: shakeFast 1s ease-in-out; }
+.char[data-anim="angry"] .head, .char[data-anim="angry"] .headSync { animation: shakeFast 1s ease-in-out; }
 .char[data-anim="angry"] .fxAnger { animation: angerPulse 1s ease-out; }
 
 /* shocked — recoil + jaw drop + bang */
@@ -312,13 +319,13 @@
 
 /* sleepy — nodding off, Zzz */
 .char[data-anim="sleepy"] { animation: sleepyBody 2.2s ease-in-out; }
-.char[data-anim="sleepy"] .head { animation: droop 2.2s ease-in-out; }
+.char[data-anim="sleepy"] .head, .char[data-anim="sleepy"] .headSync { animation: droop 2.2s ease-in-out; }
 .char[data-anim="sleepy"] .eyes { animation: squint 2.2s ease-in-out; }
 .char[data-anim="sleepy"] .fxZzz { animation: zzzFloat 2.2s ease-out; }
 
 /* shrug — i dunno */
 .char[data-anim="shrug"] { animation: shrugBody 1.2s ease-in-out; }
-.char[data-anim="shrug"] .head { animation: shrugHead 1.2s ease-in-out; }
+.char[data-anim="shrug"] .head, .char[data-anim="shrug"] .headSync { animation: shrugHead 1.2s ease-in-out; }
 .char[data-anim="shrug"] .armL { animation: shrugArmL 1.2s ease-in-out; }
 .char[data-anim="shrug"] .armR { animation: shrugArmR 1.2s ease-in-out; }
 .char[data-anim="shrug"] .thought { animation: thought 1.2s ease-in-out; }
@@ -529,7 +536,7 @@
 
 /* ---------- reduced motion: keep it calm ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .floaty, .earL, .earR, .tailL, .tailR, .shadow, .head, .pupils, .mouth, .wings, .halo { animation: none; }
+  .floaty, .earL, .earR, .tailL, .tailR, .shadow, .head, .headSync, .robe, .robeAura, .pupils, .mouth, .wings, .halo { animation: none; }
   .eyes { animation: blink 6s infinite; }
   .char[data-anim] { animation: none !important; }
   .char[data-anim] * { animation: none !important; }

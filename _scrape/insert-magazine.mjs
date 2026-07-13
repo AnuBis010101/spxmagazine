@@ -27,6 +27,11 @@ const MAG = 'spx-magazine';
 const AUTHOR = 'SPX Magazine';
 
 const articles = [
+  { file: 'mag-cognisphere-weekly-3.json',
+    title: 'The Cognisphere Weekly #3', slug: 'the-cognisphere-weekly-3',
+    published_at: '2026-07-12T00:00:00Z',
+    excerpt: 'Some weeks build quietly. A reborn spx6900.com with Lumi, six Aeons meeting up down under, the first DC meetup incoming — and something of our own landing Tuesday.',
+    tags: [MAG, 'weekly', 'community', 'cognisphere'] },
   { file: 'mag-cognisphere-weekly-2.json',
     title: 'The Cognisphere Weekly #2', slug: 'the-cognisphere-weekly-2',
     published_at: '2026-07-03T00:00:00Z',

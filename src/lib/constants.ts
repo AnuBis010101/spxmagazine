@@ -8,6 +8,7 @@ export type NavItem = { label: string; href: string; children?: NavChild[] };
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "News", href: "/news" },
+  { label: "Videos", href: "/videos" },
   {
     label: "Articles",
     href: "/articles",
@@ -26,6 +27,9 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   { label: "Data", href: "/data" },
+  { label: "Magazines", href: "/magazines" },
+  { label: "Books", href: "/books" },
+  { label: "Store", href: "/store" },
 ];
 
 // External newsletter signup page (Substack).

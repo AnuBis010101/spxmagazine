@@ -1,6 +1,6 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import type { Post, ContentType } from "@/types/content";
-import { POSTS_PER_PAGE } from "@/lib/constants";
+import { POSTS_PER_PAGE, MAGAZINE_TAG } from "@/lib/constants";
 
 export async function getPublishedPosts(
   contentType?: ContentType,
@@ -178,6 +178,19 @@ export async function getLatestByContentType(
 
   if (error) return [];
   return (data as Post[]) || [];
+}
+
+// Latest community articles — 'article' posts WITHOUT the magazine tag.
+// Feeds the home "Articles" tab.
+export async function getLatestCommunityArticles(limit = 3): Promise<Post[]> {
+  const { posts } = await getPublishedPosts(
+    "article",
+    1,
+    limit,
+    undefined,
+    MAGAZINE_TAG
+  );
+  return posts;
 }
 
 export async function searchPosts(query: string): Promise<Post[]> {

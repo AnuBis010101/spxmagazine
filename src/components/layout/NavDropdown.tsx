@@ -64,7 +64,7 @@ export default function NavDropdown({
     >
       <Link
         href={item.href}
-        className="relative flex items-center gap-1 px-4 py-1.5"
+        className="relative flex items-center gap-1 px-3 py-1.5"
         aria-haspopup="true"
         aria-expanded={open}
       >

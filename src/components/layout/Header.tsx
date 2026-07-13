@@ -28,7 +28,7 @@ function NavItem({
   return (
     <Link
       href={href}
-      className="relative flex items-center px-4 py-1.5"
+      className="relative flex items-center px-3 py-1.5"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -152,7 +152,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-0.5 lg:flex">
             {NAV_ITEMS.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
@@ -205,7 +205,7 @@ export function Header() {
             <motion.button
               type="button"
               onClick={() => setIsMobileNavOpen(true)}
-              className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400 md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400 lg:hidden"
               aria-label="Open menu"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.93 }}

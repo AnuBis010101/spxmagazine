@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/lib/constants";
-import { getHeroPost, getFeaturedPosts, getLatestByContentType, getTrendingPosts } from "@/lib/queries/articles";
+import { getHeroPost, getFeaturedPosts, getLatestByContentType, getLatestCommunityArticles, getTrendingPosts } from "@/lib/queries/articles";
 import { getFeaturedVideo } from "@/lib/queries/videos";
 import { getSidebarTweets } from "@/lib/queries/tweets";
 import { getGlossaryTerms } from "@/lib/queries/glossary";
@@ -39,7 +39,7 @@ export default async function HomePage() {
     getHeroPost(),
     getFeaturedPosts(6),
     getLatestByContentType("news", 4),
-    getLatestByContentType("article", 3),
+    getLatestCommunityArticles(3),
     getLatestByContentType("learn", 4),
     getFeaturedVideo(),
     getSidebarTweets(8),

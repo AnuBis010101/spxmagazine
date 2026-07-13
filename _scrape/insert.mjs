@@ -75,6 +75,27 @@ const scraped = [
     slug: 'spx6900-culture-an-insiders-perspective',
     author_name: 'T-Dog', published_at: '2025-03-28T00:00:00Z',
     tags: ['culture', 'community', 'guide'] },
+  { file: 'dexterity-spx-does-what-cryptdont.json',
+    title: "SPX6900 does what Cryptdon't.",
+    slug: 'spx6900-does-what-cryptdont',
+    author_name: 'Dexterity', published_at: '2026-06-09T21:31:46Z',
+    tags: ['culture', 'belief', 'movement', 'opinion', 'aeon'] },
+  // @snp500to0 — "Five Hundred Issues with the S&P 500" satire series
+  { file: 'snp-match-group-predators-casino.json',
+    title: "Match Group Inc.: Predator's Casino",
+    slug: 'match-group-predators-casino',
+    author_name: 'S&P500 hater', published_at: '2026-02-15T21:55:11Z',
+    tags: ['satire', 'sp500', 'critique', 'dating-apps'] },
+  { file: 'snp-davita-pay-them-off-clinic.json',
+    title: 'DaVita Inc.: The "Pay Them Off" Clinic',
+    slug: 'davita-pay-them-off-clinic',
+    author_name: 'S&P500 hater', published_at: '2026-01-27T21:15:16Z',
+    tags: ['satire', 'sp500', 'critique', 'healthcare'] },
+  { file: 'snp-lamb-weston-potato-cartel.json',
+    title: 'Lamb Weston: The Potato Cartel',
+    slug: 'lamb-weston-the-potato-cartel',
+    author_name: 'S&P500 hater', published_at: '2026-01-21T18:29:34Z',
+    tags: ['satire', 'sp500', 'critique', 'food'] },
 ];
 
 // ---- Repo-prepared T-Dog pieces (never inserted). Bodies pulled from existing scripts. ----

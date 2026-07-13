@@ -1,0 +1,118 @@
+import { writeFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Body captured byte-exact from X with spaces rendered as · so nothing collapses.
+const TOTAL = [17961, 3258372631];
+const ck = s => { let h=0; for (let i=0;i<s.length;i++){ h=(h*31 + s.charCodeAt(i))>>>0; } return h; };
+
+const DOT = `<h2>Five·Hundred·Issues·with·the·S[[AMP]]amp;P·500·—·№498</h2>
+<p>Match·Group,·Inc.·is·an·American·technology·company·which·owns·the·world's·most·popular·dating·services·such·as·Tinder,·Hinge,·OkCupid,·<a·href[[EQ]]"//Match.com">Match.com</a>,·Plenty·Of·Fish.</p>
+<p>Dating·services·are·extremely·popular,·quickly·becoming·the·main·way·for·people·to·find·partners.·Match·Group,·Inc.·as·of·mid-2025,·has·roughly·<strong>30·million·monthly·active·users</strong>·across·its·portfolio·in·the·United·States·alone,·and·<strong>80·million·globally.·</strong>That·basically·means·that·around·<strong>30-40%·of·U.S.·adults·</strong>have·used·Match's·services·at·some·point.</p>
+<p>Match·Group,·Inc.·was·added·to·the·S[[AMP]]amp;P·500·Index·on·September·20,·2021.</p>
+<blockquote><p>Weight·in·the·S[[AMP]]amp;P500:·0.01%·
+Price/Share:·≈$31.45··
+Approximate·Valuation:·∼·$7.5·billion</p></blockquote>
+<p>It's·not·a·secret·to·anyone·that·loneliness·is·one·of·the·biggest·issues·in·the·US/European·Countries·in·the·last·two·decades.·The·headlines·such·as·"The·American·Loneliness·Epidemic"·<a·href[[EQ]]"https://americaninequality.substack.com/p/loneliness-and-inequality">[1]</a>·start·appearing·more·often,·the·statistics·showing·that·each·generation·is·more·lonely·than·the·previous·one·don't·surprise·anyone·<a·href[[EQ]]"https://www.statista.com/chart/20713/lonlieness-america/">[2]</a>,·research·into·how·loneliness·affects·one's·well-being·is·conducted·<a·href[[EQ]]"https://pubmed.ncbi.nlm.nih.gov/40632698/">[3]</a>.</p>
+<p>While·the·claims·of·"epidemic"·might·be·exaggerated,·there's·broad·agreement·in·public·health·that·loneliness·is·a·major,·widespread·problem·with·real·consequences.</p>
+<p>Match·Group·positions·itself·as·<strong>a·solution·to·this·problem</strong>.·One·of·the·most·well-known·slogans·of·Hinge·is·"Designed·to·be·deleted",·suggesting·that·Hinge·is·meant·to·help·you·find·that·one·specific·person,·to·fall·in·love,·not·to·go·on·an·endless·cycle·of·one-night·stands.</p>
+<figure><img·src[[EQ]]"https://pbs.twimg.com/media/HBNWieLXcAATUn_.jpg"·/></figure>
+<p>Insanely·noble·goal,·if·you·ask·me.·But·are·Match·Group's·apps·the·one·to·be·trusted[[Q]]·Do·they·really·intend·for·you·to·find·your·long-term·partner·and·delete·their·app[[Q]]·Do·they·really·help·people[[Q]]·And·do·they·solve·said·problem·of·modern·loneliness·or·just·make·the·matters·worse[[Q]]</p>
+<hr·/>
+<h2>The·Predator's·Platform</h2>
+<p>The·most·notorious·case·of·the·Match·Group,·Inc.·in·the·last·few·years·is·the·case·of·Steven·Matthews.·This·case·is·truly·outrageous,·and·it·had·quite·a·wide·media·coverage·with·multiple·really·well-made·articles·written·on·the·case.·<a·href[[EQ]]"https://www.theguardian.com/us-news/2025/feb/13/tinder-hinge-match-investigation">[4]</a>/<a·href[[EQ]]"https://www.theguardian.com/technology/2025/dec/16/hinge-tinder-date-rape-lawsuit">[5]</a>/<a·href[[EQ]]"https://www.cbsnews.com/colorado/news/stephen-matthews-sentenced-158-years-drugging-sexually-assaulting-women-met-dating-apps-cardiologist/">[6]</a></p>
+<p><strong>Stephen·Matthews</strong>,·a·Denver·cardiologist,·drugged,·sexually·assaulted,·and·raped·multiple·women·he·met·through·dating·apps·-·notably·<strong>Hinge·</strong>and·<strong>Tinder</strong>.·He·would·invite·women·to·the·bar,·where·he·would·drug·them,·and·then·drive·them·to·his·home,·where·he·would·assault·them·(or·he·would·invite·them·directly·to·his·home,·where·he·would·offer·them·the·drugged·drink).</p>
+<p>All·victims·reported·having·sporadic·memories·of·the·evening·after·they·had·drinks·with·Matthews.·Some·were·able·to·get·out·of·the·bar·and·get·a·taxi,·some·would·regain·consciousness·being·naked·in·bed·with·Matthews.·He·then·tried·to·"gaslight"·them,·trying·to·convince·them·that·whatever·happened·was·their·fault,·suggesting·they·drank·too·much·or·couldn't·hold·their·liquor.</p>
+<p>His·assault·streak·lasted·for·<strong>4·years</strong>,·from·2019·to·2023.·All·victims·were·found·by·Matthews·on·dating·apps.</p>
+<figure><img·src[[EQ]]"https://pbs.twimg.com/media/HBNygWUXQAAITnb.jpg"·/><figcaption>Steven·Matthews,·Denver·Police</figcaption></figure>
+<p>He·was·first·reported·on·<strong>September·28,·2020,</strong>·a·woman·says·she·met·Matthews·via·Hinge·and·alleged·she·was·raped·after·a·date.·She·reported·him·to·Hinge.·Despite·the·report,·Matthews·continued·using·the·app.</p>
+<p>Throughout·<strong>2020-2023</strong>·Matthews·been·report·to·Hinge<strong>·MULTIPLE·</strong>times.·Some·sources·claim·that·up·to<strong>·15·</strong>women·would·report·him.·Eventually·he·would·be·banned·on·the·platform.·But,·Matthews·was·able·to·easily·by-pass·the·ban.·He·kept·everything·the·same,·he·kept·all·his·photos,·he·kept·his·descriptions,·he·even·kept·his·phone·number,·the·only·thing·he·had·to·change·was·his·email·and·it·was·enough·to·keep·him·on·a·platform.</p>
+<p>The·situation·became·even·more·disturbing·in·the<strong>·fall·2022</strong>.·During·that·time·Matthews·was·being·promoted·on·Hinge·as·a·<strong>Standout</strong>,·a·popular·profile,·an·algorithm's·pick·for·women·of·Denver.·Quick·reminder,·that·by·this·time·Matthews·was·already·reported·for·rape·multiple·times,·and·once·was·banned·on·Hinge.</p>
+<figure><img·src[[EQ]]"https://pbs.twimg.com/media/HBN2FM2WQAAorkD.jpg"·/><figcaption>Stephen·Matthews·promoted·as·Standout·on·Hinge.·Photograph:·Pulitzer·Center/Markup</figcaption></figure>
+<p>Somewhat·public·awareness·about·Matthews·came·not·from·Match·Group,·but·from·Facebook.·In·<strong>December·2022,</strong>·a·thread·on·Facebook·become·locally-viral·in·Denver·where·women·were·sharing·information·they,·themself,·had·with·Matthews,·or·their·friends·had·with·him.·During·that·time·Matthews·still·stayed·on·Match·Group·apps.</p>
+<p>He·was·finally·arrested·on<strong>·March·27,·2023.·</strong></p>
+<p><strong>On·August·13,·2024,</strong>·a·Denver·jury·found·Matthews·guilty·on·35·count,·including·multiple·sexual·assault·charges·and·second-degree·assault.·Eleven·women·were·identified·as·victims·in·the·criminal·trial.·There·were·more·women·who·came·forward·during·the·investigation,·but·11·were·formally·part·of·the·conviction·case.</p>
+<p><strong>On·October·25,·2025,</strong>·Matthews·was·sentenced·to·158·years·to·life·in·prison·-·the·absolute·maximum·he·could·have·possibly·get.</p>
+<p>Later·that·year,·on·<strong>December·16,·2025</strong>,·a·civil·lawsuit·was·filed·by·six·Matthew's·victims,·against·Match·Group,·arguing·the·company·failed·to·protect·users.</p>
+<p>It's·hard·to·deny·that·if·company·acted·adequately<strong>·</strong>on·the·first·report·back·in·2020,·it's·possible·that·there·would·be·much·fewer·victims.</p>
+<p><em>It's·important·note,·that·during·the·trial·against·Matthews,·Match·Group·didn’t·make·it·easy·for·the·Denver·prosecutors·to·convict·him.·A·search·warrant·was·issued·for·Hinge·in·July·2023.·Two·months·later,·prosecutors·were·still·empty-handed·–·with·the·judge·in·the·case·asking·at·a·hearing·whether·he·needed·to·start·“dragging·people·in·to·get·stuff·done”.·</em></p>
+<p>Overall,·the·safety·system·on·Match·Group's·apps·are·flawed.</p>
+<p>As·was·demonstrated·with·Matthew's·case·it·was·very·easy·to·by-pass·the·ban·on·those·apps.·But·it's·not·the·only·issue.·One·of·the·biggest·and·known·defects·of·reporting·system·on·dating·apps,·is·that·sometimes·the·ability·to·report·a·user·once·someone·unmatched·them·is·removed,·meaning·abusive·users·could·evade·detection·by·simply·unmatching.</p>
+<p>And·when·the·reported·case·is·finally·reviewed·by·moderator·it's·not·that·simple.</p>
+<p>At·Hinge,·moderators·reviewing·flagged·profiles·can·handle·up·to·60·complaints·per·hour·-·about·one·minute·per·case,·according·to·two·employees·and·a·screenshot·of·the·company·policy.·Those·reports·include·everything·-·from·racist·language·to·sexual·assault·allegations,·while·moderators·also·decide·on·bans·and·on·escalating·serious·issues.·At·OkCupid,·moderators·handling·complex·cases·like·sexual·assault·face·a·quota·of·15·complaints·per·hour,·giving·them·roughly·four·minutes·to·review·both·parties’·profiles·and·messages·and·respond.·While·many·complaints·can·be·resolved·quickly,·complicated·cases·often·cause·moderators·to·fall·behind·their·hourly·targets.·<a·href[[EQ]]"https://www.propublica.org/article/addressing-rape-in-four-minutes-or-less-dating-app-reps-left-unprepared-to-respond-to-assault-victims">[7]</a></p>
+<p>To·anyone,·it's·obvious·that·this·system·is·inadequate·-·from·the·easy-to-bypass·bans·to·moderators·trying·to·meet·their·hourly·quota.</p>
+<p>But·I·wouldn't·hold·any·high·hopes·for·the·said·civil·lawsuit·to·succeed.·The·lawsuit·faces·an·uphill·battle·against·section·230·of·the·Communications·Decency·Act·<a·href[[EQ]]"https://www.congress.gov/crs-product/R46751">[8]</a>,·a·1996·law·that·grants·online·platforms·immunity·from·liability·for·most·user-generated·content.·Most·likely·Match·Group·is·going·to·evade·any·charges.</p>
+<p>But·as·was·said,·the·case·of·Stephen·Matthews·got·a·huge·media·coverage·and·the·public·outrage·is·there.·So·Match·Group·has·to·address·the·safety·concerns·in·some·way,·right[[Q]]</p>
+<hr·/>
+<h2>Arbitrary·Enforcement</h2>
+<p>If·you·go·on·Reddit·right·now,·and·try·to·look·for·any·MatchGroup-related·subreddit,·alongside·some·basic·stuff,·like·Tinder·itself,·TinderStories·etc.,·you·will·find·one·of·the·most·prolific·subreddits·for·this·theme·-·<strong>r/SwipeHelper.</strong>·While·it·doesn't·have·the·same·number·of·visitors·as·mentioned·Tinder-subreddit·(1.1M·to·50k),·it·has·a·tonne·of·daily·posts.</p>
+<blockquote><p><em><strong>r/SwipeHelper·</strong></em><em>is·"a·subreddit·exchanging·advanced·advice·for·online·apps·such·as·Tinder,·Bumble,·Hinge,·and·more."·</em><a·href[[EQ]]"https://www.reddit.com/r/SwipeHelper/"><em>[8]</em></a><em>·</em></p></blockquote>
+<p>In·reality,·it·mostly·focuses·on·people·sharing·about·unreasonable·and·unexplained·bans·they·got·on·Match·Group's·apps.</p>
+<p>Many·users·report·an·insane·amount·of·bans·that·started·to·occur·in·late·2025.·People·get·no·clear·explanation·on·reasons·for·getting·banned,·appeal·process·is·long·and·communication·with·support·team·makes·you·desire·more.</p>
+<p>While·the·Match·Group·didn't·give·any·comments·on·the·insane·ban-streak·and·didn't·announce·any·changes·in·their·ban·policies,·I·think,·it·safe·to·assume·that·it's·some·sort·of·a·response·to·Stephen·Matthew's·case.·It's·impossible·to·prove,·but·it·seems·very·fitting·that·after·a·huge·public·case·regarding·customer·safety·concerns,·Match·Group·decided·to·pull-up·a·ban-hammer.</p>
+<p>It·seems,·that·for·Match·Group··"fixing"·apps'·safety·issues,·means·to·ban·anyone·on·the·first·report.</p>
+<p>There's·a·term,·well-known·to·anyone·who·used·dating·services·for·a·long-period·of·time·-·<strong>Revenge·Reporting</strong>.·Anything·can·happen·on·a·first·date,·you·may·be·disappointed·in·each·other,·you·might·have·expected·a·different·person·on·a·date,·you·may·have·had·a·hot·argument·on·a·current·political·issue,·or·maybe·the·person·you·went·on·a·date·with·is·a·narcissist·or·sociopath.</p>
+<p>What·if·after·such·a·bad·date·that·person·can·ruin·the·app·for·you[[Q]]·Revenge·Reporting·is·nothing·new,·it's·been·the·case·since·forever.·But·now·the·single·report·after·an·unsuccessful·date·lead·to·immediate·ban.</p>
+<p>Match·Group·cannot·afford·any·more·public·safety·scandal,·so·their·answer·is·simple·-·ban·everyone·and·figure·things·out·later.</p>
+<hr·/>
+<p>However,·that's·not·the·only·topic·is·discussed·on·the·subreddit·-·another·interesting·one·is·<strong>Shadowban.·</strong></p>
+<blockquote><p><em>User·reports·that·they·subscribed·to·Tinder·Platinum.·After·a·while,·their·account·suddenly·went·dead·-·no·matches,·no·likes·-·even·though·they·were·still·paying·for·Platinum.
+To·test·it,·they·created·a·second·account·using·the·same·photos,·bio,·and·location.·That·account·started·getting·likes·within·hours.·They·also·made·a·female·test·account,·which·appeared·immediately·on·their·Platinum·account.·But·their·Platinum·profile·never·showed·up·on·the·female·account·-·even·after·swiping·through·everyone·within·5·km.
+It·became·clear·Platinum·account·was·being·suppressed·while·user·was·still·being·charged.·When·they·contacted·support,·they·denied·any·issue.·</em><a·href[[EQ]]"https://www.reddit.com/r/SwipeHelper/comments/1le80fi/the_untouchable_scam_how_tindermatch_group_uses/">[9]</a></p></blockquote>
+<p>And·the·paragraph·above·is·not·the·only·example.·There·are·multiple·posts·complaining·that·paying·for·premium·subscription·turned·out·to·be·more·of·a·net-negative.</p>
+<p>While·we·are·at·it,·why·don't·we·speak·on·Match·Group·business·concept·as·a·whole[[Q]]</p>
+<hr·/>
+<h2>Preying·On·Insecurities</h2>
+<p>Let's·return·to·that·"The·dating·app·designed·to·be·deleted"·slogan.·How·is·it·supposed·to·work[[Q]]·The·entire·business·concept·is·<strong>self-contradictory.·</strong>If·the·app·is·designed·for·you·to·find·your·one·and·forever·partner·how·is·it·supposed·to·generate·revenue·to·the·share·holders[[Q]]·The·company·should·be·considered·charity·and·for·non-profit·for·it·to·be·true,·and·not·to·be·publicly·tradable·as·a·part·of·the·S[[AMP]]amp;P·500·index.</p>
+<p>And·it's·known·that·most·of·users·use·dating·apps·to·meet·a·long-term·partner,·up·to·44%,·while·40%·look·for·casual·dating·and·the·rest·looking·for·casual·sex.·<a·href[[EQ]]"https://www.forbes.com/health/dating/dating-statistics/">[10]</a></p>
+<p>So,·how·does·dating·apps·aim·to·help·you·build·long,·meaningful·relations[[Q]]</p>
+<p>They·don't.</p>
+<p>Their·goal·is·to·make·you·an·addict.</p>
+<p>In·2024,·six·people·filed·a·federal·lawsuit·in·San·Francisco·accusing·<strong>Match·Group</strong>·of·deliberately·designing·apps·like·<strong>Tinder</strong>,·<strong>Hinge</strong>,·and·<strong>The·League</strong>·to·be·addictive.</p>
+<p>The·complaint·said·the·apps·use·game-like·features,·hidden·algorithms,·push·notifications,·and·paid·perks·(like·unlimited·swipes·or·“roses”)·to·keep·users·chasing·matches·-·comparing·it·to·gambling·psychology.·Plaintiffs·argued·this·traps·people·in·a·pay-to-play·loop·that·prioritizes·profit·over·actually·helping·users·find·relationships.</p>
+<p>Match·Group·denied·the·claims,·calling·the·lawsuit·“ridiculous”·and·saying·their·goal·is·to·get·people·on·dates·and·off·the·apps.·<a·href[[EQ]]"https://www.wusf.org/2024-02-14/maker-of-tinder-hinge-sued-over-addictive-dating-apps-that-put-profits-over-love">[11]</a></p>
+<p>The·lawsuit·went·nowhere.</p>
+<p>But·interestingly,·the·next·year,·CEO·of·Match·Group,·Inc.,·Spencer·Rascoff·wrote·an·open·letter·on·his·LinkedIn,·where·he·said:</p>
+<blockquote><p><em>“Too·often,·our·apps·have·felt·like·a·numbers·game·rather·than·a·place·to·build·real·connections..."</em><a·href[[EQ]]"https://www.linkedin.com/feed/update/urn:li:activity:7306011167544553472/[[Q]]original_referer[[EQ]]https%3A%2F%2Ffortune.com%2F">[12]</a></p></blockquote>
+<p><em>One·more·interesting·fact,·prior·to·Rascoff,·Bernard·Kim·served·as·the·CEO·of·Match·Group.·Before·Match·Group·Bernard·Kim·spent·10·years·in·Electronic·Arts·as·a·Senior·Vice·President·of·Mobile·Publishing.·In·the·company·that·notorious·for·its·pay-to-win·and·gambling·mechanics.·</em></p>
+<p>Overall,·online·dating·is·subjective.·Many·people·find·it·positive,·many·people·say·that·it's·the·worst·thing·that·happened·to·them·and·their·mental·health,·completely·ruining·their·body-image·and·self-esteem.</p>
+<p>But·I·would·love·you·to·check·the·following·study:
+<a·href[[EQ]]"https://www.sciencedirect.com/science/article/abs/pii/S0747563225000135">https://www.sciencedirect.com/science/article/abs/pii/S0747563225000135</a>
+
+It's·a·research·conducted·by·National·Taipei·University·of·Technology.·They·researched·how·dating·apps·affected·people·who·had·social·anxiety/insecurities·before·using·the·app.·While·most·of·them·concluded·that·their·experience·with·the·app·was·positive,·that·they've·found·it·way·easier·to·communicate·and·to·form·some·sort·of·relationship·via·dating·services.·The·very·same·people·were·more·likely·to·develop·an·unhealthy·relationship·with·the·app·itself,·become·addicted·to·it,·to·spend·an·absurd·amount·of·money·on·it.</p>
+<p>It's·not·the·only·research·on·effects·of·dating·apps·on·mental·health.·I·can·also·recommend·this·one·-·<a·href[[EQ]]"https://www.sciencedirect.com/science/article/pii/S0747563224003832">[13]</a>.</p>
+<hr·/>
+<h2>More·about·Match·Group</h2>
+<p>There·still·may·be·many·things·that·can·be·told·about·the·concept·of·dating·services·itself·-·how·they·artificially·adjust·the·ratio·of·females/males·on·dating·market,·how·they·are·responsible·for·insane·standards·for·both·genders,·how·they·ridicule·your·persona·down·to·a·bunch·of·tags,·not·caring·about·you·as·a·person·and·basing·your·promotion·chance·on·the·app·according·to·it.·But·this·all·cannot·be·reliably·proven.</p>
+<p>What·is·certain,·it·is·that·romantic·part·of·life·is·incredibly·important·to·any·human.</p>
+<p>Ask·yourself·this:·do·you·really·want·to·outsource·this·intimate·aspect·of·your·life·to·people·who·<strong>don't</strong>·care·about·your·safety·or·well-being,·but·instead·view·you·as·nothing·more·than·a·monthly·revenue-generating·machine[[Q]]</p>
+<hr·/>
+<p>That's·it·for·Match·Group,·Inc.·-·one·of·the·five·hundred·companies·composing·the·S[[AMP]]amp;P·500.</p>
+<figure><img·src[[EQ]]"https://pbs.twimg.com/media/HBOqfNDXAAAHM-j.jpg"·/></figure>
+<hr·/>
+<p><em>This·article·is·not·financial·advice·and·not·an·investment·thesis.</em></p>
+<p><em>I'm·not·a·professional·journalist·and·do·not·aim·to·be·one.·I·don't··seek·to·be·a·reliable·source.</em></p>
+<p><em>The·text·is·based·on·publicly·available·information·that·can·be·found·online.·It's·intentionally·biased·but·documentable.</em></p>
+<p><em>This·is·anti-corporate·pamphlet·-·deliberate·reputational·vandalism·created·for·cultural·critique·and·entertainment.</em></p>
+<p><em>The·goal·is·to·dismantle·the·myth·of·the·S[[AMP]]amp;P·500·by·inspecting·every·company·that·composes·it.</em></p>
+<p><em>Look·into·SPX6900.</em></p>
+<p><em>Flip·the·stock·market.</em></p>
+<p><em>6900[[AMP]]gt;500.</em></p>`;
+
+const body = DOT.split('·').join(' ');
+
+if (body.length !== TOTAL[0] || ck(body) !== TOTAL[1]) {
+  console.error(`MISMATCH: got [${body.length}, ${ck(body)}] want [${TOTAL[0]}, ${TOTAL[1]}]`);
+  // localize: print per-line so we can compare to browser per-line if needed
+  process.exit(1);
+}
+
+const payload = {
+  cover: 'https://pbs.twimg.com/media/HA0RGRPa0AAUoAR.jpg',
+  excerpt: 'Five Hundred Issues with the S&P 500, №498. Match Group owns Tinder, Hinge and OkCupid — dating apps sold as "designed to be deleted." A look at the predator’s casino they really run.',
+  body,
+};
+const outPath = join(__dirname, 'payloads', 'snp-match-group-predators-casino.json');
+writeFileSync(outPath, JSON.stringify(payload));
+console.log(`OK — body verified byte-exact (${body.length} chars). Wrote ${outPath}.`);

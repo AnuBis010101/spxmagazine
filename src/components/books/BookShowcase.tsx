@@ -152,7 +152,7 @@ export default function BookShowcase() {
         className="mx-auto mt-16 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
       >
         The gospel of the pure belief asset, written by the community. Buy the paperbacks,
-        download the e-books, press play on the audiobook — then go tell someone.
+        download the e-books, press play on the audiobook: then go tell someone.
       </motion.p>
 
       <BookStyles />
@@ -208,7 +208,7 @@ function BookHero() {
         transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mx-auto mt-5 max-w-xl text-base leading-relaxed text-mag-muted sm:text-lg"
       >
-        The essential reading on the pure belief asset — Amazon paperbacks, free e-books, and
+        The essential reading on the pure belief asset: Amazon paperbacks, free e-books, and
         an audiobook, all written by Aeons. Read, believe, repeat.
       </motion.p>
 

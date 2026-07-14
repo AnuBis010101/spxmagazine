@@ -59,7 +59,7 @@ const STORES: Store[] = [
     accent2: "#8BFFD8",
     hero: {
       src: "/stores/industries-hero-tall.png",
-      alt: "SPX6900 Industries — Aeon angel key art",
+      alt: "SPX6900 Industries: Aeon angel key art",
       position: "center 18%",
       tone: "light",
     },
@@ -75,7 +75,7 @@ const STORES: Store[] = [
     name: "SPX6900 Gear",
     tagline: "We will flip the stock market",
     blurb:
-      "Hoodies, tees, mugs, hats, cards & more — mostly unisex, in every color and size. Suit up and join the movement.",
+      "Hoodies, tees, mugs, hats, cards & more: mostly unisex, in every color and size. Suit up and join the movement.",
     href: "https://spx6900gear.com/",
     accent: "#39FF14",
     accent2: "#B8FF5A",
@@ -119,7 +119,7 @@ const STORES: Store[] = [
     name: "Jinping Labs",
     tagline: "Underground systems active",
     blurb:
-      "SPX6900 synchronized. Surface reactions pending. Hardware and artifacts from the underground lab — booting soon.",
+      "SPX6900 synchronized. Surface reactions pending. Hardware and artifacts from the underground lab: booting soon.",
     href: "https://x.com/JinpingLabs",
     accent: "#FFC93C",
     accent2: "#FFE79A",
@@ -163,7 +163,7 @@ export default function StoreShowcase() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="mx-auto mt-16 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
       >
-        <span className="text-mag-light">SPX6900 Industries</span> is the official merch store — the
+        <span className="text-mag-light">SPX6900 Industries</span> is the official merch store: the
         rest are built by the community. Every thread, sticker, and artifact flies the same flag.
       </motion.p>
 
@@ -314,7 +314,7 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
           ["--accent-2" as string]: store.accent2,
         }}
         className={`sc-card group/card ${official ? "is-official" : ""}`}
-        aria-label={`${store.name} — ${official ? "official SPX6900 store" : "community store"}, ${soon ? "coming soon" : "open in a new tab"}`}
+        aria-label={`${store.name}: ${official ? "official SPX6900 store" : "community store"}, ${soon ? "coming soon" : "open in a new tab"}`}
       >
         {/* living accent border — stays on the stable frame, never tilts */}
         <span aria-hidden className="sc-ring" />

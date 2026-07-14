@@ -299,7 +299,6 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.7, delay: (order % 2) * 0.08 + 0.04, ease: [0.16, 1, 0.3, 1] }}
-      style={{ perspective: 1300 }}
       className="sc-card-shell"
       ref={shellRef}
     >
@@ -310,18 +309,24 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
         onPointerMove={onMove}
         onPointerLeave={onLeave}
         style={{
-          rotateX: reduce ? 0 : rotateX,
-          rotateY: reduce ? 0 : rotateY,
-          transformStyle: "preserve-3d",
+          perspective: 1300,
           ["--accent" as string]: store.accent,
           ["--accent-2" as string]: store.accent2,
         }}
         className={`sc-card group/card ${official ? "is-official" : ""}`}
         aria-label={`${store.name} — ${official ? "official SPX6900 store" : "community store"}, ${soon ? "coming soon" : "open in a new tab"}`}
       >
-        {/* living accent border */}
+        {/* living accent border — stays on the stable frame, never tilts */}
         <span aria-hidden className="sc-ring" />
 
+        {/* Tilt layer: the ONLY element that rotates. Because :hover, the ring,
+            and overflow:hidden all live on the stable frame above, the tilt can
+            never swing the card's own hit-area past the cursor — so :hover (and
+            the ring/shine animations it drives) can't flicker on mouse move. */}
+        <motion.div
+          className="sc-card-tilt"
+          style={{ rotateX: reduce ? 0 : rotateX, rotateY: reduce ? 0 : rotateY, transformStyle: "preserve-3d" }}
+        >
         {/* ─ Preview stage ─ */}
         <div className="sc-stage" style={{ transform: "translateZ(1px)" }}>
           <div className={`sc-stage-img ${store.hero.tone === "light" ? "is-light" : ""}`}>
@@ -429,6 +434,7 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
             <ArrowUpRight className="sc-cta-arrow h-4 w-4" />
           </span>
         </div>
+        </motion.div>
       </motion.a>
     </motion.article>
   );
@@ -522,6 +528,10 @@ function StoreStyles() {
                     0 0 46px -8px color-mix(in oklab, var(--accent) 45%, transparent);
       }
       .sc-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+      /* Inner tilt layer — carries the 3D cursor parallax so the frame's :hover
+         hit-area stays perfectly still (no hover flicker). */
+      .sc-card-tilt { position: relative; transform-style: preserve-3d; will-change: transform; }
 
       /* flagship: the official store gets a gold-lit frame layered over its mint accent */
       .sc-card.is-official {

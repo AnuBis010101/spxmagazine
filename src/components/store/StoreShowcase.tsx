@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { ArrowUpRight, BadgeCheck, Lock, Users } from "lucide-react";
@@ -254,8 +254,12 @@ function StoreHero() {
 
 function StoreCard({ store, order }: { store: Store; order: number }) {
   const reduce = useReducedMotion();
-  const [hovered, setHovered] = useState(false);
-  const ref = useRef<HTMLAnchorElement>(null);
+  // Ref lives on the OUTER, untransformed shell — never on the tilting card.
+  // Measuring getBoundingClientRect() off the rotating element returns its
+  // 3D-projected box (which shifts/resizes as it tilts), so each move would
+  // remap the pointer and make the tilt jitter. The shell only carries
+  // `perspective` (applied to children, not itself), so its box is stable.
+  const shellRef = useRef<HTMLElement>(null);
 
   // Pointer position 0..1 across the card, spring-smoothed → tilt + glare.
   const px = useMotionValue(0.5);
@@ -274,14 +278,17 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
 
   function onMove(e: React.PointerEvent) {
     if (reduce) return;
-    const el = ref.current;
+    const el = shellRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    px.set((e.clientX - r.left) / r.width);
-    py.set((e.clientY - r.top) / r.height);
+    // Clamp so a raised (translateZ) child that overhangs the shell edge can't
+    // push the value past [0,1] and snap the tilt.
+    const nx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const ny = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    px.set(nx);
+    py.set(ny);
   }
   function onLeave() {
-    setHovered(false);
     px.set(0.5);
     py.set(0.5);
   }
@@ -294,14 +301,13 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
       transition={{ duration: 0.7, delay: (order % 2) * 0.08 + 0.04, ease: [0.16, 1, 0.3, 1] }}
       style={{ perspective: 1300 }}
       className="sc-card-shell"
+      ref={shellRef}
     >
       <motion.a
-        ref={ref}
         href={store.href}
         target="_blank"
         rel="noopener noreferrer"
         onPointerMove={onMove}
-        onPointerEnter={() => setHovered(true)}
         onPointerLeave={onLeave}
         style={{
           rotateX: reduce ? 0 : rotateX,

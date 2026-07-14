@@ -38,11 +38,16 @@ export default function NewsletterStickyBar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className={cn(
-        "sticky top-[65px] z-40 overflow-hidden border-b transition-all duration-300 lg:top-[81px]",
+        "sticky z-40 overflow-hidden border-b transition-[border-color,box-shadow] duration-300",
         stuck
           ? "border-gold-400/30 shadow-[0_8px_24px_-12px_rgba(212,175,55,0.25)]"
           : "border-gold-400/15"
       )}
+      // Sits flush against the header's live height (published as --header-h by
+      // Header's ResizeObserver) so it never drifts into a gap as the header
+      // condenses on scroll. Falls back to the pre-condense height if the var
+      // hasn't been set yet (e.g. very first paint).
+      style={{ top: "var(--header-h, 81px)" }}
     >
       {/* Near-solid dark base + gold wash. No backdrop-blur: at 96% opacity it was
           invisible but forced a full-width re-blur of the animated hero every

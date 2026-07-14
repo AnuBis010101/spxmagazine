@@ -59,6 +59,22 @@ export function Header() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // Publish the header's live rendered height as a CSS var so anything sticky
+  // beneath it (e.g. NewsletterStickyBar) can sit flush against it without a
+  // hardcoded pixel guess — this keeps them in sync through the scroll-condense
+  // height transition instead of drifting into a gap.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const setVar = () =>
+      document.documentElement.style.setProperty("--header-h", `${el.offsetHeight}px`);
+    setVar();
+    const ro = new ResizeObserver(setVar);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Cursor spotlight inside the nav rail — driven straight through the DOM
   // (no React state) so mousemove never re-renders the header.
   const navRailRef = useRef<HTMLElement>(null);
@@ -113,6 +129,7 @@ export function Header() {
     <>
       <PremiumNavStyles />
       <motion.header
+        ref={headerRef}
         className={cn(
           // Perf: backdrop-blur re-rasterises the content behind it every scroll
           // frame. Once scrolled the bar is 95% opaque and the blur is invisible,

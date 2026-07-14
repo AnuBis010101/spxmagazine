@@ -225,8 +225,8 @@ function StoreHero() {
         transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mx-auto mt-5 max-w-xl text-base leading-relaxed text-mag-muted sm:text-lg"
       >
-        One official atelier and three community storefronts — from Solana streetwear to an
-        underground hardware lab. Pick your storefront and gear up for the flippening.
+        One official atelier and three community storefronts. Pick your storefront and gear up
+        for the flippening.
       </motion.p>
 
       <motion.div
@@ -238,7 +238,6 @@ function StoreHero() {
         {[
           { label: "1 official", tone: "gold" as const },
           { label: "3 community", tone: "plain" as const },
-          { label: "Solana · USDC", tone: "plain" as const },
           { label: "1 booting up", tone: "plain" as const },
         ].map((s) => (
           <span key={s.label} className={`sc-stat ${s.tone === "gold" ? "is-gold" : ""}`}>

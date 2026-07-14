@@ -70,7 +70,7 @@ export function NavActivePill() {
     >
       {/* top light-catch + bottom gold glint */}
       <span className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-      <span className="nav-pill-glint absolute inset-x-3 -bottom-px h-px" />
+      <span className="nav-pill-glint absolute inset-x-4 bottom-1 h-px" />
     </motion.span>
   );
 }

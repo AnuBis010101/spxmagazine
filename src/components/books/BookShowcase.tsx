@@ -53,7 +53,7 @@ const BOOKS: Book[] = [
     title: "Stop Trading, Start Believing!",
     author: "Audacious",
     blurb:
-      "A tokenized movement against TradFi — flipping the stock market one holder at a time.",
+      "A tokenized movement against TradFi: flipping the stock market one holder at a time.",
     cover: { src: "/books/stop-trading.jpg", alt: "SPX6900: Stop Trading, Start Believing! book cover" },
     free: false,
     format: "Paperback",
@@ -69,7 +69,7 @@ const BOOKS: Book[] = [
     title: "Discovering SPX6900",
     author: "Audacious",
     blurb:
-      "The world's first pure belief asset — the rise of a token built on conviction, culture, and community.",
+      "The world's first pure belief asset: the rise of a token built on conviction, culture, and community.",
     cover: { src: "/books/belief-asset.png", alt: "Discovering SPX6900: The World's First Pure Belief Asset book cover" },
     free: true,
     format: "E-book + Audiobook",
@@ -88,7 +88,7 @@ const BOOKS: Book[] = [
     title: "Invest & Grow Rich",
     author: "Jordan Riz",
     blurb:
-      "A movement-coin investing playbook — how to thrive in the AI age with the ticker that flips the S&P.",
+      "A movement-coin investing playbook: how to thrive in the AI age with the ticker that flips the S&P.",
     cover: { src: "/books/invest-grow-rich.jpg", alt: "SPX6900: Invest & Grow Rich book cover" },
     free: false,
     format: "Paperback",
@@ -104,7 +104,7 @@ const BOOKS: Book[] = [
     title: "Alchemical",
     author: "RLanky",
     blurb:
-      "A crystalline meditation on transformation — the community's most esoteric title, wrapped in glass.",
+      "A crystalline meditation on transformation: the community's most esoteric title, wrapped in glass.",
     cover: { src: "/books/alchemical.png", alt: "Alchemical book cover" },
     free: true,
     format: "E-book",

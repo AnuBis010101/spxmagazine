@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
-import { ArrowUpRight, Lock } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Lock, Users } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────────────────────
    The SPX6900 storefront directory.
@@ -25,7 +25,8 @@ type BrandMark =
 
 type Store = {
   id: string;
-  index: string;
+  /** Official SPX6900 merch store, or a community-run storefront. */
+  kind: "official" | "community";
   name: string;
   /** Small line above the CTA / under the preview. */
   tagline: string;
@@ -48,7 +49,7 @@ type Store = {
 const STORES: Store[] = [
   {
     id: "industries",
-    index: "01",
+    kind: "official",
     name: "SPX6900 Industries",
     tagline: "Advanced merch for the savvy Aeon",
     blurb:
@@ -70,7 +71,7 @@ const STORES: Store[] = [
   },
   {
     id: "gear",
-    index: "02",
+    kind: "community",
     name: "SPX6900 Gear",
     tagline: "We will flip the stock market",
     blurb:
@@ -92,7 +93,7 @@ const STORES: Store[] = [
   },
   {
     id: "lilmissponzi",
-    index: "03",
+    kind: "community",
     name: "LilMissPonzi",
     tagline: "Believe in something",
     blurb:
@@ -114,7 +115,7 @@ const STORES: Store[] = [
   },
   {
     id: "jinpinglabs",
-    index: "04",
+    kind: "community",
     name: "Jinping Labs",
     tagline: "Underground systems active",
     blurb:
@@ -162,8 +163,8 @@ export default function StoreShowcase() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="mx-auto mt-16 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
       >
-        Every thread, sticker, and artifact flies the SPX6900 flag. Official drops, community
-        ateliers, and the underground lab — all pointing at the same flippening.
+        <span className="text-mag-light">SPX6900 Industries</span> is the official merch store — the
+        rest are built by the community. Every thread, sticker, and artifact flies the same flag.
       </motion.p>
 
       <StoreStyles />
@@ -224,7 +225,7 @@ function StoreHero() {
         transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mx-auto mt-5 max-w-xl text-base leading-relaxed text-mag-muted sm:text-lg"
       >
-        Four ways to wear the movement — official ateliers, Solana streetwear, and an
+        One official atelier and three community storefronts — from Solana streetwear to an
         underground hardware lab. Pick your storefront and gear up for the flippening.
       </motion.p>
 
@@ -234,9 +235,15 @@ function StoreHero() {
         transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mt-8 flex flex-wrap items-center justify-center gap-2.5"
       >
-        {["4 storefronts", "Shopify", "Solana · USDC", "1 booting up"].map((s) => (
-          <span key={s} className="sc-stat">
-            {s}
+        {[
+          { label: "1 official", tone: "gold" as const },
+          { label: "3 community", tone: "plain" as const },
+          { label: "Solana · USDC", tone: "plain" as const },
+          { label: "1 booting up", tone: "plain" as const },
+        ].map((s) => (
+          <span key={s.label} className={`sc-stat ${s.tone === "gold" ? "is-gold" : ""}`}>
+            {s.tone === "gold" && <BadgeCheck className="h-3.5 w-3.5" />}
+            {s.label}
           </span>
         ))}
       </motion.div>
@@ -264,6 +271,7 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
   const glare = useMotionTemplate`radial-gradient(300px circle at ${glareX} ${glareY}, rgba(255,255,255,0.14), transparent 60%)`;
 
   const soon = store.status === "soon";
+  const official = store.kind === "official";
 
   function onMove(e: React.PointerEvent) {
     if (reduce) return;
@@ -303,8 +311,8 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
           ["--accent" as string]: store.accent,
           ["--accent-2" as string]: store.accent2,
         }}
-        className="sc-card group/card"
-        aria-label={`${store.name} — ${soon ? "coming soon" : "open store in a new tab"}`}
+        className={`sc-card group/card ${official ? "is-official" : ""}`}
+        aria-label={`${store.name} — ${official ? "official SPX6900 store" : "community store"}, ${soon ? "coming soon" : "open in a new tab"}`}
       >
         {/* living accent border */}
         <span aria-hidden className="sc-ring" />
@@ -330,9 +338,14 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
           {/* animated glare tracking the cursor */}
           {!reduce && <motion.span aria-hidden className="sc-glare" style={{ backgroundImage: glare }} />}
 
-          {/* index + status */}
-          <span className="sc-index" style={{ transform: "translateZ(40px)" }}>
-            {store.index}
+          {/* official / community classifier + live status */}
+          <span
+            className={`sc-kind ${official ? "is-official" : "is-community"}`}
+            style={{ transform: "translateZ(46px)" }}
+          >
+            {official ? <BadgeCheck className="h-3.5 w-3.5" /> : <Users className="h-3 w-3" />}
+            {official ? "Official" : "Community"}
+            {official && <span aria-hidden className="sc-kind-shine" />}
           </span>
           <span
             className={`sc-status ${soon ? "is-soon" : "is-live"}`}
@@ -382,8 +395,14 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
         <div className="sc-body" style={{ transform: "translateZ(24px)" }}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="sc-name font-display text-xl font-bold tracking-tight sm:text-2xl">
-                {store.name}
+              <span className={`sc-kind-eyebrow ${official ? "is-official" : "is-community"}`}>
+                {official ? "Official merch store" : "Community store"}
+              </span>
+              <h2 className="sc-name mt-1 flex items-center gap-1.5 font-display text-xl font-bold tracking-tight sm:text-2xl">
+                <span className="truncate">{store.name}</span>
+                {official && (
+                  <BadgeCheck className="sc-verified h-[1.05rem] w-[1.05rem] shrink-0" aria-label="Official store" />
+                )}
               </h2>
               <p className="sc-tagline mt-1 text-sm font-medium italic">{store.tagline}</p>
             </div>
@@ -458,11 +477,18 @@ function StoreStyles() {
         animation: scTitleShine 6s linear infinite;
       }
       .sc-stat {
+        display: inline-flex; align-items: center; gap: 0.35rem;
         border-radius: 9999px; padding: 0.34rem 0.85rem;
         border: 1px solid var(--color-mag-border);
         background: color-mix(in oklab, var(--color-mag-white) 4%, transparent);
         font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; color: var(--color-mag-light);
       }
+      .sc-stat.is-gold {
+        border-color: color-mix(in oklab, var(--color-gold-400) 55%, transparent);
+        background: color-mix(in oklab, var(--color-gold-400) 12%, transparent);
+        color: var(--color-gold-200);
+      }
+      .sc-stat.is-gold svg { color: var(--color-gold-300); }
       .sc-coin {
         opacity: 0.5; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.5));
         animation-name: scCoin; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
@@ -491,6 +517,33 @@ function StoreStyles() {
                     0 0 46px -8px color-mix(in oklab, var(--accent) 45%, transparent);
       }
       .sc-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+      /* flagship: the official store gets a gold-lit frame layered over its mint accent */
+      .sc-card.is-official {
+        border-color: color-mix(in oklab, var(--color-gold-400) 42%, var(--color-mag-border));
+        background:
+          radial-gradient(120% 80% at 50% -20%, color-mix(in oklab, var(--color-gold-400) 12%, transparent), transparent 58%),
+          radial-gradient(120% 80% at 50% -20%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 60%),
+          linear-gradient(180deg, color-mix(in oklab, var(--color-gold-400) 5%, #111011), #0a0a0b 62%);
+        box-shadow: 0 1px 0 color-mix(in oklab, var(--color-gold-100) 14%, transparent) inset,
+                    0 22px 54px -30px rgba(0,0,0,0.9),
+                    0 0 34px -12px color-mix(in oklab, var(--color-gold-400) 45%, transparent);
+      }
+      .sc-card.is-official:hover {
+        border-color: color-mix(in oklab, var(--color-gold-400) 70%, transparent);
+        box-shadow: 0 1px 0 color-mix(in oklab, var(--color-gold-100) 20%, transparent) inset,
+                    0 30px 72px -34px color-mix(in oklab, var(--color-gold-500) 55%, black),
+                    0 0 50px -8px color-mix(in oklab, var(--color-gold-400) 55%, transparent);
+      }
+      /* gold living ring for the flagship (overrides the accent ring hue) */
+      .sc-card.is-official .sc-ring {
+        background: conic-gradient(from 0deg,
+          transparent 0deg,
+          color-mix(in oklab, var(--color-gold-400) 90%, transparent) 60deg,
+          color-mix(in oklab, var(--color-gold-200) 95%, transparent) 110deg,
+          transparent 180deg,
+          transparent 360deg);
+      }
 
       /* living accent ring (masked 1px conic border, animates on hover) */
       .sc-ring {
@@ -536,13 +589,32 @@ function StoreStyles() {
       }
       .sc-card:hover .sc-shine { animation: scShine 0.95s cubic-bezier(0.4,0,0.2,1) forwards; }
 
-      /* index / status / mark badges */
-      .sc-index {
-        position: absolute; top: 12px; left: 14px; z-index: 5;
-        font-family: var(--font-display); font-size: 0.82rem; font-weight: 800; letter-spacing: 0.14em;
-        color: color-mix(in oklab, var(--accent) 92%, white);
-        text-shadow: 0 1px 10px rgba(0,0,0,0.7);
+      /* official / community classifier badge */
+      .sc-kind {
+        position: absolute; top: 11px; left: 12px; z-index: 6;
+        display: inline-flex; align-items: center; gap: 0.35rem; overflow: hidden;
+        border-radius: 9999px; padding: 0.28rem 0.66rem 0.28rem 0.56rem;
+        font-size: 0.62rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
       }
+      .sc-kind.is-official {
+        color: #23180a;
+        background: linear-gradient(135deg, var(--color-gold-200), var(--color-gold-400) 55%, var(--color-gold-300));
+        border: 1px solid color-mix(in oklab, var(--color-gold-100) 70%, transparent);
+        box-shadow: 0 4px 16px -4px color-mix(in oklab, var(--color-gold-400) 80%, transparent),
+                    0 0 0 3px color-mix(in oklab, var(--color-gold-400) 18%, transparent);
+      }
+      .sc-kind.is-official svg { color: #23180a; }
+      .sc-kind-shine {
+        position: absolute; inset: 0; transform: translateX(-130%);
+        background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.7) 50%, transparent 70%);
+        animation: scKindShine 4.4s ease-in-out infinite; animation-delay: 1s;
+      }
+      .sc-kind.is-community {
+        color: color-mix(in oklab, var(--accent) 62%, white);
+        background: rgba(8,8,10,0.62);
+        border: 1px solid color-mix(in oklab, var(--accent) 42%, transparent);
+      }
+      .sc-kind.is-community svg { color: color-mix(in oklab, var(--accent) 78%, white); }
       .sc-status {
         position: absolute; top: 11px; right: 12px; z-index: 5;
         display: inline-flex; align-items: center; gap: 0.4rem;
@@ -616,8 +688,21 @@ function StoreStyles() {
       }
 
       .sc-body { position: relative; z-index: 5; padding: 18px 20px 20px; }
+      .sc-kind-eyebrow {
+        display: block; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
+      }
+      .sc-kind-eyebrow.is-official {
+        background: linear-gradient(92deg, var(--color-gold-200), var(--color-gold-400), var(--color-gold-200));
+        background-size: 200% auto;
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+        animation: scTitleShine 5s linear infinite;
+      }
+      .sc-kind-eyebrow.is-community { color: color-mix(in oklab, var(--accent) 46%, var(--color-mag-muted)); }
+      .sc-verified { color: var(--color-gold-400); filter: drop-shadow(0 0 6px color-mix(in oklab, var(--color-gold-400) 55%, transparent)); }
       .sc-name { color: var(--color-mag-white); transition: color 0.3s ease; }
       .sc-card:hover .sc-name { color: color-mix(in oklab, var(--accent) 65%, white); }
+      .sc-card.is-official:hover .sc-name { color: color-mix(in oklab, var(--color-gold-300) 80%, white); }
       .sc-tagline { color: color-mix(in oklab, var(--accent) 80%, white); }
       .sc-chip {
         border-radius: 9999px; padding: 0.26rem 0.66rem;
@@ -637,6 +722,7 @@ function StoreStyles() {
 
       @keyframes scRing { to { transform: rotate(360deg); } }
       @keyframes scShine { to { transform: translateX(320%) skewX(-16deg); } }
+      @keyframes scKindShine { 0% { transform: translateX(-130%); } 45%, 100% { transform: translateX(320%); } }
       @keyframes scTitleShine { to { background-position: -220% center; } }
       @keyframes scPulse { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 60%, transparent); } 70%,100% { box-shadow: 0 0 0 8px transparent; } }
       @keyframes scRadar { to { transform: translate(-50%,-50%) rotate(360deg); } }
@@ -648,10 +734,10 @@ function StoreStyles() {
 
       @media (prefers-reduced-motion: reduce) {
         .sc-title, .sc-eyebrow-dot, .sc-coin, .sc-ring, .sc-shine, .sc-radar,
-        .sc-lock-badge, .sc-status-dot { animation: none !important; }
+        .sc-lock-badge, .sc-status-dot, .sc-kind-shine, .sc-kind-eyebrow.is-official { animation: none !important; }
         .sc-card:hover .sc-hero-img,
         .sc-card:hover .sc-poly-inner { transform: none !important; }
-        .sc-title { background-position: 0 center; }
+        .sc-title, .sc-kind-eyebrow.is-official { background-position: 0 center; }
         .sc-coin { display: none; }
       }
     `}</style>

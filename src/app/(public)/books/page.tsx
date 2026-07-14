@@ -13,7 +13,7 @@ export default function BooksPage() {
       section="Books"
       headline="Coming"
       tagline="Soon"
-      note="The SPX6900 bookshelf is being written — the essential reading for Aeons. Check back soon."
+      note="The SPX6900 bookshelf is being written: the essential reading for Aeons. Check back soon."
       cta={{ label: "Start with the guides", href: "/learn" }}
     />
   );

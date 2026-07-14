@@ -13,7 +13,7 @@ export default function MagazinesPage() {
       section="Magazines"
       headline="The print edition"
       tagline="is coming Soon"
-      note="We're pressing something special — the SPX6900 print magazine. In the meantime, the digital edition is already live."
+      note="We're pressing something special: the SPX6900 print magazine. In the meantime, the digital edition is already live."
       cta={{ label: "Read the digital edition", href: "/articles/magazine" }}
     />
   );

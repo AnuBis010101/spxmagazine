@@ -13,7 +13,7 @@ export default function StorePage() {
       section="Store"
       headline="Coming"
       tagline="Soon"
-      note="The SPX6900 store is being stocked with merch and more. Gear up for the flippening — stay tuned."
+      note="The SPX6900 store is being stocked with merch and more. Gear up for the flippening: stay tuned."
       cta={{ label: "Back to home", href: "/" }}
     />
   );

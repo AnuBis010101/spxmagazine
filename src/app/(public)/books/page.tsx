@@ -1,20 +1,12 @@
 import type { Metadata } from "next";
-import ComingSoon from "@/components/layout/ComingSoon";
+import BookShowcase from "@/components/books/BookShowcase";
 
 export const metadata: Metadata = {
   title: "Books",
   description:
-    "The SPX6900 bookshelf is on its way. Books are coming soon — the definitive reading list for the Cognisphere.",
+    "The SPX6900 library — the essential reading on the pure belief asset. Amazon paperbacks (Stop Trading, Start Believing!; Invest & Grow Rich), free e-books (Discovering SPX6900; Alchemical), and an audiobook, all written by the community.",
 };
 
 export default function BooksPage() {
-  return (
-    <ComingSoon
-      section="Books"
-      headline="Coming"
-      tagline="Soon"
-      note="The SPX6900 bookshelf is being written: the essential reading for Aeons. Check back soon."
-      cta={{ label: "Start with the guides", href: "/learn" }}
-    />
-  );
+  return <BookShowcase />;
 }

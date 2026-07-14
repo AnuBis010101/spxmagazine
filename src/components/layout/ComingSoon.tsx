@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -43,8 +44,35 @@ export default function ComingSoon({
   const words = headline.split(" ");
   let charIndex = 0;
 
+  // The fixed OrbitBackground behind every page centers its rings on the true
+  // viewport center (it's `fixed inset-0`). This section, though, sits in
+  // normal flow below the header/ticker chrome, so a plain "100vh minus chrome"
+  // min-height centers content *below* that point by roughly half the chrome
+  // height. Measuring the chrome above us and doubling it in the subtraction
+  // (100vh - 2×chrome) makes the flex-centered midpoint land exactly on the
+  // real viewport center, matching the background's rings.
+  const sectionRef = useRef<HTMLElement>(null);
+  const [minH, setMinH] = useState<string | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const measure = () => {
+      const chromeAbove = el.getBoundingClientRect().top + window.scrollY;
+      const target = Math.max(window.innerHeight - chromeAbove * 2, 480);
+      setMinH(`${target}px`);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   return (
-    <section className="cs-root relative flex min-h-[calc(100vh-9rem)] items-center justify-center overflow-hidden px-4 py-20">
+    <section
+      ref={sectionRef}
+      style={minH ? { minHeight: minH } : undefined}
+      className="cs-root relative flex min-h-[calc(100vh-9rem)] items-center justify-center overflow-hidden px-4 py-20"
+    >
       {/* Ambient aurora blobs */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <span className="cs-aurora cs-aurora--1" />

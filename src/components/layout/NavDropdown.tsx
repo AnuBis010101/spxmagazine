@@ -3,10 +3,11 @@
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import type { NavItem } from "@/lib/constants";
+import { NavActivePill, NavLetters, NavShine } from "./NavPremium";
 
 /**
  * Determine whether a dropdown child link should render as active for the
@@ -64,35 +65,28 @@ export default function NavDropdown({
     >
       <Link
         href={item.href}
-        className="relative flex items-center gap-1 px-3 py-1.5"
+        aria-label={item.label}
+        className={cn(
+          "premium-nav-item relative flex items-center gap-1 rounded-full px-3 py-2 transition-colors duration-300",
+          !isActive && "hover:bg-white/[0.04]"
+        )}
         aria-haspopup="true"
         aria-expanded={open}
       >
-        <span className="relative z-10 overflow-hidden" style={{ height: "1.2em" }}>
-          <span
-            className={cn(
-              "block text-sm font-medium transition-colors duration-200",
-              isActive ? "text-gold-400" : open ? "text-white" : "text-mag-muted"
-            )}
-          >
-            {item.label}
-          </span>
-        </span>
+        {isActive && <NavActivePill />}
+        <NavShine />
+        <NavLetters
+          label={item.label}
+          hovered={open}
+          tone={isActive ? "active" : open ? "bright" : "muted"}
+        />
         <ChevronDown
           className={cn(
-            "h-3.5 w-3.5 transition-all duration-200",
+            "relative z-10 h-3.5 w-3.5 transition-all duration-300",
             isActive ? "text-gold-400" : open ? "text-white" : "text-mag-muted",
             open && "rotate-180"
           )}
         />
-
-        {isActive && (
-          <motion.span
-            layoutId="activeNavBar"
-            className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-gold-400"
-            transition={{ type: "spring", stiffness: 400, damping: 35 }}
-          />
-        )}
       </Link>
 
       <AnimatePresence>
@@ -101,7 +95,7 @@ export default function NavDropdown({
             variants={{
               closed: reduce
                 ? { opacity: 0 }
-                : { opacity: 0, scaleY: 0.85 },
+                : { opacity: 0, y: -10, scale: 0.96 },
               open: reduce
                 ? {
                     opacity: 1,
@@ -109,12 +103,14 @@ export default function NavDropdown({
                   }
                 : {
                     opacity: 1,
-                    scaleY: 1,
+                    y: 0,
+                    scale: 1,
                     transition: {
-                      duration: 0.22,
-                      ease: [0.16, 1, 0.3, 1],
-                      staggerChildren: 0.028,
-                      delayChildren: 0.04,
+                      type: "spring",
+                      stiffness: 420,
+                      damping: 32,
+                      staggerChildren: 0.045,
+                      delayChildren: 0.05,
                     },
                   },
             }}
@@ -122,40 +118,83 @@ export default function NavDropdown({
             animate="open"
             exit="closed"
             style={{ transformOrigin: "top center" }}
-            className="absolute left-1/2 top-full z-50 mt-2 min-w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-gold-400/20 bg-mag-dark/95 p-1.5 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+            className="nav-panel-rim absolute left-1/2 top-full z-50 mt-3 w-72 -translate-x-1/2 rounded-2xl p-px shadow-[0_24px_60px_-16px_rgba(0,0,0,0.85)]"
           >
-            {children.map((child) => {
-              const active = isChildActive(child.href, siblingHrefs, pathname);
-              return (
-                <motion.div
-                  key={`${child.label}-${child.href}`}
-                  variants={{
-                    closed: reduce
-                      ? { opacity: 0 }
-                      : { opacity: 0, y: -6 },
-                    open: reduce
-                      ? { opacity: 1 }
-                      : {
-                          opacity: 1,
-                          y: 0,
-                          transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
-                        },
-                  }}
-                >
-                  <Link
-                    href={child.href}
-                    className={cn(
-                      "block whitespace-nowrap rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors",
-                      active
-                        ? "bg-gold-400/10 text-gold-400"
-                        : "text-mag-light hover:bg-white/5 hover:text-gold-400"
-                    )}
+            <div className="relative overflow-hidden rounded-[calc(1rem-1px)] bg-mag-dark/[0.985] p-1.5">
+              {/* faint top light-catch inside the panel */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/50 to-transparent"
+              />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-gold-400/[0.06] to-transparent"
+              />
+
+              {children.map((child) => {
+                const active = isChildActive(child.href, siblingHrefs, pathname);
+                return (
+                  <motion.div
+                    key={`${child.label}-${child.href}`}
+                    variants={{
+                      closed: reduce ? { opacity: 0 } : { opacity: 0, y: -6 },
+                      open: reduce
+                        ? { opacity: 1 }
+                        : {
+                            opacity: 1,
+                            y: 0,
+                            transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
+                          },
+                    }}
                   >
-                    {child.label}
-                  </Link>
-                </motion.div>
-              );
-            })}
+                    <Link
+                      href={child.href}
+                      className={cn(
+                        "group/row relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-200",
+                        active ? "bg-gold-400/10" : "hover:bg-white/[0.05]"
+                      )}
+                    >
+                      {/* dot marker */}
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "h-1.5 w-1.5 flex-shrink-0 rounded-full transition-all duration-300",
+                          active
+                            ? "bg-gold-400 shadow-[0_0_8px_rgba(212,175,55,0.9)]"
+                            : "bg-mag-muted/40 group-hover/row:scale-125 group-hover/row:bg-gold-400 group-hover/row:shadow-[0_0_8px_rgba(212,175,55,0.8)]"
+                        )}
+                      />
+                      <span className="min-w-0 flex-1 transition-transform duration-300 group-hover/row:translate-x-0.5">
+                        <span
+                          className={cn(
+                            "block font-display text-sm font-medium transition-colors duration-200",
+                            active
+                              ? "text-gold-400"
+                              : "text-mag-light group-hover/row:text-gold-400"
+                          )}
+                        >
+                          {child.label}
+                        </span>
+                        {child.desc && (
+                          <span className="mt-0.5 block truncate text-xs text-mag-muted/80">
+                            {child.desc}
+                          </span>
+                        )}
+                      </span>
+                      <ArrowRight
+                        aria-hidden
+                        className={cn(
+                          "h-3.5 w-3.5 flex-shrink-0 text-gold-400 transition-all duration-300",
+                          active
+                            ? "translate-x-0 opacity-100"
+                            : "-translate-x-1.5 opacity-0 group-hover/row:translate-x-0 group-hover/row:opacity-100"
+                        )}
+                      />
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

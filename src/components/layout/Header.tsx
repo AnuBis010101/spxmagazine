@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,12 @@ import ThemeToggle from "@/components/layout/ThemeToggle";
 import NavDropdown from "./NavDropdown";
 import { MobileNav } from "./MobileNav";
 import SearchModal from "./SearchModal";
+import {
+  NavActivePill,
+  NavLetters,
+  NavShine,
+  PremiumNavStyles,
+} from "./NavPremium";
 
 function NavItem({
   href,
@@ -28,51 +34,21 @@ function NavItem({
   return (
     <Link
       href={href}
-      className="relative flex items-center px-3 py-1.5"
+      aria-label={label}
+      className={cn(
+        "premium-nav-item relative flex items-center rounded-full px-3 py-2 transition-colors duration-300",
+        !isActive && "hover:bg-white/[0.04]"
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Hover highlight (only when not active) */}
-      {!isActive && isHovered && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 rounded-md bg-white/5"
-          transition={{ duration: 0.15 }}
-        />
-      )}
-
-      {/* Text */}
-      <span className="relative z-10 overflow-hidden" style={{ height: "1.2em" }}>
-        <motion.span
-          className={cn(
-            "block text-sm font-medium transition-colors duration-200",
-            isActive ? "text-gold-400" : isHovered ? "text-white" : "text-mag-muted"
-          )}
-          animate={
-            isHovered && !isActive
-              ? { rotateX: [0, -90, 0], y: [0, 4, 0] }
-              : { rotateX: 0, y: 0 }
-          }
-          transition={{
-            duration: 0.35,
-            ease: [0.23, 1, 0.32, 1],
-          }}
-          style={{ transformOrigin: "50% 100%", display: "inline-block" }}
-        >
-          {label}
-        </motion.span>
-      </span>
-
-      {/* Sliding gold underline bar */}
-      {isActive && (
-        <motion.span
-          layoutId="activeNavBar"
-          className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-gold-400"
-          transition={{ type: "spring", stiffness: 400, damping: 35 }}
-        />
-      )}
+      {isActive && <NavActivePill />}
+      <NavShine />
+      <NavLetters
+        label={label}
+        hovered={isHovered}
+        tone={isActive ? "active" : isHovered ? "bright" : "muted"}
+      />
     </Link>
   );
 }
@@ -82,6 +58,22 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Cursor spotlight inside the nav rail — driven straight through the DOM
+  // (no React state) so mousemove never re-renders the header.
+  const navRailRef = useRef<HTMLElement>(null);
+  const spotRef = useRef<HTMLSpanElement>(null);
+  const handleRailMove = useCallback((e: ReactMouseEvent<HTMLElement>) => {
+    const rail = navRailRef.current;
+    const spot = spotRef.current;
+    if (!rail || !spot) return;
+    const rect = rail.getBoundingClientRect();
+    spot.style.transform = `translate(${e.clientX - rect.left - 56}px, -50%)`;
+    spot.style.opacity = "1";
+  }, []);
+  const handleRailLeave = useCallback(() => {
+    if (spotRef.current) spotRef.current.style.opacity = "0";
+  }, []);
 
   const handleScroll = useCallback(() => {
     setIsScrolled(window.scrollY > 20);
@@ -119,20 +111,26 @@ export function Header() {
 
   return (
     <>
+      <PremiumNavStyles />
       <motion.header
         className={cn(
           // Perf: backdrop-blur re-rasterises the content behind it every scroll
           // frame. Once scrolled the bar is 95% opaque and the blur is invisible,
           // so we only keep it at rest at the very top (over the hero) and drop it
           // during scroll — which is exactly when smoothness matters.
-          "sticky top-0 z-50 border-b border-gold-400/20 transition-colors duration-300",
+          "sticky top-0 z-50 transition-colors duration-300",
           isScrolled ? "bg-mag-black/95" : "bg-mag-black/80 backdrop-blur-xl"
         )}
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
+        <div
+          className={cn(
+            "mx-auto flex max-w-7xl items-center justify-between px-4 transition-[height] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] sm:px-6 lg:px-8",
+            isScrolled ? "h-14 lg:h-16" : "h-16 lg:h-20"
+          )}
+        >
           {/* Logo */}
           <Link href="/" className="relative flex-shrink-0 group">
             <motion.div
@@ -151,13 +149,25 @@ export function Header() {
             </motion.div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-0.5 lg:flex">
+          {/* Desktop Navigation — glass rail with living rim + cursor spotlight */}
+          <nav
+            ref={navRailRef}
+            onMouseMove={handleRailMove}
+            onMouseLeave={handleRailLeave}
+            className="relative hidden items-center rounded-full bg-white/[0.03] px-1 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] lg:flex"
+          >
+            <span aria-hidden className="nav-rim pointer-events-none" />
+            <span
+              ref={spotRef}
+              aria-hidden
+              className="nav-spot pointer-events-none absolute left-0 top-1/2 h-28 w-28 rounded-full opacity-0 transition-opacity duration-300"
+              style={{ transform: "translate(-9999px, -50%)" }}
+            />
             {NAV_ITEMS.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
               return (
-                <MagneticHover key={item.href} strength={0.25}>
+                <MagneticHover key={item.href} strength={0.2}>
                   {item.children ? (
                     <NavDropdown item={item} isActive={isActive} />
                   ) : (
@@ -178,7 +188,7 @@ export function Header() {
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.93 }}>
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400"
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted ring-1 ring-inset ring-transparent transition-all duration-300 hover:bg-mag-dark hover:text-gold-400 hover:ring-gold-400/30"
                   aria-label="Search"
                 >
                   <Search className="h-4 w-4" />
@@ -190,7 +200,7 @@ export function Header() {
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.93 }}>
                 <Link
                   href="/bookmarks"
-                  className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400"
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-mag-muted ring-1 ring-inset ring-transparent transition-all duration-300 hover:bg-mag-dark hover:text-gold-400 hover:ring-gold-400/30"
                   aria-label="Bookmarks"
                 >
                   <Bookmark className="h-4 w-4" />
@@ -214,6 +224,15 @@ export function Header() {
             </motion.button>
           </div>
         </div>
+
+        {/* Bottom hairline — static gold base with a slow travelling glint */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px overflow-hidden"
+        >
+          <span className="absolute inset-0 bg-gold-400/20" />
+          <span className="nav-hairline-glint absolute inset-y-0 left-0 w-1/3" />
+        </span>
       </motion.header>
 
       <MobileNav

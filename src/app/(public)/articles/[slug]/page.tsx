@@ -88,7 +88,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   return (
     <>
     <ReadingProgress />
-    <article className="max-w-7xl mx-auto px-4 py-12">
+    <article className="max-w-7xl xl:max-w-[84rem] mx-auto px-4 py-12">
       <ArticleJsonLd post={post} url={articleUrl} />
       {/* Breadcrumbs */}
       <Breadcrumbs items={[
@@ -189,7 +189,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       </div>
 
       {/* Article body with optional TOC sidebar */}
-      <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,56rem)_minmax(0,1fr)] xl:gap-8 xl:px-8">
+      <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,56rem)_minmax(0,1fr)] xl:gap-8">
         {/* Chapter spine — sticky vertical progress rail in the outer gutter.
             Renders a plain spacer div when there are <2 H2s, below xl, or under
             reduced motion, so grid column widths stay stable. */}

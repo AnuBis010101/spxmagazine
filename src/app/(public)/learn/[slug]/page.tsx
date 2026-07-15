@@ -80,7 +80,7 @@ export default async function LearnArticlePage({ params }: PageProps) {
   return (
     <>
     <ReadingProgress />
-    <article className="max-w-7xl mx-auto px-4 py-12">
+    <article className="max-w-7xl xl:max-w-[84rem] mx-auto px-4 py-12">
       <ArticleJsonLd post={post} url={articleUrl} />
       <Breadcrumbs items={[
         { label: "Home", href: "/" },
@@ -169,7 +169,7 @@ export default async function LearnArticlePage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,56rem)_minmax(0,1fr)] xl:gap-8 xl:px-8">
+      <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,56rem)_minmax(0,1fr)] xl:gap-8">
         <ChapterSpine />
 
         <div>

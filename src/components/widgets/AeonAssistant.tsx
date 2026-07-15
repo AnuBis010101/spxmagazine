@@ -94,6 +94,16 @@ function tipsForPath(path: string): Tip[] {
   if (path.startsWith("/how-to-buy")) return [
     { content: <>Ready to become an Aeon? Follow the steps — DYOR, then <b>DCA</b>.</>, anim: "pointU" },
   ];
+  if (path.startsWith("/store")) return [
+    { content: <>Welcome to the <b>Store</b>, Aeon. Four SPX6900 storefronts, all flying the same flag.</>, anim: "wave" },
+    { content: <><b>SPX6900 Industries</b> is the official merch store. The other three are built by the community.</>, anim: "pointU" },
+    { content: <>Hover a card to make it come alive, then hit <b>Visit store</b> to shop. <b>Jinping Labs</b> is still booting up. 🛍️</>, anim: "celebrate" },
+  ];
+  if (path.startsWith("/books")) return [
+    { content: <>Welcome to the <b>Library</b>. The essential reading on the pure belief asset. 📚</>, anim: "wave" },
+    { content: <>Two are free e-books, two are on <b>Amazon</b>, and one even has an <b>audiobook</b>.</>, anim: "pointU" },
+    { content: <>Hover a book to turn it in 3D, then <b>Read free</b> or <b>Buy on Amazon</b>. No chart, just conviction.</>, anim: "think" },
+  ];
   return [
     { content: <>Need a hand navigating? Use the menu up top to explore the Cognisphere.</>, anim: "pointU" },
   ];

@@ -1,7 +1,7 @@
 export const SITE_NAME = "SPX Magazine";
 export const SITE_DESCRIPTION =
   "The premier source for SPX6900 news, insights, and community resources.";
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://spxmagazine.com";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://spx6900magazine.com";
 
 export type NavChild = { label: string; href: string; desc?: string };
 export type NavItem = { label: string; href: string; children?: NavChild[] };

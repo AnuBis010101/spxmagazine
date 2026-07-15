@@ -65,7 +65,7 @@ const resourceLinks = [
 const connectLinks = [
   {
     label: "X / Twitter",
-    href: "https://x.com/SPX6900",
+    href: "https://x.com/Spx6900Magazine",
     icon: XIcon,
   },
   {

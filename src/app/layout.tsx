@@ -38,8 +38,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    site: "@SPX6900",
-    creator: "@SPX6900",
+    site: "@Spx6900Magazine",
+    creator: "@Spx6900Magazine",
   },
   robots: {
     index: true,

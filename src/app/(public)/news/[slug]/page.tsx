@@ -169,7 +169,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[1fr_minmax(0,56rem)_16rem] xl:gap-8 xl:px-8">
+      <div className="mt-10 max-w-4xl mx-auto xl:max-w-none xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,56rem)_minmax(0,1fr)] xl:gap-8 xl:px-8">
         <ChapterSpine />
 
         <div>

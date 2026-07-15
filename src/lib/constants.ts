@@ -9,6 +9,7 @@ export type NavItem = { label: string; href: string; children?: NavChild[] };
 export const NAV_ITEMS: NavItem[] = [
   { label: "News", href: "/news" },
   { label: "Videos", href: "/videos" },
+  { label: "Podcasts", href: "/podcasts" },
   {
     label: "Articles",
     href: "/articles",

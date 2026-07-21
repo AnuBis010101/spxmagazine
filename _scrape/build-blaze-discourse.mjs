@@ -34,12 +34,21 @@ lines.forEach((l,i)=>{const e=PER[i]; if(!e) return;
 if (body.length!==TOTAL[0]||ck(body)!==TOTAL[1]) bad.push(`body total: got [${body.length},${ck(body)}] want [${TOTAL[0]},${TOTAL[1]}]`);
 if (bad.length) { console.error('MISMATCH:\n'+bad.join('\n')); process.exit(1); }
 
+// The source carries stray citation markers left over from its drafting tool
+// ("...one awaiteth?21", "...the common man.28"). The verification above is
+// against the faithful scrape; strip them only for publication. Verified that
+// no other paragraph in this piece ends in digits, so this cannot eat a real
+// number (no decimals, years or figures sit in final position).
+const CITES = /(\[\[Q\]\]|[.!?])\d+(?=<\/p>)/g;
+const stripped = (body.match(CITES) || []).length;
+const cleanBody = body.replace(CITES, '$1');
+
 const payload = {
   cover: 'https://pbs.twimg.com/media/HNr74x1WAAAr1so.jpg',
   imgUsed: 0,
   excerpt: 'A satirical discourse in the old tongue upon SPX6900 — that daring memecoin which challengeth the ancient S&P 500 Index, in the Year of Our Lord 2026.',
-  body,
+  body: cleanBody,
 };
 const outPath = join(__dirname, 'payloads', 'blaze-discourse-upon-spx6900.json');
 writeFileSync(outPath, JSON.stringify(payload));
-console.log(`OK — all ${lines.length} lines + total verified byte-exact. Wrote ${outPath} (body ${body.length} chars).`);
+console.log(`OK — all ${lines.length} lines + total verified byte-exact. Stripped ${stripped} stray citation markers. Wrote ${outPath} (body ${cleanBody.length} chars).`);

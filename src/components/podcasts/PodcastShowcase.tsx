@@ -21,6 +21,20 @@ function YouTubeIcon({ className }: { className?: string }) {
   );
 }
 
+/** Brand-accurate Twitch glyph. */
+function TwitchIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M4.3 1.5 1.5 5.9v15.4h5.2V24h2.9l2.8-2.7h4.3l5.8-5.6V1.5H4.3Zm15.9 13.3-3.3 3.2h-5.2l-2.8 2.7v-2.7H4.4V3.4h15.8v11.4ZM16.6 7v5.8h-2V7h2Zm-5.3 0v5.8h-2V7h2Z" />
+    </svg>
+  );
+}
+
+const PLATFORM = {
+  youtube: { label: "YouTube", Icon: YouTubeIcon, brand: "#ff0000", fg: "#fff" },
+  twitch: { label: "Twitch", Icon: TwitchIcon, brand: "#9146ff", fg: "#fff" },
+} as const;
+
 /* ─────────────────────────────────────────────────────────────────────────
    The Cognisphere on air — SPX6900 podcasts & shows.
 
@@ -43,7 +57,17 @@ type Podcast = {
   blurb: string;
   channelUrl: string;
   latestUrl: string;
-  cover: { src: string; alt: string };
+  /** Where the show lives — drives the corner badge and the CTA. */
+  platform: keyof typeof PLATFORM;
+  /**
+   * Latest-episode still. Omitted for live shows, which render the designed
+   * on-air stage instead of a screenshot.
+   */
+  cover?: { src: string; alt: string };
+  /** Live broadcast rather than an episode archive: shows the ON AIR lockup. */
+  live?: boolean;
+  /** Station ident drawn on the on-air stage (live shows only). */
+  ident?: string;
   avatar: { src: string; alt: string };
   chips: string[];
   accent: string;
@@ -60,6 +84,7 @@ const PODCASTS: Podcast[] = [
       "Deep, thought-provoking conversations: four co-hosts and guests digging into the corners of crypto nobody else covers.",
     channelUrl: "https://youtube.com/@flipthestockmarket",
     latestUrl: "https://youtube.com/watch?v=AKslD8AxFfE",
+    platform: "youtube",
     cover: { src: "/podcasts/flip-latest.jpg", alt: "Flip The Stock Market — latest episode" },
     avatar: { src: "/podcasts/flip-avatar.jpg", alt: "Flip The Stock Market" },
     chips: ["4 co-hosts", "Guests", "Crypto"],
@@ -75,6 +100,7 @@ const PODCASTS: Podcast[] = [
       "Recordings of the SPX6900 Spaces on X: the timeline's live conversations, archived for the whole Cognisphere.",
     channelUrl: "https://youtube.com/@big6900_spx",
     latestUrl: "https://youtube.com/watch?v=eUOu8CimcwA",
+    platform: "youtube",
     cover: { src: "/podcasts/big6900-latest.jpg", alt: "Big6900 — latest Spaces recording" },
     avatar: { src: "/podcasts/big6900-avatar.jpg", alt: "Big6900" },
     chips: ["X Spaces", "Community", "Archive"],
@@ -90,11 +116,29 @@ const PODCASTS: Podcast[] = [
       "Southern Fried Chad and co-hosts go Into the Cognisphere every Tuesday at 8PM ET. Believe in something. Persist forever.",
     channelUrl: "https://youtube.com/@southernfriedchad",
     latestUrl: "https://youtube.com/watch?v=ul0th4dQrJo",
+    platform: "youtube",
     cover: { src: "/podcasts/chad-latest.jpg", alt: "Persist Forever — latest highlight" },
     avatar: { src: "/podcasts/chad-avatar.jpg", alt: "Persist Forever" },
     chips: ["Tues 8PM ET", "Co-hosts", "Weekly"],
     accent: "#9B7BFF",
     accent2: "#CBB8FF",
+  },
+  {
+    id: "spxfm",
+    name: "SPX_FM",
+    format: "Live show",
+    tagline: "Broadcasting from SPX Studios",
+    blurb:
+      "Hyp3, AEON G1RL and Lumina go live from SPX Studios: music, long-form talk, and Project Aeon, straight out of the Cognisphere.",
+    channelUrl: "https://www.twitch.tv/spx_studios",
+    latestUrl: "https://www.twitch.tv/videos/2827437187",
+    platform: "twitch",
+    live: true,
+    ident: "SPX_FM",
+    avatar: { src: "/podcasts/spxfm-avatar.jpg", alt: "SPX_FM — spx_studios" },
+    chips: ["Twitch", "3 hosts", "Music + talk"],
+    accent: "#9146FF",
+    accent2: "#C9A6FF",
   },
 ];
 
@@ -106,7 +150,9 @@ export default function PodcastShowcase() {
     <section className="pc-page relative mx-auto w-full max-w-6xl px-4 pb-28 pt-14 sm:pt-20">
       <PodcastHero />
 
-      <div className="mt-14 grid grid-cols-1 gap-6 sm:mt-16 lg:grid-cols-3 lg:gap-7">
+      {/* Four shows: a balanced 2×2 at lg. A 3-up grid would strand the
+          fourth card alone on its own row. */}
+      <div id="shows" className="mt-14 grid grid-cols-1 gap-6 scroll-mt-28 sm:mt-16 lg:grid-cols-2 lg:gap-7">
         {PODCASTS.map((p, i) => (
           <PodcastCard key={p.id} podcast={p} order={i} />
         ))}
@@ -136,6 +182,47 @@ function Equalizer({ bars = 5 }: { bars?: number }) {
         <span key={i} className="pc-eq-bar" style={{ animationDelay: `${(i % bars) * -0.28}s` }} />
       ))}
     </span>
+  );
+}
+
+/* ── On-air stage ──────────────────────────────────────────────────────────
+   Live shows get a designed broadcast stage instead of a video still: a
+   station ident over an animated spectrum. Twitch VOD stills are desktop
+   screen-captures (third-party album art, webcam, chat), so they would neither
+   match the editorial look of the other covers nor be ours to publish.
+   Deterministic bar heights keep SSR and client markup identical.
+   ──────────────────────────────────────────────────────────────────────── */
+
+const STAGE_BARS = [
+  0.30, 0.52, 0.74, 0.44, 0.88, 0.62, 0.36, 0.70, 0.50, 0.82, 0.40, 0.66,
+  0.56, 0.92, 0.46, 0.78, 0.34, 0.60, 0.86, 0.48, 0.72, 0.38, 0.64, 0.54,
+];
+
+function OnAirStage({ ident, reduce }: { ident: string; reduce: boolean }) {
+  return (
+    <div aria-hidden className="pc-stage">
+      <span className="pc-stage-grid" />
+      <span className="pc-stage-glow" />
+
+      <span className="pc-stage-spectrum">
+        {STAGE_BARS.map((h, i) => (
+          <span
+            key={i}
+            className="pc-stage-bar"
+            style={{
+              ["--h" as string]: h,
+              animationDelay: `${i * -0.11}s`,
+              animationPlayState: reduce ? "paused" : "running",
+            }}
+          />
+        ))}
+      </span>
+
+      <span className="pc-stage-ident">
+        <span className="pc-stage-ident-text">{ident}</span>
+        <span className="pc-stage-ident-sub">Cognisphere Radio</span>
+      </span>
+    </div>
   );
 }
 
@@ -192,7 +279,7 @@ function PodcastHero() {
         transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mt-8 flex flex-wrap items-center justify-center gap-2.5"
       >
-        {["3 shows", "Video podcasts", "X Spaces", "Weekly"].map((s) => (
+        {["4 shows", "Live on Twitch", "Video podcasts", "X Spaces"].map((s) => (
           <span key={s} className="pc-stat">
             {s}
           </span>
@@ -206,6 +293,8 @@ function PodcastHero() {
 
 function PodcastCard({ podcast, order }: { podcast: Podcast; order: number }) {
   const reduce = useReducedMotion();
+  const platform = PLATFORM[podcast.platform];
+  const PlatformIcon = platform.Icon;
   // Ref on the OUTER, untransformed shell — never the tilting layer.
   const shellRef = useRef<HTMLElement>(null);
 
@@ -252,15 +341,19 @@ function PodcastCard({ podcast, order }: { podcast: Podcast; order: number }) {
           className="pc-tilt"
           style={{ rotateX: reduce ? 0 : rotateX, rotateY: reduce ? 0 : rotateY, transformStyle: "preserve-3d" }}
         >
-          {/* ── Cover: latest episode + play ── */}
+          {/* ── Cover: latest episode (or the on-air stage for live shows) ── */}
           <div className="pc-cover" style={{ transform: "translateZ(1px)" }}>
-            <Image
-              src={podcast.cover.src}
-              alt={podcast.cover.alt}
-              fill
-              sizes="(max-width: 1024px) 100vw, 380px"
-              className="pc-cover-img object-cover"
-            />
+            {podcast.cover ? (
+              <Image
+                src={podcast.cover.src}
+                alt={podcast.cover.alt}
+                fill
+                sizes="(max-width: 1024px) 100vw, 560px"
+                className="pc-cover-img object-cover"
+              />
+            ) : (
+              <OnAirStage ident={podcast.ident ?? podcast.name} reduce={!!reduce} />
+            )}
             <span aria-hidden className="pc-cover-scrim" />
             <span aria-hidden className="pc-shine" />
             {!reduce && <motion.span aria-hidden className="pc-glare" style={{ backgroundImage: glare }} />}
@@ -269,18 +362,32 @@ function PodcastCard({ podcast, order }: { podcast: Podcast; order: number }) {
               <Radio className="h-3 w-3" />
               {podcast.format}
             </span>
-            <span className="pc-yt" style={{ transform: "translateZ(40px)" }}>
-              <YouTubeIcon className="h-3.5 w-3.5" />
+            <span
+              className="pc-platform"
+              style={{ transform: "translateZ(40px)", ["--brand" as string]: platform.brand }}
+            >
+              <PlatformIcon className="h-3.5 w-3.5" />
             </span>
 
-            {/* pulsing play button → latest episode */}
+            {podcast.live && (
+              <span className="pc-live" style={{ transform: "translateZ(48px)" }}>
+                <span aria-hidden className="pc-live-dot" />
+                On air
+              </span>
+            )}
+
+            {/* pulsing play button → latest episode / live channel */}
             <a
               href={podcast.latestUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="pc-play"
               style={{ transform: "translateZ(55px)" }}
-              aria-label={`Play the latest episode of ${podcast.name}`}
+              aria-label={
+                podcast.live
+                  ? `Watch ${podcast.name} on ${platform.label}`
+                  : `Play the latest episode of ${podcast.name}`
+              }
             >
               <span aria-hidden className="pc-play-ripple" />
               <span aria-hidden className="pc-play-ripple pc-play-ripple--2" />
@@ -328,8 +435,8 @@ function PodcastCard({ podcast, order }: { podcast: Podcast; order: number }) {
                 rel="noopener noreferrer"
                 className="pc-cta"
               >
-                <YouTubeIcon className="h-4 w-4" />
-                <span>Watch on YouTube</span>
+                <PlatformIcon className="h-4 w-4" />
+                <span>Watch on {platform.label}</span>
                 <ArrowUpRight className="pc-cta-arrow h-3.5 w-3.5" />
               </a>
               <a
@@ -339,7 +446,7 @@ function PodcastCard({ podcast, order }: { podcast: Podcast; order: number }) {
                 className="pc-latest"
               >
                 <Play className="h-3 w-3" fill="currentColor" />
-                Latest
+                {podcast.live ? "Last stream" : "Latest"}
               </a>
             </div>
           </div>
@@ -456,11 +563,79 @@ function PodcastStyles() {
         box-shadow: 0 4px 14px -4px color-mix(in oklab, var(--accent) 70%, transparent);
       }
       .pc-format svg { color: color-mix(in oklab, var(--accent) 20%, #08110c); }
-      .pc-yt {
+      .pc-platform {
         position: absolute; top: 10px; right: 10px; z-index: 6;
         display: inline-flex; align-items: center; justify-content: center;
         width: 26px; height: 26px; border-radius: 8px;
-        background: #ff0000; color: #fff; box-shadow: 0 4px 14px -4px rgba(255,0,0,0.7);
+        background: var(--brand); color: #fff;
+        box-shadow: 0 4px 14px -4px color-mix(in oklab, var(--brand) 70%, transparent);
+      }
+
+      /* ON AIR badge — sits under the platform chip, never overlapping it */
+      .pc-live {
+        position: absolute; top: 44px; right: 10px; z-index: 6;
+        display: inline-flex; align-items: center; gap: 0.34rem;
+        border-radius: 9999px; padding: 0.24rem 0.55rem;
+        font-size: 0.58rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+        color: #fff; background: rgba(10,10,11,0.72);
+        border: 1px solid color-mix(in oklab, #ff3b3b 55%, transparent);
+        box-shadow: 0 4px 14px -6px rgba(0,0,0,0.9);
+      }
+      .pc-live-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: #ff3b3b;
+        box-shadow: 0 0 10px #ff3b3b; animation: pcPulse 1.8s ease-out infinite;
+      }
+
+      /* designed broadcast stage (live shows, in place of a video still) */
+      .pc-stage {
+        position: absolute; inset: 0; overflow: hidden;
+        /* the ident scales to the CARD, not the viewport (cqw below) */
+        container-type: inline-size;
+        background:
+          radial-gradient(120% 85% at 50% 8%, color-mix(in oklab, var(--accent) 34%, transparent), transparent 62%),
+          linear-gradient(168deg, #17102b 0%, #0c0a14 55%, #060607 100%);
+      }
+      .pc-stage-grid {
+        position: absolute; inset: 0; opacity: 0.5;
+        background-image:
+          linear-gradient(color-mix(in oklab, var(--accent) 14%, transparent) 1px, transparent 1px),
+          linear-gradient(90deg, color-mix(in oklab, var(--accent) 14%, transparent) 1px, transparent 1px);
+        background-size: 34px 34px;
+        mask-image: radial-gradient(120% 80% at 50% 45%, #000 25%, transparent 78%);
+      }
+      .pc-stage-glow {
+        position: absolute; left: 50%; top: 42%; width: 78%; aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle, color-mix(in oklab, var(--accent) 42%, transparent), transparent 66%);
+        filter: blur(6px);
+      }
+      .pc-stage-spectrum {
+        position: absolute; inset-inline: 0; bottom: 0; height: 42%;
+        display: flex; align-items: flex-end; justify-content: center; gap: 3px;
+        padding-inline: 8%;
+        mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+      }
+      .pc-stage-bar {
+        flex: 1 1 0; min-width: 0; max-width: 9px;
+        height: calc(16% + var(--h) * 84%);
+        border-radius: 9999px 9999px 0 0; transform-origin: bottom; transform: scaleY(0.34);
+        background: linear-gradient(180deg, var(--accent-2), color-mix(in oklab, var(--accent) 70%, transparent));
+        animation: pcEq 1.3s ease-in-out infinite;
+      }
+      .pc-stage-ident {
+        position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%);
+        display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+        text-align: center; width: 100%; padding-inline: 1rem;
+      }
+      .pc-stage-ident-text {
+        font-family: var(--font-display); font-weight: 800;
+        font-size: clamp(1.6rem, 7cqw, 2.6rem); line-height: 1;
+        letter-spacing: -0.02em; color: #fff;
+        text-shadow: 0 0 26px color-mix(in oklab, var(--accent) 75%, transparent);
+      }
+      .pc-stage-ident-sub {
+        font-size: 0.58rem; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase;
+        color: color-mix(in oklab, var(--accent-2) 82%, white);
       }
 
       /* play button */

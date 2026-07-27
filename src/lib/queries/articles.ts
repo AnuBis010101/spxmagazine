@@ -53,25 +53,31 @@ export async function getPublishedPosts(
 }
 
 /**
- * News, split into a recent lead section and everything older, so the News
- * page ages its own content out without anyone unpublishing anything.
+ * Posts split into a recent lead section and everything older, so a listing
+ * ages its own content out without anyone unpublishing anything. Used by both
+ * News and Community Articles.
  *
  * The cutoff is computed once here and shared by both queries: two separate
  * `Date.now()` calls could straddle a post published in the intervening
  * moment and either duplicate it or lose it. Keeping the clock read in the
- * data layer also leaves the page component pure.
+ * data layer also leaves the page components pure.
+ *
+ * `fresh` is always the first page of the window — the lead section belongs to
+ * page 1, and callers drop it on deeper pages. `earlier` is what paginates.
  */
-export async function getNewsSplitByFreshness(
+export async function getPostsSplitByFreshness(
+  contentType: ContentType,
   freshDays: number,
   page = 1,
   limit = POSTS_PER_PAGE,
-  tag?: string
+  tag?: string,
+  excludeTag?: string
 ): Promise<{ fresh: Post[]; earlier: Post[]; earlierTotal: number }> {
   const cutoff = new Date(Date.now() - freshDays * 24 * 60 * 60 * 1000).toISOString();
 
   const [freshRes, earlierRes] = await Promise.all([
-    getPublishedPosts("news", 1, limit, tag, undefined, { since: cutoff }),
-    getPublishedPosts("news", page, limit, tag, undefined, { before: cutoff }),
+    getPublishedPosts(contentType, 1, limit, tag, excludeTag, { since: cutoff }),
+    getPublishedPosts(contentType, page, limit, tag, excludeTag, { before: cutoff }),
   ]);
 
   return {

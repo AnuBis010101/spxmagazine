@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { NEWS_FRESH_DAYS, POSTS_PER_PAGE } from "@/lib/constants";
+import { FRESH_WINDOW_DAYS, POSTS_PER_PAGE } from "@/lib/constants";
 import { buildOgImageUrl } from "@/lib/utils/og-url";
-import { getNewsSplitByFreshness, getAllTags } from "@/lib/queries/articles";
+import { getPostsSplitByFreshness, getAllTags } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
 import Pagination from "@/components/content/Pagination";
 import { TagFilter } from "@/components/content/TagFilter";
@@ -33,7 +33,7 @@ export default async function NewsPage({
      "Earlier". Nothing is hidden or deleted — permalinks, tags and search all
      keep working, so this needs no upkeep once it's running. */
   const [{ fresh, earlier, earlierTotal }, allTags] = await Promise.all([
-    getNewsSplitByFreshness(NEWS_FRESH_DAYS, currentPage, POSTS_PER_PAGE, tag),
+    getPostsSplitByFreshness("news", FRESH_WINDOW_DAYS, currentPage, POSTS_PER_PAGE, tag),
     getAllTags("news"),
   ]);
 

@@ -67,9 +67,10 @@ export const MAGAZINE_TAG = "spx-magazine";
 export const POSTS_PER_PAGE = 12;
 
 /**
- * How long a news post stays in the News page's lead section. Past this it
- * moves to "Earlier" automatically — nothing is unpublished or deleted, so
- * permalinks, search and tags keep working. Change this to retune the window.
+ * How long a post stays in the "This week" lead section on News and Community
+ * Articles. Past this it moves to "Earlier" automatically — nothing is
+ * unpublished or deleted, so permalinks, search and tags keep working.
+ * Change this to retune the window for both listings.
  */
-export const NEWS_FRESH_DAYS = 7;
+export const FRESH_WINDOW_DAYS = 7;
 export const FEATURED_COUNT = 3;

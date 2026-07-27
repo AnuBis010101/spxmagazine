@@ -120,8 +120,10 @@ const PODCASTS: Podcast[] = [
     cover: { src: "/podcasts/chad-latest.jpg", alt: "Persist Forever — latest highlight" },
     avatar: { src: "/podcasts/chad-avatar.jpg", alt: "Persist Forever" },
     chips: ["Tues 8PM ET", "Co-hosts", "Weekly"],
-    accent: "#9B7BFF",
-    accent2: "#CBB8FF",
+    // Rose, not violet: SPX_FM owns the purple end of the palette (Twitch
+    // brand). This sits in the widest gap between the other three accents.
+    accent: "#FF4D8F",
+    accent2: "#FFA8CB",
   },
   {
     id: "spxfm",

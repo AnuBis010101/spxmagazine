@@ -225,7 +225,7 @@ function StoreHero() {
         transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mx-auto mt-5 max-w-xl text-base leading-relaxed text-mag-muted sm:text-lg"
       >
-        One official atelier and three community storefronts. Pick your storefront and gear up
+        One official store and three community storefronts. Pick yours and gear up
         for the flippening.
       </motion.p>
 

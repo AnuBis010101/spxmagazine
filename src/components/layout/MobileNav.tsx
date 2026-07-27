@@ -68,7 +68,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           className="fixed inset-0 z-[60] flex flex-col bg-mag-black/95 backdrop-blur-xl focus:outline-none"
         >
           {/* Top bar */}
-          <div className="flex items-center justify-between px-6 py-5">
+          <div className="flex shrink-0 items-center justify-between px-6 py-5">
             <Image
               src="/spxlogo.png"
               alt="SPX Magazine"
@@ -86,8 +86,15 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             </button>
           </div>
 
-          {/* Nav links */}
-          <nav className="flex flex-1 flex-col items-center justify-center gap-8">
+          {/* Nav links.
+              The list is taller than a phone screen, so this has to scroll.
+              min-h-0 lets the flex child actually shrink (without it the nav
+              keeps its content height and overflows the panel), and the inner
+              min-h-full wrapper keeps the links centred when they DO fit —
+              justify-center on the scroll container itself would make the
+              overflowing top items unreachable. */}
+          <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="flex min-h-full flex-col items-center justify-center gap-8 px-6 py-8">
             {NAV_ITEMS.map((item, index) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
@@ -172,10 +179,11 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 Bookmarks
               </Link>
             </motion.div>
+            </div>
           </nav>
 
-          {/* Bottom section */}
-          <div className="px-6 pb-10">
+          {/* Bottom section — pad past the iPhone home indicator */}
+          <div className="shrink-0 px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
             <div className="flex justify-center mb-4">
               <ThemeToggle />
             </div>

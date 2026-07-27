@@ -65,4 +65,11 @@ export const CONTENT_TYPES = {
 export const MAGAZINE_TAG = "spx-magazine";
 
 export const POSTS_PER_PAGE = 12;
+
+/**
+ * How long a news post stays in the News page's lead section. Past this it
+ * moves to "Earlier" automatically — nothing is unpublished or deleted, so
+ * permalinks, search and tags keep working. Change this to retune the window.
+ */
+export const NEWS_FRESH_DAYS = 7;
 export const FEATURED_COUNT = 3;

@@ -7,18 +7,32 @@ export async function getPublishedPosts(
   page = 1,
   limit = POSTS_PER_PAGE,
   tag?: string,
-  excludeTag?: string
+  excludeTag?: string,
+  /**
+   * Optional publish-date window, as ISO strings. `since` is inclusive and
+   * `before` exclusive, so a pair of calls sharing one cutoff partitions the
+   * posts cleanly with no duplicates and nothing dropped.
+   */
+  window?: { since?: string; before?: string }
 ): Promise<{ posts: Post[]; total: number }> {
   const supabase = createPublicClient();
   const offset = (page - 1) * limit;
 
+  const now = new Date().toISOString();
   let query = supabase
     .from("posts")
     .select("*, category:categories(*)", { count: "exact" })
     .eq("status", "published")
-    .lte("published_at", new Date().toISOString())
+    .lte("published_at", now)
     .order("published_at", { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (window?.since) {
+    query = query.gte("published_at", window.since);
+  }
+  if (window?.before) {
+    query = query.lt("published_at", window.before);
+  }
 
   if (contentType) {
     query = query.eq("content_type", contentType);
@@ -36,6 +50,35 @@ export async function getPublishedPosts(
   if (error) return { posts: [], total: 0 };
 
   return { posts: (data as Post[]) || [], total: count || 0 };
+}
+
+/**
+ * News, split into a recent lead section and everything older, so the News
+ * page ages its own content out without anyone unpublishing anything.
+ *
+ * The cutoff is computed once here and shared by both queries: two separate
+ * `Date.now()` calls could straddle a post published in the intervening
+ * moment and either duplicate it or lose it. Keeping the clock read in the
+ * data layer also leaves the page component pure.
+ */
+export async function getNewsSplitByFreshness(
+  freshDays: number,
+  page = 1,
+  limit = POSTS_PER_PAGE,
+  tag?: string
+): Promise<{ fresh: Post[]; earlier: Post[]; earlierTotal: number }> {
+  const cutoff = new Date(Date.now() - freshDays * 24 * 60 * 60 * 1000).toISOString();
+
+  const [freshRes, earlierRes] = await Promise.all([
+    getPublishedPosts("news", 1, limit, tag, undefined, { since: cutoff }),
+    getPublishedPosts("news", page, limit, tag, undefined, { before: cutoff }),
+  ]);
+
+  return {
+    fresh: freshRes.posts,
+    earlier: earlierRes.posts,
+    earlierTotal: earlierRes.total,
+  };
 }
 
 export async function getAllTags(

@@ -1,13 +1,40 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useRef, useSyncExternalStore } from "react";
+import { cn } from "@/lib/utils/cn";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Animated theme toggler.
+
+   The whole page is snapshotted with the View Transitions API and the
+   incoming theme is revealed through a clip-path circle that grows from the
+   button itself out to the furthest corner of the viewport — so the new
+   theme looks like it is being poured from wherever you clicked.
+
+   Everything degrades: without the API, or under prefers-reduced-motion, the
+   theme still swaps instantly and only the icon animates. The reveal is
+   decoration, never the mechanism.
+   ──────────────────────────────────────────────────────────────────────── */
 
 type Theme = "dark" | "gold";
 
+const STORAGE_KEY = "spx-theme";
+const REVEAL_MS = 620;
+/* Long, slow-settling ease — the expensive-feeling one, not a linear wipe. */
+const REVEAL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
 function SunIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
       <circle cx="12" cy="12" r="5" />
       <line x1="12" y1="1" x2="12" y2="3" />
       <line x1="12" y1="21" x2="12" y2="23" />
@@ -23,65 +50,136 @@ function SunIcon({ className }: { className?: string }) {
 
 function MoonIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   );
 }
 
-export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("dark");
-  const [mounted, setMounted] = useState(false);
+/* The `data-theme` attribute on <html> is the single source of truth — the
+   pre-paint script in layout.tsx sets it before React exists, so mirroring it
+   into component state would just be a second copy that can disagree.
+   Subscribing to the attribute instead keeps every mounted toggle (header and
+   mobile menu) in step automatically, and useSyncExternalStore gives the
+   correct server snapshot so hydration never mismatches. */
+function subscribeToTheme(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+  return () => observer.disconnect();
+}
 
-  useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("spx-theme") as Theme | null;
-    if (saved === "gold") {
-      setTheme("gold");
-      document.documentElement.setAttribute("data-theme", "gold");
+function readTheme(): Theme {
+  return document.documentElement.getAttribute("data-theme") === "gold"
+    ? "gold"
+    : "dark";
+}
+
+/* Server render can't know the visitor's saved choice; the store corrects
+   itself on hydration and the pre-paint script means the *page* is already
+   right either way. */
+const readServerTheme = (): Theme => "dark";
+
+export default function ThemeToggle({ className }: { className?: string }) {
+  const theme = useSyncExternalStore(subscribeToTheme, readTheme, readServerTheme);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const apply = useCallback((next: Theme) => {
+    // Setting the attribute is what re-renders the button, via the observer.
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      /* private mode — the theme still applies for this session */
     }
   }, []);
 
   const toggle = useCallback(() => {
-    const next = theme === "dark" ? "gold" : "dark";
-    setTheme(next);
-    localStorage.setItem("spx-theme", next);
-    document.documentElement.setAttribute("data-theme", next);
-  }, [theme]);
+    const next: Theme = theme === "dark" ? "gold" : "dark";
+    const root = document.documentElement;
 
-  if (!mounted) return <div className="w-9 h-9" />;
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduced || typeof document.startViewTransition !== "function") {
+      apply(next);
+      return;
+    }
+
+    // Grow from the button's centre out to the furthest corner, so the circle
+    // always covers the viewport no matter which corner the button sits in.
+    const r = btnRef.current?.getBoundingClientRect();
+    const cx = r ? r.left + r.width / 2 : window.innerWidth / 2;
+    const cy = r ? r.top + r.height / 2 : window.innerHeight / 2;
+    const radius = Math.hypot(
+      Math.max(cx, window.innerWidth - cx),
+      Math.max(cy, window.innerHeight - cy)
+    );
+
+    // Marks this transition as a theme swap so the global page-navigation
+    // crossfade (globals.css) stands down and leaves the circle clean.
+    root.setAttribute("data-theme-vt", "");
+
+    const transition = document.startViewTransition(() => {
+      apply(next);
+    });
+
+    transition.ready
+      .then(() => {
+        root.animate(
+          {
+            clipPath: [
+              `circle(0px at ${cx}px ${cy}px)`,
+              `circle(${radius}px at ${cx}px ${cy}px)`,
+            ],
+          },
+          {
+            duration: REVEAL_MS,
+            easing: REVEAL_EASE,
+            pseudoElement: "::view-transition-new(root)",
+          }
+        );
+      })
+      .catch(() => {
+        /* Transition was skipped/aborted — apply() already ran, so the theme
+           is correct and only the flourish is lost. */
+      });
+
+    transition.finished.finally(() => root.removeAttribute("data-theme-vt"));
+  }, [theme, apply]);
+
+  const goingGold = theme === "dark";
 
   return (
-    <motion.button
+    <button
+      ref={btnRef}
+      type="button"
       onClick={toggle}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-mag-muted transition-colors hover:bg-mag-dark hover:text-gold-400 relative overflow-hidden"
-      aria-label={theme === "dark" ? "Switch to gold theme" : "Switch to dark theme"}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.93 }}
+      className={cn("spx-theme-toggle", className)}
+      aria-label={goingGold ? "Switch to gold theme" : "Switch to dark theme"}
+      title={goingGold ? "Switch to gold theme" : "Switch to dark theme"}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {theme === "dark" ? (
-          <motion.div
-            key="sun"
-            initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.25 }}
-          >
-            <SunIcon className="h-4 w-4" />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="moon"
-            initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.25 }}
-          >
-            <MoonIcon className="h-4 w-4" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.button>
+      <span aria-hidden className="spx-theme-toggle-halo" />
+      <span aria-hidden className="spx-theme-toggle-icon">
+        <SunIcon
+          className={cn("spx-theme-toggle-glyph", goingGold ? "is-in" : "is-out")}
+        />
+        <MoonIcon
+          className={cn("spx-theme-toggle-glyph", goingGold ? "is-out" : "is-in")}
+        />
+      </span>
+    </button>
   );
 }

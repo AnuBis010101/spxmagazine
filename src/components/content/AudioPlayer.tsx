@@ -34,6 +34,11 @@ export default function AudioPlayer({
   const [error, setError] = useState<string | null>(null);
   const [audioReady, setAudioReady] = useState(false);
   const [loadingHint, setLoadingHint] = useState("");
+  /* Generation progress. `etaSeconds` comes from the server's probe; `elapsed`
+     ticks locally. Both are 0 for a cache hit, which is the usual case after
+     an article's first listen. */
+  const [etaSeconds, setEtaSeconds] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const blobUrlRef = useRef<string | null>(null);
@@ -112,16 +117,44 @@ export default function AudioPlayer({
     // Fetch new audio
     setIsLoading(true);
     setError(null);
-    setLoadingHint("Generating audio...");
+    setElapsed(0);
+    setEtaSeconds(0);
+    setLoadingHint("Loading audio...");
 
     // Abort any previous in-flight request
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
+    /* Ask first: is this article's audio already synthesised, and if not, how
+       long should the reader expect to wait? Lets us show a real countdown
+       instead of an unbounded spinner. */
+    let tickTimer: ReturnType<typeof setInterval> | undefined;
+    try {
+      const probe = await fetch(
+        `/api/tts?slug=${encodeURIComponent(slug)}&probe=1`,
+        { signal: controller.signal }
+      ).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+
+      if (!mountedRef.current) return;
+
+      if (probe && !probe.cached && probe.estimatedSeconds > 0) {
+        setEtaSeconds(probe.estimatedSeconds);
+        setLoadingHint("Generating audio");
+        const startedAt = Date.now();
+        tickTimer = setInterval(() => {
+          if (mountedRef.current) setElapsed((Date.now() - startedAt) / 1000);
+        }, 250);
+      }
+    } catch {
+      /* Probe is an optimisation; fall through to the normal request. */
+    }
+
     // Show progressive loading hints
     const hintTimer = setTimeout(() => {
-      if (mountedRef.current) setLoadingHint("Still generating, almost there...");
+      if (mountedRef.current && !etaSeconds) {
+        setLoadingHint("Still generating, almost there...");
+      }
     }, 15_000);
 
     try {
@@ -213,8 +246,13 @@ export default function AudioPlayer({
       }
     } finally {
       clearTimeout(hintTimer);
+      if (tickTimer) clearInterval(tickTimer);
+      if (mountedRef.current) {
+        setEtaSeconds(0);
+        setElapsed(0);
+      }
     }
-  }, [getAudio, slug, speed]);
+  }, [getAudio, slug, speed, etaSeconds]);
 
   const handlePause = useCallback(() => {
     audioRef.current?.pause();
@@ -297,6 +335,17 @@ export default function AudioPlayer({
 
   const showRetry = !!error && !isLoading;
 
+  /* While synthesising, the seek bar has nothing to seek through, so it shows
+     generation progress instead. Capped at 95% — the bar should never sit at
+     100% while the reader is still waiting, and the estimate can run short. */
+  const isGenerating = isLoading && etaSeconds > 0;
+  const genPercent = isGenerating
+    ? Math.min(95, (elapsed / etaSeconds) * 100)
+    : 0;
+  const secondsLeft = isGenerating
+    ? Math.max(0, Math.ceil(etaSeconds - elapsed))
+    : 0;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -371,10 +420,12 @@ export default function AudioPlayer({
             className="group/seek relative flex-1 h-1.5 bg-mag-border/30 rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             <motion.div
-              className="absolute inset-y-0 left-0 w-full origin-left bg-gold-400 rounded-full"
+              className={`absolute inset-y-0 left-0 w-full origin-left rounded-full ${
+                isGenerating ? "bg-gold-400/50" : "bg-gold-400"
+              }`}
               style={{ transformOrigin: "left center" }}
               initial={false}
-              animate={{ scaleX: progress / 100 }}
+              animate={{ scaleX: (isGenerating ? genPercent : progress) / 100 }}
               transition={reduce ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
             />
             <span
@@ -385,11 +436,13 @@ export default function AudioPlayer({
 
           {/* Time display */}
           <span className="text-xs text-mag-muted shrink-0 tabular-nums">
-            {audioReady
-              ? `${formatTime(currentTime)} / ${formatTime(duration)}`
-              : estimatedMinutes
-                ? `~${estimatedMinutes}m`
-                : ""}
+            {isGenerating
+              ? `~${formatTime(secondsLeft)} left`
+              : audioReady
+                ? `${formatTime(currentTime)} / ${formatTime(duration)}`
+                : estimatedMinutes
+                  ? `~${estimatedMinutes}m`
+                  : ""}
           </span>
 
           {/* Speed toggle */}

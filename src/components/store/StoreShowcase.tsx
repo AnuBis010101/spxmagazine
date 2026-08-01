@@ -11,7 +11,7 @@ import { ArrowUpRight, BadgeCheck, Lock, Users } from "lucide-react";
    A gallery of the community's stores rendered as ultra-premium, cursor-tilting
    "trading-card" panels: real storefront key-art in a framed preview stage, a
    floating product polaroid, an accent-lit living border, a specular sweep on
-   hover, and a coming-soon lockup for the lab that hasn't opened its doors yet.
+   hover, and a coming-soon lockup for any store that hasn't opened yet.
 
    Every effect is transform/opacity only and gated behind prefers-reduced-motion.
    Card backgrounds are opaque gradients (no stacked backdrop-blur) so the page
@@ -117,22 +117,24 @@ const STORES: Store[] = [
     id: "jinpinglabs",
     kind: "community",
     name: "Jinping Labs",
-    tagline: "Underground systems active",
+    tagline: "The lab has opened its doors",
     blurb:
-      "SPX6900 synchronized. Surface reactions pending. Hardware and artifacts from the underground lab: booting soon.",
-    href: "https://x.com/JinpingLabs",
+      "Tokyo-coded SPX6900 streetwear: Auto Heal tees, the 3333 windbreaker, jerseys, caps and glassware, all shot as one lookbook.",
+    href: "https://jinpinglabs.com/",
     accent: "#FFC93C",
     accent2: "#FFE79A",
     hero: {
-      src: "/stores/jinping-banner.jpg",
-      alt: "Jinping Labs retro handheld console",
-      position: "center",
+      src: "/stores/jinping-hero.jpg",
+      alt: "Jinping Labs lookbook: three models in SPX6900 tees",
+      // Portrait source in a 16:9 frame — bias upward to keep the garments in shot.
+      position: "center 22%",
       tone: "dark",
     },
+    product: { src: "/stores/jinping-jacket.png", alt: "Jinping Labs 3333 Cute Girls windbreaker" },
     mark: { kind: "avatar", src: "/stores/jinping-logo.jpg", alt: "Jinping Labs" },
-    meta: ["Hardware", "SPX6900 synced", "Launching soon"],
-    status: "soon",
-    cta: "Follow @JinpingLabs",
+    meta: ["Shopify", "Apparel · Hats · Glassware", "Collection One"],
+    status: "live",
+    cta: "Visit store",
   },
 ];
 

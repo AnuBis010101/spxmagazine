@@ -17,10 +17,14 @@ import {
 
 const LINE = "Stop Trading & Believe in something";
 
-/** One repetition. Padding lives here so copies never butt together. */
+/**
+ * One repetition. The trailing padding matches the inner gap exactly, so the
+ * space after the emojis reads the same as the space before them and the loop
+ * has one uniform rhythm rather than a wide seam at each join.
+ */
 function Phrase({ muted = false }: { muted?: boolean }) {
   return (
-    <span className="flex items-center gap-4 pr-10 sm:gap-6 sm:pr-16">
+    <span className="flex items-center gap-4 pr-4 sm:gap-6 sm:pr-6">
       <span className={muted ? "bm-line bm-line--muted" : "bm-line"}>{LINE}</span>
       <span className="bm-emoji" aria-hidden>
         💹 🧲

@@ -8,6 +8,7 @@ import ScrollProgress from "@/components/home/ScrollProgress";
 import OrbitCoin from "@/components/home/OrbitCoin";
 import AnimatedHero from "@/components/home/AnimatedHero";
 import CategoryShowcase from "@/components/home/CategoryShowcase";
+import BeliefMarquee from "@/components/home/BeliefMarquee";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import VideoSpotlight from "@/components/home/VideoSpotlight";
 import CommunityPulse from "@/components/home/CommunityPulse";
@@ -59,6 +60,8 @@ export default async function HomePage() {
         <RackFocus>
           <CategoryShowcase news={newsLatest} articles={articlesLatest} learn={learnLatest} />
         </RackFocus>
+        {/* Scroll-reactive band between Departments and Trending */}
+        <BeliefMarquee />
         {trendingPosts.length >= 3 && (
           <ScrollReveal direction="up" duration={0.55}>
             <TrendingArticles posts={trendingPosts} />

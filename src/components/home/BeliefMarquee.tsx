@@ -23,7 +23,7 @@ function Phrase({ muted = false }: { muted?: boolean }) {
     <span className="flex items-center gap-4 pr-10 sm:gap-6 sm:pr-16">
       <span className={muted ? "bm-line bm-line--muted" : "bm-line"}>{LINE}</span>
       <span className="bm-emoji" aria-hidden>
-        💹🧲
+        💹 🧲
       </span>
     </span>
   );
@@ -31,9 +31,10 @@ function Phrase({ muted = false }: { muted?: boolean }) {
 
 export default function BeliefMarquee() {
   return (
+    /* Padding is deliberately tiny: the rules sit close in against the text. */
     <section
       aria-label={LINE}
-      className="bm-band relative isolate overflow-hidden py-10 sm:py-14"
+      className="bm-band relative isolate overflow-hidden py-[0.25rem] sm:py-[0.35rem]"
     >
       <ScrollVelocityContainer className="bm-mask font-display font-bold tracking-tight">
         <ScrollVelocityRow baseVelocity={6} direction={1}>

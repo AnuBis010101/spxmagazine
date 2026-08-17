@@ -9,6 +9,7 @@ import OrbitCoin from "@/components/home/OrbitCoin";
 import AnimatedHero from "@/components/home/AnimatedHero";
 import CategoryShowcase from "@/components/home/CategoryShowcase";
 import BeliefMarquee from "@/components/home/BeliefMarquee";
+import FilamentDivider from "@/components/home/FilamentDivider";
 import FeaturedCarousel from "@/components/home/FeaturedCarousel";
 import VideoSpotlight from "@/components/home/VideoSpotlight";
 import CommunityPulse from "@/components/home/CommunityPulse";
@@ -67,6 +68,8 @@ export default async function HomePage() {
             <TrendingArticles posts={trendingPosts} />
           </ScrollReveal>
         )}
+        {/* Scroll-drawn seam between Trending and the market-cap gauge */}
+        <FilamentDivider />
         <ScrollReveal direction="up" duration={0.55}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             <FlippeningTracker />

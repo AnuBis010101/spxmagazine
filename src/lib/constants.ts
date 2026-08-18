@@ -31,6 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/learn",
     children: [
       { label: "Guides", href: "/learn", desc: "Your map to the Cognisphere" },
+      { label: "Project AEON", href: "/learn/project-aeon", desc: "3,333 beings, one quantum glitch" },
       { label: "How to Buy", href: "/how-to-buy", desc: "Get SPX6900 in minutes" },
       { label: "Glossary", href: "/learn/glossary", desc: "Every term, decoded" },
     ],

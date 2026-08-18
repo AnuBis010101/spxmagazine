@@ -33,7 +33,7 @@ const AEONS = Array.from({ length: 24 }, (_, i) => i + 1);
    the curly apostrophe in AEON's and the hyphen in "3333 Aeons - beings"
    survive exactly as written. */
 const HERO_QUESTION =
-  "if we could harness the power of God, could we flip the SPX500?";
+  "if we could harness the power of God, could we flip the S&P500?";
 
 const HERO_LINES = [
   "Deep within the clandestine vaults of SPX6900 Labs, a radical research experiment codenamed \"Project AEON\" sought the answer to this question.",

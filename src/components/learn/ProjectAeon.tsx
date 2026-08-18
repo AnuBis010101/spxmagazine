@@ -267,9 +267,6 @@ export default function ProjectAeon() {
               <span aria-hidden className="pa-stage-veil" />
               <span aria-hidden className="pa-stage-sheen" />
               <span aria-hidden className="pa-stage-frame" />
-              <span aria-hidden className="pa-stage-num font-display">
-                {SECTIONS[active].index}
-              </span>
             </div>
 
             <div className="pa-rail" aria-hidden>
@@ -543,12 +540,6 @@ function ProjectAeonStyles() {
       @keyframes paSheen {
         0% { transform: translateX(-120%); }
         45%, 100% { transform: translateX(120%); }
-      }
-      .pa-stage-num {
-        position: absolute; right: 1.15rem; bottom: 0.6rem;
-        font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 800; line-height: 1;
-        letter-spacing: -0.04em; pointer-events: none;
-        color: transparent; -webkit-text-stroke: 1px color-mix(in oklab, var(--color-gold-300) 55%, transparent);
       }
 
       /* Progress rail under the stage */

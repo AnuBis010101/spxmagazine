@@ -7,11 +7,12 @@ import {
   motion,
   useInView,
   useReducedMotion,
+  useMotionValueEvent,
   useScroll,
   useSpring,
   useTransform,
 } from "framer-motion";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import {
   ScrollVelocityContainer,
   ScrollVelocityRow,
@@ -28,13 +29,9 @@ import {
 
 const AEONS = Array.from({ length: 24 }, (_, i) => i + 1);
 
-/* Copy is reproduced verbatim from the community site this page documents
-   (aeons6900.com/aeons), at the editor's request, and is credited and linked
-   at the foot of the page. Held as string constants rather than inline JSX so
-   that quoting, apostrophes and the hyphen in "3333 Aeons - beings" survive
-   exactly as written. */
-const SOURCE_URL = "https://www.aeons6900.com/aeons";
-
+/* Copy is held as string constants rather than inline JSX so that the quoting,
+   the curly apostrophe in AEON's and the hyphen in "3333 Aeons - beings"
+   survive exactly as written. */
 const HERO_QUESTION =
   "if we could harness the power of God, could we flip the SPX500?";
 
@@ -47,16 +44,19 @@ const HERO_LINES = [
 const SECTIONS = [
   {
     index: "01",
+    media: "aeons-1",
     title: "Cosmic Anomalies",
     body: "In the shadowy recesses of quantum experimentation, Project AEON emerges as a groundbreaking digital narrative brought to life through the Ethereum blockchain. This collection of 3,333 uniquely crafted entities, known as Aeons, is the result of a fictional \"quantum glitch\" from the enigmatic SPX6900 Labs. Each Aeon represents a fusion of cosmic anomaly and human ambition, embodying stories of creation, chaos, and transcendence.",
   },
   {
     index: "02",
+    media: "aeons-2",
     title: "Beyond Comprehension",
     body: "Within the collection lies a tapestry of intrigue, blending cutting-edge generative artistry with a rich backstory of scientific ambition gone awry. The Aeons, brought into existence by forces beyond comprehension, carry an aura of mystery and allure, inviting collectors to uncover their secrets. With visually striking designs and a narrative steeped in curiosity, Project AEON bridges the realms of art, technology, and speculative fiction.",
   },
   {
     index: "03",
+    media: "aeons-3",
     title: "SPX6900",
     body: "SPX6900 is closely tied to Project AEON NFTs, sharing a narrative universe built around quantum experimentation and digital creativity. The memecoin fuels the ecosystem, providing utility within AEON\u2019s sci-fi-inspired lore while uniting collectors and investors under a shared vision of blockchain-powered innovation and humor.",
   },
@@ -90,52 +90,23 @@ function Tally({ to, duration = 1600 }: { to: number; duration?: number }) {
   return <span ref={ref} className="tabular-nums">{shown.toLocaleString("en-US")}</span>;
 }
 
-/** Card that tilts an INNER layer — the frame keeps :hover so it never flickers. */
-function LoreCard({
-  index,
-  title,
-  children,
-}: {
-  index: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  const reduce = useReducedMotion();
-  const shell = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
-
-  function onMove(e: React.PointerEvent) {
-    if (reduce || !shell.current) return;
-    const r = shell.current.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    setTilt({ rx: (0.5 - py) * 7, ry: (px - 0.5) * 7 });
-  }
-
-  return (
-    <div
-      ref={shell}
-      onPointerMove={onMove}
-      onPointerLeave={() => setTilt({ rx: 0, ry: 0 })}
-      className="pa-card group/pa"
-    >
-      <motion.div
-        className="pa-card-inner"
-        animate={{ rotateX: tilt.rx, rotateY: tilt.ry }}
-        transition={{ type: "spring", stiffness: 180, damping: 20 }}
-      >
-        <span aria-hidden className="pa-card-sheen" />
-        <span className="pa-index">{index}</span>
-        <h3 className="pa-card-title font-display">{title}</h3>
-        <div className="pa-card-body">{children}</div>
-      </motion.div>
-    </div>
-  );
-}
-
 export default function ProjectAeon() {
   const reduce = useReducedMotion();
   const heroRef = useRef<HTMLDivElement>(null);
+  /* Which chapter owns the pinned stage. Derived straight from how far the
+     chapter column has travelled past the viewport centre, which is
+     deterministic — an IntersectionObserver band and framer's onViewportEnter
+     both proved unreliable here, latching on the wrong chapter. */
+  const [active, setActive] = useState(0);
+  const panelsRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: chapterProgress } = useScroll({
+    target: panelsRef,
+    offset: ["start center", "end center"],
+  });
+  useMotionValueEvent(chapterProgress, "change", (v) => {
+    const i = Math.min(SECTIONS.length - 1, Math.max(0, Math.floor(v * SECTIONS.length)));
+    setActive((prev) => (prev === i ? prev : i));
+  });
 
   // Hero parallax: the artwork bed drifts slower than the copy above it.
   const { scrollYProgress } = useScroll({
@@ -177,14 +148,29 @@ export default function ProjectAeon() {
           className="pa-hero-copy"
           style={reduce ? undefined : { y: copyY, opacity: copyFade }}
         >
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="pa-logo"
+          >
+            <span aria-hidden className="pa-logo-ring" />
+            <Image
+              src="/aeon/pa-logo.png"
+              alt="Project AEON"
+              width={132}
+              height={132}
+              priority
+            />
+          </motion.div>
+
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             className="pa-eyebrow"
           >
-            <Sparkles className="h-3 w-3" />
-            The Cognisphere Files
+            NFT Collection
           </motion.span>
 
           <h1 className="pa-title font-display" aria-label="Project AEON">
@@ -256,15 +242,66 @@ export default function ProjectAeon() {
         <span aria-hidden className="pa-hero-fade" />
       </header>
 
-      {/* ── The glitch ───────────────────────────────────────────────── */}
-      <section className="pa-section">
+      {/* ── The three chapters: media pins, copy scrolls past ─────────── */}
+      <section className="pa-showcase">
         <div className="pa-rule" />
-        <div className="pa-lore">
-          {SECTIONS.map((sec) => (
-            <LoreCard key={sec.index} index={sec.index} title={sec.title}>
-              {sec.body}
-            </LoreCard>
-          ))}
+        <div className="pa-showcase-grid">
+          {/* Pinned stage — clips crossfade as each chapter takes over */}
+          <div className="pa-stage-col">
+            <div className="pa-stage">
+              {SECTIONS.map((sec, i) => (
+                <video
+                  key={sec.media}
+                  className={`pa-stage-media${active === i ? " is-on" : ""}`}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload={i === 0 ? "auto" : "metadata"}
+                  poster={`/aeon/aeon-${i * 8 + 1}.jpg`}
+                >
+                  <source src={`/aeon/${sec.media}.webm`} type="video/webm" />
+                  <source src={`/aeon/${sec.media}.mp4`} type="video/mp4" />
+                </video>
+              ))}
+              <span aria-hidden className="pa-stage-veil" />
+              <span aria-hidden className="pa-stage-sheen" />
+              <span aria-hidden className="pa-stage-frame" />
+              <span aria-hidden className="pa-stage-num font-display">
+                {SECTIONS[active].index}
+              </span>
+            </div>
+
+            <div className="pa-rail" aria-hidden>
+              {SECTIONS.map((sec, i) => (
+                <span key={sec.index} className={`pa-rail-seg${active >= i ? " is-lit" : ""}`}>
+                  <span className="pa-rail-fill" />
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Chapters */}
+          <div className="pa-panels" ref={panelsRef}>
+            {SECTIONS.map((sec, i) => (
+              <article
+                key={sec.index}
+                className={`pa-panel${active === i ? " is-active" : ""}`}
+              >
+                {/* Media inline on narrow screens, where nothing can pin */}
+                <div className="pa-panel-media">
+                  <video autoPlay loop muted playsInline preload="none" poster={`/aeon/aeon-${i * 8 + 1}.jpg`}>
+                    <source src={`/aeon/${sec.media}.webm`} type="video/webm" />
+                    <source src={`/aeon/${sec.media}.mp4`} type="video/mp4" />
+                  </video>
+                </div>
+
+                <span className="pa-panel-index">{sec.index}</span>
+                <h2 className="pa-panel-title font-display">{sec.title}</h2>
+                <p className="pa-panel-body">{sec.body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -293,34 +330,6 @@ export default function ProjectAeon() {
         </ScrollVelocityContainer>
       </section>
 
-      {/* ── Why it matters ───────────────────────────────────────────── */}
-      <section className="pa-section">
-        <div className="pa-rule" />
-        <div className="pa-split">
-          <div>
-            <h2 className="pa-h2 font-display">Art, technology and speculative fiction</h2>
-            <p className="pa-body">
-              Project AEON sits where generative artistry meets a story about
-              science overreaching itself. The images are the surface; the pull
-              is the backstory underneath them, which invites you to work out
-              what the laboratory was really doing and what it let out.
-            </p>
-            <p className="pa-body">
-              That is the same instinct the movement runs on. SPX6900 and the
-              Aeons share one narrative universe — the coin supplies the fuel and
-              the collection supplies the myth, and neither is trying very hard
-              to pretend it is only a joke.
-            </p>
-          </div>
-          <div className="pa-quote">
-            <span aria-hidden className="pa-quote-mark">&ldquo;</span>
-            <p>
-              Beings neither of this world nor wholly apart from it.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* ── Where to look ────────────────────────────────────────────── */}
       <section className="pa-cta-wrap">
         <div className="pa-cta">
@@ -340,13 +349,6 @@ export default function ProjectAeon() {
               Back to Guides
             </Link>
           </div>
-          <p className="pa-credit">
-            Lore text courtesy of the SPX6900 community site,{" "}
-            <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
-              aeons6900.com
-            </a>
-            .
-          </p>
         </div>
       </section>
 
@@ -389,6 +391,18 @@ function ProjectAeonStyles() {
           linear-gradient(180deg, var(--color-mag-black) 0%, transparent 20%, transparent 60%, var(--color-mag-black) 100%);
       }
       .pa-hero-copy { position: relative; z-index: 1; text-align: center; max-width: 62rem; }
+      /* Block-level and centred so the eyebrow sits on its own line beneath,
+         rather than flowing alongside it. */
+      .pa-logo {
+        position: relative; display: grid; place-items: center;
+        width: fit-content; margin: 0 auto 1.1rem;
+      }
+      .pa-logo img { position: relative; z-index: 1; width: clamp(84px, 12vw, 132px); height: auto; }
+      .pa-logo-ring {
+        position: absolute; inset: -18%;
+        border-radius: 9999px;
+        background: radial-gradient(circle, color-mix(in oklab, var(--color-gold-400) 30%, transparent), transparent 68%);
+      }
       .pa-eyebrow {
         display: inline-flex; align-items: center; gap: 0.5rem;
         border-radius: 9999px; padding: 0.4rem 0.95rem;
@@ -483,46 +497,112 @@ function ProjectAeonStyles() {
         font-size: 1.02rem; line-height: 1.85; text-wrap: pretty;
       }
 
-      /* ── lore cards ── */
-      .pa-lore {
-        display: grid; gap: 1.25rem;
-        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+      /* ── chapters: pinned stage + scrolling copy ── */
+      .pa-showcase { max-width: 84rem; margin-inline: auto; padding: var(--pa-gap) 1rem; }
+      .pa-showcase-grid {
+        display: grid; gap: clamp(2rem, 5vw, 4rem);
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        align-items: start;
       }
-      .pa-card { perspective: 1000px; }
-      .pa-card-inner {
-        position: relative; overflow: hidden; height: 100%;
-        border-radius: 20px; padding: 1.6rem 1.5rem 1.8rem;
-        transform-style: preserve-3d;
-        border: 1px solid var(--color-mag-border);
-        background:
-          radial-gradient(120% 90% at 50% -20%, color-mix(in oklab, var(--color-gold-400) 10%, transparent), transparent 60%),
-          linear-gradient(180deg, #101011, #0a0a0b 70%);
-        transition: border-color 0.4s ease, box-shadow 0.4s ease;
+      .pa-stage-col { position: sticky; top: clamp(5rem, 12vh, 8rem); }
+
+      .pa-stage {
+        position: relative; overflow: hidden;
+        border-radius: 26px; aspect-ratio: 16 / 9;
+        background: #07070a;
+        box-shadow:
+          0 40px 90px -50px color-mix(in oklab, var(--color-gold-400) 70%, black),
+          0 0 0 1px color-mix(in oklab, var(--color-gold-400) 16%, transparent);
       }
-      .pa-card:hover .pa-card-inner {
-        border-color: color-mix(in oklab, var(--color-gold-400) 46%, transparent);
-        box-shadow: 0 26px 60px -34px color-mix(in oklab, var(--color-gold-400) 60%, black);
+      .pa-stage-media {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        object-fit: cover;
+        opacity: 0; transform: scale(1.06);
+        transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1),
+                    transform 1.4s cubic-bezier(0.16,1,0.3,1);
       }
-      .pa-card-sheen {
+      .pa-stage-media.is-on { opacity: 1; transform: scale(1); }
+
+      /* Gradient vignette so the numeral and frame read over any frame. */
+      .pa-stage-veil {
         position: absolute; inset: 0; pointer-events: none;
-        background: linear-gradient(105deg, transparent 32%, rgba(255,255,255,0.09) 50%, transparent 68%);
-        transform: translateX(-130%);
-        transition: transform 0.9s cubic-bezier(0.16,1,0.3,1);
+        background:
+          radial-gradient(120% 90% at 50% 40%, transparent 40%, rgba(7,7,10,0.55) 100%),
+          linear-gradient(180deg, rgba(7,7,10,0.35) 0%, transparent 30%, transparent 62%, rgba(7,7,10,0.72) 100%);
       }
-      .pa-card:hover .pa-card-sheen { transform: translateX(130%); }
-      .pa-index {
-        font-family: var(--font-display); font-size: 0.72rem; font-weight: 800;
-        letter-spacing: 0.2em; color: var(--color-gold-400);
+      .pa-stage-frame {
+        position: absolute; inset: 10px; border-radius: 18px; pointer-events: none;
+        border: 1px solid color-mix(in oklab, var(--color-gold-300) 30%, transparent);
       }
-      .pa-card-title {
-        margin-top: 0.55rem; font-size: 1.25rem; font-weight: 700;
-        color: var(--color-mag-white); letter-spacing: -0.01em;
+      .pa-stage-sheen {
+        position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.10) 50%, transparent 62%);
+        transform: translateX(-120%);
+        animation: paSheen 7s cubic-bezier(0.6,0,0.2,1) infinite;
       }
-      .pa-card-body {
-        margin-top: 0.7rem; color: var(--color-mag-muted);
-        font-size: 0.95rem; line-height: 1.75;
+      @keyframes paSheen {
+        0% { transform: translateX(-120%); }
+        45%, 100% { transform: translateX(120%); }
       }
-      .pa-card-body strong { color: var(--color-gold-300); font-weight: 700; }
+      .pa-stage-num {
+        position: absolute; right: 1.15rem; bottom: 0.6rem;
+        font-size: clamp(3rem, 7vw, 5.5rem); font-weight: 800; line-height: 1;
+        letter-spacing: -0.04em; pointer-events: none;
+        color: transparent; -webkit-text-stroke: 1px color-mix(in oklab, var(--color-gold-300) 55%, transparent);
+      }
+
+      /* Progress rail under the stage */
+      .pa-rail { display: flex; gap: 8px; margin-top: 1.1rem; }
+      .pa-rail-seg {
+        position: relative; flex: 1; height: 2px; border-radius: 9999px; overflow: hidden;
+        background: color-mix(in oklab, var(--color-mag-white) 10%, transparent);
+      }
+      .pa-rail-fill {
+        position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0);
+        background: linear-gradient(90deg, var(--color-gold-400), #fff6d8);
+        transition: transform 0.7s cubic-bezier(0.16,1,0.3,1);
+      }
+      .pa-rail-seg.is-lit .pa-rail-fill { transform: scaleX(1); }
+
+      /* Chapters column */
+      .pa-panels { display: flex; flex-direction: column; }
+      .pa-panel {
+        min-height: 74vh; display: flex; flex-direction: column; justify-content: center;
+        padding: clamp(1.5rem, 4vw, 2.5rem) 0;
+        opacity: 0.34; transition: opacity 0.6s ease;
+      }
+      .pa-panel.is-active { opacity: 1; }
+      .pa-panel-media { display: none; }
+      .pa-panel-index {
+        font-family: var(--font-display); font-size: 0.78rem; font-weight: 800;
+        letter-spacing: 0.24em; color: var(--color-gold-400);
+      }
+      .pa-panel-title {
+        margin-top: 0.6rem;
+        font-size: clamp(1.7rem, 3.6vw, 2.8rem); font-weight: 700;
+        line-height: 1.1; letter-spacing: -0.02em; color: var(--color-mag-white);
+        text-wrap: balance;
+      }
+      .pa-panel-body {
+        margin-top: 1.1rem; color: var(--color-mag-light);
+        font-size: clamp(0.98rem, 1.5vw, 1.06rem); line-height: 1.85; text-wrap: pretty;
+      }
+
+      /* Below the two-column breakpoint nothing can pin: inline the clips. */
+      @media (max-width: 900px) {
+        .pa-showcase-grid { grid-template-columns: 1fr; }
+        .pa-stage-col { display: none; }
+        .pa-panel { min-height: 0; opacity: 1; padding-block: clamp(2rem, 8vw, 3rem); }
+        .pa-panel-media { display: block; margin-bottom: 1.25rem; }
+        .pa-panel-media video {
+          width: 100%; border-radius: 18px; aspect-ratio: 16 / 9; object-fit: cover;
+          border: 1px solid color-mix(in oklab, var(--color-gold-400) 20%, transparent);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .pa-stage-sheen { animation: none; opacity: 0; }
+        .pa-stage-media { transition: opacity 0.2s linear; transform: none; }
+      }
 
       /* ── artwork strip ── */
       .pa-strip-wrap {
@@ -545,29 +625,6 @@ function ProjectAeonStyles() {
       .pa-tile:hover {
         border-color: color-mix(in oklab, var(--color-gold-400) 60%, transparent);
         transform: translateY(-4px);
-      }
-
-      /* ── split + quote ── */
-      .pa-split {
-        display: grid; gap: 2rem;
-        grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
-        align-items: center;
-      }
-      .pa-quote {
-        position: relative; border-radius: 22px; padding: 2.4rem 2rem;
-        border: 1px solid color-mix(in oklab, var(--color-gold-400) 22%, transparent);
-        background:
-          radial-gradient(110% 90% at 50% 0%, color-mix(in oklab, var(--color-gold-400) 11%, transparent), transparent 62%),
-          #0a0a0b;
-      }
-      .pa-quote p {
-        font-family: var(--font-display); font-size: clamp(1.25rem, 2.6vw, 1.8rem);
-        line-height: 1.35; color: var(--color-mag-white); text-wrap: balance;
-      }
-      .pa-quote-mark {
-        position: absolute; top: 0.2rem; left: 1.2rem;
-        font-family: var(--font-display); font-size: 5rem; line-height: 1;
-        color: color-mix(in oklab, var(--color-gold-400) 30%, transparent);
       }
 
       /* ── cta ── */

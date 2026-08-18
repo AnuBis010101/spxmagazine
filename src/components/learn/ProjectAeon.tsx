@@ -28,6 +28,40 @@ import {
 
 const AEONS = Array.from({ length: 24 }, (_, i) => i + 1);
 
+/* Copy is reproduced verbatim from the community site this page documents
+   (aeons6900.com/aeons), at the editor's request, and is credited and linked
+   at the foot of the page. Held as string constants rather than inline JSX so
+   that quoting, apostrophes and the hyphen in "3333 Aeons - beings" survive
+   exactly as written. */
+const SOURCE_URL = "https://www.aeons6900.com/aeons";
+
+const HERO_QUESTION =
+  "if we could harness the power of God, could we flip the SPX500?";
+
+const HERO_LINES = [
+  "Deep within the clandestine vaults of SPX6900 Labs, a radical research experiment codenamed \"Project AEON\" sought the answer to this question.",
+  "But then, the unexpected happened. A phenomenon known as a quantum glitch occurred, sparking life into 3333 Aeons - beings neither of this world nor wholly apart from it.",
+  "These entities, birthed from the crucible of human ambition and cosmic anomaly, could save us.",
+];
+
+const SECTIONS = [
+  {
+    index: "01",
+    title: "Cosmic Anomalies",
+    body: "In the shadowy recesses of quantum experimentation, Project AEON emerges as a groundbreaking digital narrative brought to life through the Ethereum blockchain. This collection of 3,333 uniquely crafted entities, known as Aeons, is the result of a fictional \"quantum glitch\" from the enigmatic SPX6900 Labs. Each Aeon represents a fusion of cosmic anomaly and human ambition, embodying stories of creation, chaos, and transcendence.",
+  },
+  {
+    index: "02",
+    title: "Beyond Comprehension",
+    body: "Within the collection lies a tapestry of intrigue, blending cutting-edge generative artistry with a rich backstory of scientific ambition gone awry. The Aeons, brought into existence by forces beyond comprehension, carry an aura of mystery and allure, inviting collectors to uncover their secrets. With visually striking designs and a narrative steeped in curiosity, Project AEON bridges the realms of art, technology, and speculative fiction.",
+  },
+  {
+    index: "03",
+    title: "SPX6900",
+    body: "SPX6900 is closely tied to Project AEON NFTs, sharing a narrative universe built around quantum experimentation and digital creativity. The memecoin fuels the ecosystem, providing utility within AEON\u2019s sci-fi-inspired lore while uniting collectors and investors under a shared vision of blockchain-powered innovation and humor.",
+  },
+];
+
 /** Counts to a target the first time it scrolls into view. */
 function Tally({ to, duration = 1600 }: { to: number; duration?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -176,12 +210,27 @@ export default function ProjectAeon() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            className="pa-lede"
+            className="pa-lede pa-lede--question"
           >
-            If you could harness the power of a god, could you flip the S&amp;P 500?
-            Somewhere in the fiction of SPX6900 Labs, an experiment asked exactly
-            that — and something answered.
+            {HERO_QUESTION}
           </motion.p>
+
+          <div className="pa-dossier">
+            {HERO_LINES.map((line, i) => (
+              <motion.p
+                key={i}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.7,
+                  delay: 0.68 + i * 0.12,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
+                {line}
+              </motion.p>
+            ))}
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -211,21 +260,11 @@ export default function ProjectAeon() {
       <section className="pa-section">
         <div className="pa-rule" />
         <div className="pa-lore">
-          <LoreCard index="01" title="The experiment">
-            Deep in the vaults of a laboratory that never existed, a research
-            programme went looking for the one force large enough to move a
-            market that size. It was not supposed to produce life.
-          </LoreCard>
-          <LoreCard index="02" title="The quantum glitch">
-            What it produced instead was an anomaly — a fault in the run that
-            sparked <strong>3,333</strong> beings into existence. Neither wholly of
-            this world nor entirely outside it, the Aeons arrived already awake.
-          </LoreCard>
-          <LoreCard index="03" title="The inheritance">
-            Born of human ambition crossed with cosmic accident, they carry the
-            thing the experiment was chasing. The collection is the record of
-            that accident, minted one by one onto Ethereum.
-          </LoreCard>
+          {SECTIONS.map((sec) => (
+            <LoreCard key={sec.index} index={sec.index} title={sec.title}>
+              {sec.body}
+            </LoreCard>
+          ))}
         </div>
       </section>
 
@@ -301,6 +340,13 @@ export default function ProjectAeon() {
               Back to Guides
             </Link>
           </div>
+          <p className="pa-credit">
+            Lore text courtesy of the SPX6900 community site,{" "}
+            <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+              aeons6900.com
+            </a>
+            .
+          </p>
         </div>
       </section>
 
@@ -369,6 +415,30 @@ function ProjectAeonStyles() {
         margin: 1.6rem auto 0; max-width: 44rem;
         font-size: clamp(1rem, 1.9vw, 1.2rem); line-height: 1.75;
         color: var(--color-mag-light);
+      }
+      .pa-lede--question {
+        font-style: italic;
+        color: var(--color-gold-200);
+        font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+      }
+      .pa-dossier {
+        margin: 1.5rem auto 0; max-width: 46rem;
+        display: flex; flex-direction: column; gap: 0.9rem;
+        text-align: left;
+        border-left: 1px solid color-mix(in oklab, var(--color-gold-400) 32%, transparent);
+        padding-left: 1.4rem;
+      }
+      .pa-dossier p {
+        color: var(--color-mag-light);
+        font-size: clamp(0.94rem, 1.5vw, 1.03rem); line-height: 1.75;
+      }
+      .pa-credit {
+        margin-top: 1.6rem; font-size: 0.8rem; color: var(--color-mag-muted);
+      }
+      .pa-credit a {
+        color: var(--color-gold-300);
+        text-decoration: underline; text-underline-offset: 3px;
+        text-decoration-color: color-mix(in oklab, var(--color-gold-400) 45%, transparent);
       }
       .pa-stats {
         margin-top: 2.2rem; display: flex; flex-wrap: wrap;

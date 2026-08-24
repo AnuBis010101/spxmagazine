@@ -66,7 +66,13 @@ const TREATMENTS = { duotone, soft: softened };
 /* Only the curated pool is baked. src/lib/aeon.ts never picks outside it, so
    baking all 24 just puts files in the repo that nothing can request. Widen
    this if the pool widens. */
-const POOL = [3, 7, 9, 11, 15, 16, 17, 21];
+const POOL = [
+  // the curated eight — used at medallion size across the site
+  3, 7, 9, 11, 15, 16, 17, 21,
+  // widened for the orbit background only, where marks are 28-48px and faint:
+  // frames passed over above for being darker or busier still read fine there
+  1, 5, 6, 10, 12, 13, 14, 18, 20,
+];
 
 function sources() {
   return readdirSync(SRC)

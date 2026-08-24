@@ -966,3 +966,23 @@ h3 {
   margin-left: calc(var(--icon-size) / -2);
   margin-top: calc(var(--icon-size) / -2);
 }
+
+/* ── Orbiting medallion axial rotation ────────────────────────────────────
+   Each mark turns about its own centre in the plane of the screen, the way a
+   moon turns as it goes round, while it also rides its orbit. Duration is set
+   per ring from the component so no two rings turn at the same rate. */
+.ob-aeon-axis {
+  display: block;
+  animation-name: ob-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+@keyframes ob-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-aeon-axis { animation: none; }
+}

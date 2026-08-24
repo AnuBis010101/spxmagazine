@@ -12,7 +12,8 @@ import {
 import { usePrice } from "@/hooks/usePrice";
 import Image from "next/image";
 import { OrbitingCircles } from "@/components/ui/orbiting-circles";
-import { AEON_POOL, markSrc } from "@/lib/aeon";
+import { usePathname } from "next/navigation";
+import { aeonOrbitSet, markSrc } from "@/lib/aeon";
 
 /* Eight marks, every one a different Aeon — the pool holds exactly eight, so
    each appears once and none repeats around the field.
@@ -31,18 +32,56 @@ import { AEON_POOL, markSrc } from "@/lib/aeon";
 
    Periods are not multiples of each other, so the rings never resynchronise
    into a pattern the eye can lock onto. */
-const AEON_ORBITS = [
-  { radius: 150, duration: 46, size: 48, ids: [AEON_POOL[0], AEON_POOL[3], AEON_POOL[6]] },
-  { radius: 275, duration: 71, size: 36, ids: [AEON_POOL[1], AEON_POOL[4], AEON_POOL[7]] },
-  { radius: 400, duration: 97, size: 28, ids: [AEON_POOL[2], AEON_POOL[5]] },
+/* One rotation period per MARK rather than per ring — sharing a period across
+   a ring made the three marks on it turn in lockstep, which reads as a single
+   rigid object. Primes, so no two ever come back into phase, and alternating
+   direction so neighbours visibly disagree. */
+const MARK_SPIN = [13, 19, 23, 29, 31, 37, 41, 43];
+const markSpin = (i: number) => ({
+  duration: MARK_SPIN[i % MARK_SPIN.length],
+  reverse: i % 2 === 1,
+});
+
+const AEON_RINGS = [
+  { radius: 150, duration: 46, size: 48, count: 3 },
+  { radius: 275, duration: 71, size: 36, count: 3 },
+  { radius: 400, duration: 97, size: 28, count: 2 },
 ] as const;
 
 /* One orbiting medallion. The baked mark carries its own treatment, so there
    is no runtime filter here — just an image and a gold rim. */
-function AeonOrbiter({ id, size, opacity }: { id: number; size: number; opacity: number }) {
+/* A medallion turns about its own centre while it orbits, the way a moon
+   turns as it goes round.
+
+   Each ring rotates at its own period, and none is a factor of its own
+   orbital period, so a mark never returns to the same attitude at the same
+   point on its path. */
+function AeonOrbiter({
+  id,
+  size,
+  opacity,
+  spin,
+  reverse,
+}: {
+  id: number;
+  size: number;
+  opacity: number;
+  spin: number;
+  reverse: boolean;
+}) {
   return (
-    <span className="ob-aeon" style={{ width: size, height: size, opacity }}>
-      <Image src={markSrc(id)} alt="" width={size * 2} height={size * 2} sizes={`${size}px`} />
+    <span
+      className="ob-aeon-axis"
+      style={{
+        width: size,
+        height: size,
+        animationDuration: `${spin}s`,
+        animationDirection: reverse ? "reverse" : "normal",
+      }}
+    >
+      <span className="ob-aeon" style={{ width: size, height: size, opacity }}>
+        <Image src={markSrc(id)} alt="" width={size * 2} height={size * 2} sizes={`${size}px`} />
+      </span>
     </span>
   );
 }
@@ -176,6 +215,22 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
   // its central glow with the 24h price move (the market) — the background
   // "responds to the reader and to the live market". Cheap: two compositor-only
   // transforms driven by one shared spring, plus a data-driven gradient string.
+  /* Each route draws its own cast of eight from the wider pool, so moving
+     between pages changes which Aeons are overhead. Keyed off the path and
+     deterministic, so a given page keeps the same eight across renders — they
+     must not reshuffle under a reader who scrolls back up. */
+  const pathname = usePathname();
+  const aeonRings = useMemo(() => {
+    const total = AEON_RINGS.reduce((n, r) => n + r.count, 0);
+    const cast = aeonOrbitSet(pathname || "/", total);
+    let cursor = 0;
+    return AEON_RINGS.map((ring) => {
+      const ids = cast.slice(cursor, cursor + ring.count);
+      cursor += ring.count;
+      return { ...ring, ids };
+    });
+  }, [pathname]);
+
   const reduce = useReducedMotion();
   const { scrollY } = useScroll();
   const scrollVelocity = useVelocity(scrollY);
@@ -219,7 +274,7 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
           Larger and nearer the centre, smaller and fainter further out, so the
           orbit reads as depth rather than as a flat ring of stickers. */}
       <div className="absolute inset-0">
-        {AEON_ORBITS.map((orbit, ring) => (
+        {aeonRings.map((orbit, ring) => (
           <OrbitingCircles
             key={orbit.radius}
             radius={orbit.radius}
@@ -228,9 +283,21 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
             reverse={ring === 1}
             pathOpacity={[0.16, 0.12, 0.09][ring]}
           >
-            {orbit.ids.map((id) => (
-              <AeonOrbiter key={id} id={id} size={orbit.size} opacity={[0.72, 0.58, 0.46][ring]} />
-            ))}
+            {orbit.ids.map((id, i) => {
+              // continuous index across all rings, so every mark differs
+              const flat = aeonRings.slice(0, ring).reduce((n, o) => n + o.ids.length, 0) + i;
+              const spin = markSpin(flat);
+              return (
+                <AeonOrbiter
+                  key={id}
+                  id={id}
+                  size={orbit.size}
+                  spin={spin.duration}
+                  reverse={spin.reverse}
+                  opacity={[0.72, 0.58, 0.46][ring]}
+                />
+              );
+            })}
           </OrbitingCircles>
         ))}
       </div>

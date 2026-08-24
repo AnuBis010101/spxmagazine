@@ -10,6 +10,28 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import { usePrice } from "@/hooks/usePrice";
+import Image from "next/image";
+import { OrbitingCircles } from "@/components/ui/orbiting-circles";
+import { AEON_POOL, markSrc } from "@/lib/aeon";
+
+/* Three orbits, drawn from the curated Aeon pool. Periods are deliberately
+   not multiples of each other, so the rings never resynchronise into a
+   pattern the eye can lock onto. */
+const AEON_ORBITS = [
+  { radius: 150, duration: 46, size: 46, ids: [AEON_POOL[0], AEON_POOL[3], AEON_POOL[6]] },
+  { radius: 275, duration: 71, size: 36, ids: [AEON_POOL[1], AEON_POOL[4], AEON_POOL[7], AEON_POOL[2]] },
+  { radius: 400, duration: 97, size: 28, ids: [AEON_POOL[5], AEON_POOL[2], AEON_POOL[0], AEON_POOL[4], AEON_POOL[7]] },
+] as const;
+
+/* One orbiting medallion. The baked mark carries its own treatment, so there
+   is no runtime filter here — just an image and a gold rim. */
+function AeonOrbiter({ id, size, opacity }: { id: number; size: number; opacity: number }) {
+  return (
+    <span className="ob-aeon" style={{ width: size, height: size, opacity }}>
+      <Image src={markSrc(id)} alt="" width={size * 2} height={size * 2} sizes={`${size}px`} />
+    </span>
+  );
+}
 
 /* ── Orbiting glossary term — each term gets its own orbit ring ── */
 function OrbitTerm({ term, radius, duration, startAngle, size, reverse, showRing }: {
@@ -107,7 +129,8 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
 
   // Cap the number of orbiting terms so the animation cost doesn't grow with the
   // glossary size (each term spawns several always-on Framer loops).
-  const MAX_TERMS = 14;
+  // Fewer terms now that the medallions carry the orbit; these are texture.
+  const MAX_TERMS = 8;
   const terms = (glossaryTerms.length > 0
     ? glossaryTerms
     : [
@@ -121,8 +144,9 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
   const orbitConfigs = useMemo(() => {
     if (!mounted) return [];
     const count = terms.length;
-    const minRadius = 120;
-    const maxRadius = 480;
+    // Pushed outside the medallion orbits so the two layers never collide.
+    const minRadius = 470;
+    const maxRadius = 700;
     return terms.map((term, i) => {
       const t = count > 1 ? i / (count - 1) : 0;
       const radius = minRadius + t * (maxRadius - minRadius);
@@ -175,7 +199,35 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
       {/* Concentric pulsing rings */}
       <ConcentricRings />
 
-      {/* Orbiting terms */}
+      {/* Aeon medallions on three counter-turning orbits. Each rides a single
+          CSS keyframe animating transform, so a dozen of them cost far less
+          than the JS-driven term orbit they replace — which matters now this
+          background is on every route.
+
+          Larger and nearer the centre, smaller and fainter further out, so the
+          orbit reads as depth rather than as a flat ring of stickers. */}
+      <div className="absolute inset-0">
+        <OrbitingCircles radius={AEON_ORBITS[0].radius} duration={AEON_ORBITS[0].duration} iconSize={AEON_ORBITS[0].size} pathOpacity={0.16}>
+          {AEON_ORBITS[0].ids.map((id) => (
+            <AeonOrbiter key={id} id={id} size={AEON_ORBITS[0].size} opacity={0.72} />
+          ))}
+        </OrbitingCircles>
+
+        <OrbitingCircles reverse radius={AEON_ORBITS[1].radius} duration={AEON_ORBITS[1].duration} iconSize={AEON_ORBITS[1].size} pathOpacity={0.12}>
+          {AEON_ORBITS[1].ids.map((id) => (
+            <AeonOrbiter key={id} id={id} size={AEON_ORBITS[1].size} opacity={0.56} />
+          ))}
+        </OrbitingCircles>
+
+        <OrbitingCircles radius={AEON_ORBITS[2].radius} duration={AEON_ORBITS[2].duration} iconSize={AEON_ORBITS[2].size} pathOpacity={0.09}>
+          {AEON_ORBITS[2].ids.map((id) => (
+            <AeonOrbiter key={id} id={id} size={AEON_ORBITS[2].size} opacity={0.42} />
+          ))}
+        </OrbitingCircles>
+      </div>
+
+      {/* Glossary terms kept as the faintest layer, out beyond the medallions,
+          so the words remain part of the background without competing. */}
       {showTerms && (
         <div className="absolute inset-0 flex items-center justify-center">
           {orbitConfigs.map((cfg, i) => (

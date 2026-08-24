@@ -1,6 +1,24 @@
 @import "tailwindcss";
 
 @theme inline {
+  /* Orbit — one transform-only keyframe per icon, which is what lets the
+     background carry a dozen orbiting marks on every route without the JS
+     animation loops the previous term orbit needed. */
+  --animate-orbit: orbit calc(var(--duration) * 1s) linear infinite;
+
+  @keyframes orbit {
+    0% {
+      transform: rotate(calc(var(--angle) * 1deg))
+        translateY(calc(var(--radius) * 1px))
+        rotate(calc(var(--angle) * -1deg));
+    }
+    100% {
+      transform: rotate(calc(var(--angle) * 1deg + 360deg))
+        translateY(calc(var(--radius) * 1px))
+        rotate(calc((var(--angle) * -1deg) - 360deg));
+    }
+  }
+
   /* Gold Palette */
   --color-gold-50: #FBF7EB;
   --color-gold-100: #F5ECD0;
@@ -899,4 +917,38 @@ h3 {
   .coin-glitch-red,
   .coin-glitch-cyan,
   .coin-glitch-slice { animation: none; }
+}
+
+/* ── Orbiting Aeon medallions (OrbitBackground) ───────────────────────────
+   The mark is baked with its treatment already in the pixels, so nothing
+   here applies a runtime filter. The rim and the soft edge are a border and
+   a gradient, both free per frame. */
+.ob-aeon {
+  position: relative;
+  display: block;
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--color-gold-400) 55%, transparent);
+  box-shadow:
+    0 0 22px -5px color-mix(in oklab, var(--color-gold-400) 85%, transparent),
+    inset 0 -6px 12px -8px color-mix(in oklab, var(--color-gold-200) 90%, transparent);
+  line-height: 0;
+}
+.ob-aeon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Sink the rim into the page so a medallion never reads as a pasted circle. */
+.ob-aeon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(
+    76% 76% at 50% 36%,
+    transparent 58%,
+    color-mix(in oklab, var(--color-mag-black) 52%, transparent) 100%
+  );
 }

@@ -863,8 +863,13 @@ h3 {
 }
 
 @keyframes coin-breathe {
-  0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
-  50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.09); }
+  /* Animate the independent `scale` property, NOT `transform`. The rule above
+     centres the halo with the independent `translate` property, and the two
+     compose rather than override — a transform re-stating translate(-50%,-50%)
+     applied the same offset twice, pushing a halo 210% the coin's size well up
+     and to the left of it once the idle animation began. */
+  0%, 100% { opacity: 0.85; scale: 1; }
+  50%      { opacity: 1;    scale: 1.09; }
 }
 @keyframes coin-rock {
   0%   { transform: perspective(900px) rotateY(-15deg) rotateX(5deg) translateY(0); }

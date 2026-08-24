@@ -70,7 +70,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           {/* Top bar */}
           <div className="flex shrink-0 items-center justify-between px-6 py-5">
             <Image
-              src="/spxlogo.png"
+              src="/spxlogo-light.png"
               alt="SPX Magazine"
               width={100}
               height={33}

@@ -148,22 +148,41 @@ export function Header() {
             isScrolled ? "h-14 lg:h-16" : "h-16 lg:h-20"
           )}
         >
-          {/* Logo */}
-          <Link href="/" className="relative flex-shrink-0 group">
+          {/* Logo.
+
+              The source artwork is a near-black wordmark on transparency, which
+              on a near-black header rendered as very nearly nothing. The light
+              variant is baked rather than inverted with a CSS filter, so there
+              is no filtered compositing layer in the header on every route.
+
+              Around it: a gold aura that breathes on opacity alone, and on
+              hover a specular sweep masked to the glyph itself plus a few
+              rising motes. The sweep uses the logo as a mask so the light
+              travels across the letterforms rather than across a rectangle. */}
+          <Link href="/" className="brand relative flex-shrink-0 group" aria-label="SPX Magazine">
+            <span aria-hidden className="brand-aura" />
             <motion.div
+              className="brand-inner relative"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
               <Image
-                src="/spxlogo.png"
+                src="/spxlogo-light.png"
                 alt="SPX Magazine"
                 width={120}
                 height={40}
                 className="h-10 w-auto"
                 priority
               />
+              <span aria-hidden className="brand-sweep" />
             </motion.div>
+            <span aria-hidden className="brand-motes">
+              <i style={{ ["--x" as string]: "14%", ["--d" as string]: "0s" }} />
+              <i style={{ ["--x" as string]: "38%", ["--d" as string]: "0.18s" }} />
+              <i style={{ ["--x" as string]: "63%", ["--d" as string]: "0.36s" }} />
+              <i style={{ ["--x" as string]: "84%", ["--d" as string]: "0.1s" }} />
+            </span>
           </Link>
 
           {/* Desktop Navigation — glass rail with living rim + cursor spotlight */}
@@ -261,6 +280,103 @@ export function Header() {
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
       />
+
+      <style>{`
+        .brand { display: inline-block; isolation: isolate; }
+        .brand-inner { position: relative; z-index: 1; }
+
+        /* A pool of gold behind the wordmark. Pure gradient, and only its
+           opacity moves — no animated filter, so this costs nothing per frame
+           in chrome that is on screen for the entire session. */
+        .brand-aura {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 190%;
+          height: 260%;
+          translate: -50% -50%;
+          z-index: 0;
+          pointer-events: none;
+          border-radius: 9999px;
+          background: radial-gradient(
+            50% 50% at 50% 50%,
+            color-mix(in oklab, var(--color-gold-400) 34%, transparent) 0%,
+            color-mix(in oklab, var(--color-gold-400) 12%, transparent) 45%,
+            transparent 72%
+          );
+          opacity: 0.5;
+          animation: brandBreathe 6s ease-in-out infinite;
+        }
+        .brand:hover .brand-aura { opacity: 0.85; }
+
+        /* The sweep is masked to the logo itself, so the light travels across
+           the letterforms rather than across a rectangle over them. */
+        .brand-sweep {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(
+            105deg,
+            transparent 38%,
+            color-mix(in oklab, #fff6d8 92%, transparent) 50%,
+            transparent 62%
+          );
+          -webkit-mask-image: url("/spxlogo-light.png");
+          mask-image: url("/spxlogo-light.png");
+          -webkit-mask-size: contain;
+          mask-size: contain;
+          -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+          -webkit-mask-position: center;
+          mask-position: center;
+          opacity: 0;
+          transform: translateX(-120%);
+        }
+        .brand:hover .brand-sweep {
+          opacity: 1;
+          transform: translateX(120%);
+          transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+        }
+
+        /* Motes lift off on hover only. Nothing drifts perpetually in chrome
+           the reader sees on every page. */
+        .brand-motes {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 2;
+        }
+        .brand-motes i {
+          position: absolute;
+          left: var(--x);
+          bottom: 12%;
+          width: 3px;
+          height: 3px;
+          border-radius: 9999px;
+          background: #fff6d8;
+          box-shadow: 0 0 8px 1px color-mix(in oklab, var(--color-gold-300) 85%, transparent);
+          opacity: 0;
+        }
+        .brand:hover .brand-motes i {
+          animation: brandMote 1.5s cubic-bezier(0.16, 1, 0.3, 1) var(--d) infinite;
+        }
+
+        @keyframes brandBreathe {
+          0%, 100% { opacity: 0.42; }
+          50%      { opacity: 0.68; }
+        }
+        @keyframes brandMote {
+          0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+          25%  { opacity: 1; }
+          100% { opacity: 0; transform: translateY(-26px) scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .brand-aura { animation: none; opacity: 0.55; }
+          .brand-sweep { display: none; }
+          .brand:hover .brand-motes i { animation: none; }
+        }
+      `}</style>
     </>
   );
 }

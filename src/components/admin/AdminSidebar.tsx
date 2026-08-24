@@ -54,7 +54,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
       {/* Logo area */}
       <div className="h-16 flex items-center px-6 border-b border-mag-border shrink-0">
         <Image
-          src="/spxlogo.png"
+          src="/spxlogo-light.png"
           alt="SPX Logo"
           width={24}
           height={24}

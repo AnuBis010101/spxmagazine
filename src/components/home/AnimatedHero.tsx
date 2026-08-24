@@ -229,7 +229,7 @@ export default function AnimatedHero({ post, glossaryTerms = [] }: AnimatedHeroP
             transition={{ duration: 1, type: "spring", stiffness: 150, damping: 20 }}
           >
             <Image
-              src="/spxlogo.png"
+              src="/spxlogo-light.png"
               alt="SPX6900 Logo"
               width={100}
               height={100}

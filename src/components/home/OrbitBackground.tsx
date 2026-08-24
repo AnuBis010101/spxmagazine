@@ -17,26 +17,32 @@ import { AEON_POOL, markSrc } from "@/lib/aeon";
 /* Eight marks, every one a different Aeon — the pool holds exactly eight, so
    each appears once and none repeats around the field.
 
-   One uniform size for all of them, deliberately: at 26px a mark sits inside a
-   single line of body text rather than straddling two, which is what stops it
-   reading as an obstruction behind the copy.
+   Sizes come from the geometry rather than taste. With only two or three
+   marks per ring the arc between neighbours on the SAME ring is enormous
+   (212px of clearance at the tightest), so that never binds. What binds is
+   the 125px radial gap between rings: marks on adjacent rings drift into
+   radial alignment as the rings turn at different rates, and at that moment
+   the pair must still clear each other. That caps any two adjacent sizes at
+   ~105px combined.
+
+   Inner marks are largest and outer smallest, so the field reads as depth.
+   Measured clearances at these sizes: 83px between rings 1 and 2, 93px
+   between rings 2 and 3 — the marks never come close to touching.
 
    Periods are not multiples of each other, so the rings never resynchronise
    into a pattern the eye can lock onto. */
-const AEON_MARK_SIZE = 26;
 const AEON_ORBITS = [
-  { radius: 150, duration: 46, ids: [AEON_POOL[0], AEON_POOL[3], AEON_POOL[6]] },
-  { radius: 275, duration: 71, ids: [AEON_POOL[1], AEON_POOL[4], AEON_POOL[7]] },
-  { radius: 400, duration: 97, ids: [AEON_POOL[2], AEON_POOL[5]] },
+  { radius: 150, duration: 46, size: 48, ids: [AEON_POOL[0], AEON_POOL[3], AEON_POOL[6]] },
+  { radius: 275, duration: 71, size: 36, ids: [AEON_POOL[1], AEON_POOL[4], AEON_POOL[7]] },
+  { radius: 400, duration: 97, size: 28, ids: [AEON_POOL[2], AEON_POOL[5]] },
 ] as const;
 
 /* One orbiting medallion. The baked mark carries its own treatment, so there
    is no runtime filter here — just an image and a gold rim. */
-function AeonOrbiter({ id, opacity }: { id: number; opacity: number }) {
-  const s = AEON_MARK_SIZE;
+function AeonOrbiter({ id, size, opacity }: { id: number; size: number; opacity: number }) {
   return (
-    <span className="ob-aeon" style={{ width: s, height: s, opacity }}>
-      <Image src={markSrc(id)} alt="" width={s * 2} height={s * 2} sizes={`${s}px`} />
+    <span className="ob-aeon" style={{ width: size, height: size, opacity }}>
+      <Image src={markSrc(id)} alt="" width={size * 2} height={size * 2} sizes={`${size}px`} />
     </span>
   );
 }
@@ -220,12 +226,12 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
             key={orbit.radius}
             radius={orbit.radius}
             duration={orbit.duration}
-            iconSize={AEON_MARK_SIZE}
+            iconSize={orbit.size}
             reverse={ring === 1}
             pathOpacity={[0.16, 0.12, 0.09][ring]}
           >
             {orbit.ids.map((id) => (
-              <AeonOrbiter key={id} id={id} opacity={[0.72, 0.58, 0.46][ring]} />
+              <AeonOrbiter key={id} id={id} size={orbit.size} opacity={[0.72, 0.58, 0.46][ring]} />
             ))}
           </OrbitingCircles>
         ))}

@@ -275,7 +275,10 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
   return (
     <motion.div
       className="fixed inset-0 overflow-hidden pointer-events-none"
-      style={{ zIndex: 0, ...(reduce ? {} : { scale: breathScale }) }}
+      /* -1, not 0: a positioned element at z-index 0 paints above ordinary
+         in-flow content, which put the whole orbit on top of the site's text.
+         See the note in OrbitCoin for why negative z stays visible here. */
+      style={{ zIndex: -1, ...(reduce ? {} : { scale: breathScale }) }}
       /* The whole field lifts in rather than snapping on at first paint.
          Opacity here, scale left alone — the scroll-velocity breath already
          owns `scale` through style, and animating it here would fight it. */

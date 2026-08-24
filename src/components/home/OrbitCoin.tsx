@@ -129,9 +129,18 @@ export default function OrbitCoin() {
   });
 
   return (
+      /* z-index -1, not 0. A POSITIONED element at z-index 0 paints above
+         ordinary in-flow content, so at z-0 these fixed layers sat on top of
+         every unpositioned paragraph and heading on the site. Negative z puts
+         them below in-flow content.
+
+         Safe here because html carries no background while body does: that
+         background propagates to the canvas, which paints below negative-z
+         children, so the layer stays visible rather than disappearing behind
+         the page colour. */
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center"
+      className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center"
     >
       <motion.div
         style={{ opacity, scale }}

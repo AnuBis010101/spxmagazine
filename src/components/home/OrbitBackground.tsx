@@ -14,21 +14,29 @@ import Image from "next/image";
 import { OrbitingCircles } from "@/components/ui/orbiting-circles";
 import { AEON_POOL, markSrc } from "@/lib/aeon";
 
-/* Three orbits, drawn from the curated Aeon pool. Periods are deliberately
-   not multiples of each other, so the rings never resynchronise into a
-   pattern the eye can lock onto. */
+/* Eight marks, every one a different Aeon — the pool holds exactly eight, so
+   each appears once and none repeats around the field.
+
+   One uniform size for all of them, deliberately: at 26px a mark sits inside a
+   single line of body text rather than straddling two, which is what stops it
+   reading as an obstruction behind the copy.
+
+   Periods are not multiples of each other, so the rings never resynchronise
+   into a pattern the eye can lock onto. */
+const AEON_MARK_SIZE = 26;
 const AEON_ORBITS = [
-  { radius: 150, duration: 46, size: 46, ids: [AEON_POOL[0], AEON_POOL[3], AEON_POOL[6]] },
-  { radius: 275, duration: 71, size: 36, ids: [AEON_POOL[1], AEON_POOL[4], AEON_POOL[7], AEON_POOL[2]] },
-  { radius: 400, duration: 97, size: 28, ids: [AEON_POOL[5], AEON_POOL[2], AEON_POOL[0], AEON_POOL[4], AEON_POOL[7]] },
+  { radius: 150, duration: 46, ids: [AEON_POOL[0], AEON_POOL[3], AEON_POOL[6]] },
+  { radius: 275, duration: 71, ids: [AEON_POOL[1], AEON_POOL[4], AEON_POOL[7]] },
+  { radius: 400, duration: 97, ids: [AEON_POOL[2], AEON_POOL[5]] },
 ] as const;
 
 /* One orbiting medallion. The baked mark carries its own treatment, so there
    is no runtime filter here — just an image and a gold rim. */
-function AeonOrbiter({ id, size, opacity }: { id: number; size: number; opacity: number }) {
+function AeonOrbiter({ id, opacity }: { id: number; opacity: number }) {
+  const s = AEON_MARK_SIZE;
   return (
-    <span className="ob-aeon" style={{ width: size, height: size, opacity }}>
-      <Image src={markSrc(id)} alt="" width={size * 2} height={size * 2} sizes={`${size}px`} />
+    <span className="ob-aeon" style={{ width: s, height: s, opacity }}>
+      <Image src={markSrc(id)} alt="" width={s * 2} height={s * 2} sizes={`${s}px`} />
     </span>
   );
 }
@@ -207,23 +215,20 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
           Larger and nearer the centre, smaller and fainter further out, so the
           orbit reads as depth rather than as a flat ring of stickers. */}
       <div className="absolute inset-0">
-        <OrbitingCircles radius={AEON_ORBITS[0].radius} duration={AEON_ORBITS[0].duration} iconSize={AEON_ORBITS[0].size} pathOpacity={0.16}>
-          {AEON_ORBITS[0].ids.map((id) => (
-            <AeonOrbiter key={id} id={id} size={AEON_ORBITS[0].size} opacity={0.72} />
-          ))}
-        </OrbitingCircles>
-
-        <OrbitingCircles reverse radius={AEON_ORBITS[1].radius} duration={AEON_ORBITS[1].duration} iconSize={AEON_ORBITS[1].size} pathOpacity={0.12}>
-          {AEON_ORBITS[1].ids.map((id) => (
-            <AeonOrbiter key={id} id={id} size={AEON_ORBITS[1].size} opacity={0.56} />
-          ))}
-        </OrbitingCircles>
-
-        <OrbitingCircles radius={AEON_ORBITS[2].radius} duration={AEON_ORBITS[2].duration} iconSize={AEON_ORBITS[2].size} pathOpacity={0.09}>
-          {AEON_ORBITS[2].ids.map((id) => (
-            <AeonOrbiter key={id} id={id} size={AEON_ORBITS[2].size} opacity={0.42} />
-          ))}
-        </OrbitingCircles>
+        {AEON_ORBITS.map((orbit, ring) => (
+          <OrbitingCircles
+            key={orbit.radius}
+            radius={orbit.radius}
+            duration={orbit.duration}
+            iconSize={AEON_MARK_SIZE}
+            reverse={ring === 1}
+            pathOpacity={[0.16, 0.12, 0.09][ring]}
+          >
+            {orbit.ids.map((id) => (
+              <AeonOrbiter key={id} id={id} opacity={[0.72, 0.58, 0.46][ring]} />
+            ))}
+          </OrbitingCircles>
+        ))}
       </div>
 
       {/* Glossary terms kept as the faintest layer, out beyond the medallions,

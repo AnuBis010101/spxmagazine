@@ -952,3 +952,17 @@ h3 {
     color-mix(in oklab, var(--color-mag-black) 52%, transparent) 100%
   );
 }
+
+/* Orbit icons are absolutely positioned with no offset, so they anchor to the
+   container's TOP-LEFT while the path is drawn around its centre — the icons
+   ended up orbiting a different origin entirely, at 423-1153px from centre
+   against drawn radii of 150/275/400.
+
+   Centring with margins rather than a translate, because the orbit keyframe
+   owns `transform` and a translate here would be overwritten by it. */
+.animate-orbit {
+  left: 50%;
+  top: 50%;
+  margin-left: calc(var(--icon-size) / -2);
+  margin-top: calc(var(--icon-size) / -2);
+}

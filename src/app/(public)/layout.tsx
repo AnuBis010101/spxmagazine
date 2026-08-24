@@ -10,6 +10,7 @@ import AeonAssistant from "@/components/widgets/AeonAssistant";
 import PageTransition from "@/components/animations/PageTransition";
 import ViewTransitions from "@/components/animations/ViewTransitions";
 import OrbitBackground from "@/components/home/OrbitBackground";
+import OrbitCoin from "@/components/home/OrbitCoin";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getLatestPosts } from "@/lib/queries/articles";
 import { getGlossaryTerms } from "@/lib/queries/glossary";
@@ -53,6 +54,12 @@ export default async function PublicLayout({
       </a>
       {/* Fixed orbit animation — always visible behind all content */}
       <OrbitBackground glossaryTerms={termsList} />
+      {/* The coin lives here rather than on the homepage so every route gets
+          it with identical mechanics: it grows in as the reader scrolls off
+          the first screen, glitches under their scroll velocity, and recedes
+          when they return to the top. Centred on the same point as the orbit
+          above. */}
+      <OrbitCoin />
       {announcement && (
         <AnnouncementBar
           message={announcement.message}

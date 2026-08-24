@@ -5,7 +5,6 @@ import { getFeaturedVideo } from "@/lib/queries/videos";
 import { getSidebarTweets } from "@/lib/queries/tweets";
 import { getGlossaryTerms } from "@/lib/queries/glossary";
 import ScrollProgress from "@/components/home/ScrollProgress";
-import OrbitCoin from "@/components/home/OrbitCoin";
 import AnimatedHero from "@/components/home/AnimatedHero";
 import CategoryShowcase from "@/components/home/CategoryShowcase";
 import BeliefMarquee from "@/components/home/BeliefMarquee";
@@ -52,7 +51,6 @@ export default async function HomePage() {
   return (
     <div>
       <ScrollProgress />
-      <OrbitCoin />
       <AnimatedHero post={heroPost} glossaryTerms={glossaryTerms.map((t) => t.term)} />
       {/* Page content scrolls over the fixed hero */}
       <ParallaxContent>

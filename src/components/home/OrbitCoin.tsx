@@ -32,13 +32,47 @@ export default function OrbitCoin() {
   }, []);
 
   const { scrollY } = useScroll();
-  // Hold off until the hero writings have started to leave, so the coin never
-  // competes with them near the top — then it fades/grows in.
-  const opacity = useTransform(scrollY, [200, 560], [0, 1]);
-  const grow = useTransform(scrollY, [200, 680], [0.4, 1]);
+
+  /* How far this page can actually scroll. The thresholds below were tuned for
+     the homepage, whose fixed hero gives ~680px of runway before the coin
+     should arrive. Now that the coin is on every route that assumption breaks:
+     a short page like an empty reading list scrolls ~400px total, so the coin
+     stalled at 40% scale and its idle never engaged.
+
+     Measured through a ResizeObserver rather than an effect body, both because
+     content height changes as images load and because writing state
+     synchronously in an effect is a lint error in this codebase. */
+  const [maxScroll, setMaxScroll] = useState(0);
+  useEffect(() => {
+    const measure = () => {
+      const next = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      setMaxScroll((prev) => (Math.abs(prev - next) < 8 ? prev : next));
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(document.documentElement);
+    window.addEventListener("resize", measure, { passive: true });
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  /* Keep the homepage's timing wherever there is room for it, and compress
+     proportionally where there is not, so the coin always completes its
+     arrival with scroll to spare. */
+  const appearAt = maxScroll > 0 ? Math.min(200, maxScroll * 0.12) : 200;
+  const visibleAt = maxScroll > 0 ? Math.min(560, maxScroll * 0.45) : 560;
+  const fullAt = maxScroll > 0 ? Math.min(680, maxScroll * 0.6) : 680;
+
+  const opacity = useTransform(scrollY, [appearAt, visibleAt], [0, 1]);
+  const grow = useTransform(scrollY, [appearAt, fullAt], [0.4, 1]);
   const scale = reduce ? 1 : grow;
   // Glitch intensity peaks mid-apparition, then settles to a clean coin.
-  const glitch = useTransform(scrollY, [220, 400, 560], [0, 1, 0]);
+  const glitch = useTransform(
+    scrollY,
+    [appearAt * 1.1, (appearAt + fullAt) / 2, visibleAt],
+    [0, 1, 0],
+  );
 
   const glitchEnabled = !reduce && !isTouch;
 

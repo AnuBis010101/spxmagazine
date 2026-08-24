@@ -36,16 +36,23 @@ import { aeonOrbitSet, markSrc } from "@/lib/aeon";
    a ring made the three marks on it turn in lockstep, which reads as a single
    rigid object. Primes, so no two ever come back into phase, and alternating
    direction so neighbours visibly disagree. */
-const MARK_SPIN = [13, 19, 23, 29, 31, 37, 41, 43];
+const MARK_SPIN = [13, 19, 23, 29, 31, 37, 41, 43, 47];
 const markSpin = (i: number) => ({
   duration: MARK_SPIN[i % MARK_SPIN.length],
   reverse: i % 2 === 1,
 });
 
+/* Three marks on every ring, nine in all. OrbitingCircles divides 360 by the
+   child count, so three sit exactly 120 degrees apart and stay evenly spaced
+   for the whole orbit — the gap between neighbours on a ring never changes.
+
+   At these sizes that leaves 212px of clear air between neighbours on the
+   tightest ring, and 83px between the closest pair on adjacent rings when
+   they drift into radial alignment. Nothing can collide. */
 const AEON_RINGS = [
   { radius: 150, duration: 46, size: 48, count: 3 },
   { radius: 275, duration: 71, size: 36, count: 3 },
-  { radius: 400, duration: 97, size: 28, count: 2 },
+  { radius: 400, duration: 97, size: 28, count: 3 },
 ] as const;
 
 /* One orbiting medallion. The baked mark carries its own treatment, so there

@@ -48,6 +48,21 @@ export default function OrbitCoin() {
     setGlitching((prev) => (prev === on ? prev : on));
   });
 
+  /* The coin used to arrive at full size and then simply stop. Once it has
+     settled it now runs a continuous idle: a slow rock on two axes, a conic
+     specular travelling round the face, a counter-turning rim light and a
+     breathing halo.
+
+     Mounted only once settled, on the same principle as the glitch layers —
+     nothing loops while the reader is still at the top of the page, and it
+     unmounts again if they scroll back up. */
+  const [settled, setSettled] = useState(false);
+  useMotionValueEvent(grow, "change", (v) => {
+    const on = v > 0.985;
+    setSettled((prev) => (prev === on ? prev : on));
+  });
+  const idle = settled && !reduce;
+
   return (
     <div
       aria-hidden="true"
@@ -57,15 +72,33 @@ export default function OrbitCoin() {
         style={{ opacity, scale }}
         className="relative h-[110px] w-[110px] sm:h-[150px] sm:w-[150px] md:h-[180px] md:w-[180px]"
       >
-        {/* Base coin with a soft gold aura */}
-        <Image
-          src="/spx6900-coin.png"
-          alt=""
-          fill
-          priority
-          sizes="360px"
-          className="object-contain drop-shadow-[0_0_45px_rgba(212,175,55,0.4)]"
-        />
+        {/* Halo. A gradient rather than the old drop-shadow filter: a filter on
+            the coin would re-rasterise it on every frame of the rock below. */}
+        <span aria-hidden className={`coin-halo${idle ? " is-idle" : ""}`} />
+
+        {/* The coin itself, on its own transform layer so the specular and rim
+            can turn independently of it. */}
+        <div className={`coin-stage${idle ? " is-idle" : ""}`}>
+          <Image
+            src="/spx6900-coin.png"
+            alt=""
+            fill
+            priority
+            sizes="360px"
+            className="object-contain"
+          />
+
+          {idle && (
+            <>
+              {/* Light travelling round the struck face. Masked to the coin so
+                  the highlight follows the minting rather than a square. */}
+              <span aria-hidden className="coin-specular" />
+              {/* A brighter, faster pass on the rim, turning the other way so
+                  the two never beat in sync. */}
+              <span aria-hidden className="coin-rim" />
+            </>
+          )}
+        </div>
 
         {/* Glitch layers — chromatic RGB split + a datamosh slice, only while appearing */}
         {glitchEnabled && glitching && (

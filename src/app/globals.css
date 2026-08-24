@@ -770,3 +770,114 @@ h3 {
 .skip-link:focus {
   transform: translateY(0);
 }
+
+/* ── OrbitCoin idle ────────────────────────────────────────────────────────
+   Runs only once the coin has finished growing (the component mounts these
+   layers on settle and unmounts them on scroll-up), so nothing loops while
+   the reader is at the top.
+
+   Everything here animates transform or opacity only. The shine is a static
+   conic-gradient painted onto a layer that ROTATES — the gradient itself
+   never recomputes, the compositor just turns the layer. No filters: a
+   filter on the coin would re-rasterise it every frame of the rock. */
+
+.coin-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 210%;
+  height: 210%;
+  translate: -50% -50%;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(212, 175, 55, 0.34) 0%,
+    rgba(212, 175, 55, 0.12) 42%,
+    transparent 70%
+  );
+  opacity: 0.7;
+}
+.coin-halo.is-idle { animation: coin-breathe 7s ease-in-out infinite; }
+
+/* The rock. Two axes at different periods so it never returns to the same
+   pose twice in a row, which is what stops it reading as a loop. Kept well
+   inside +/-90deg so the flat artwork never turns edge-on or mirrors. */
+.coin-stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.coin-stage.is-idle { animation: coin-rock 14s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+
+.coin-specular,
+.coin-rim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 9999px;
+  /* Masked to the coin artwork, so light tracks the struck shape. */
+  -webkit-mask-image: url("/spx6900-coin.png");
+  mask-image: url("/spx6900-coin.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  will-change: transform;
+}
+
+/* A single bright wedge sweeping the face. */
+.coin-specular {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 62deg,
+    rgba(255, 246, 216, 0.5) 84deg,
+    rgba(255, 255, 255, 0.82) 90deg,
+    rgba(255, 246, 216, 0.5) 96deg,
+    transparent 118deg,
+    transparent 360deg
+  );
+  opacity: 0.75;
+  animation: coin-sweep 9s linear infinite;
+}
+
+/* Two thinner wedges opposite each other, turning the other way. */
+.coin-rim {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(212, 175, 55, 0.55) 12deg,
+    transparent 30deg,
+    transparent 180deg,
+    rgba(212, 175, 55, 0.42) 192deg,
+    transparent 210deg,
+    transparent 360deg
+  );
+  opacity: 0.55;
+  animation: coin-sweep-rev 6.5s linear infinite;
+}
+
+@keyframes coin-breathe {
+  0%, 100% { opacity: 0.58; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.92; transform: translate(-50%, -50%) scale(1.06); }
+}
+@keyframes coin-rock {
+  0%   { transform: perspective(900px) rotateY(-15deg) rotateX(5deg) translateY(0); }
+  25%  { transform: perspective(900px) rotateY(6deg)  rotateX(-3deg) translateY(-6px); }
+  50%  { transform: perspective(900px) rotateY(15deg) rotateX(4deg) translateY(0); }
+  75%  { transform: perspective(900px) rotateY(-4deg) rotateX(-5deg) translateY(6px); }
+  100% { transform: perspective(900px) rotateY(-15deg) rotateX(5deg) translateY(0); }
+}
+@keyframes coin-sweep     { to { transform: rotate(360deg); } }
+@keyframes coin-sweep-rev { to { transform: rotate(-360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .coin-halo.is-idle,
+  .coin-stage.is-idle { animation: none; }
+  .coin-specular,
+  .coin-rim { animation: none; opacity: 0.4; }
+}

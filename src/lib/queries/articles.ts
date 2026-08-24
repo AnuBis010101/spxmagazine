@@ -242,23 +242,109 @@ export async function getLatestCommunityArticles(limit = 3): Promise<Post[]> {
   return posts;
 }
 
-export async function searchPosts(query: string): Promise<Post[]> {
-  // Strip characters that would break PostgREST's or() filter grammar.
-  const safe = query.replace(/[,()]/g, " ").trim();
-  if (!safe) return [];
+/** Fields a free-text term is matched against, in the OR group for that term. */
+const SEARCH_TEXT_FIELDS = ["title", "excerpt", "author_name"] as const;
+
+/** More terms than this and the query is noise; also bounds the URL length. */
+const MAX_SEARCH_TERMS = 6;
+
+/**
+ * Escape LIKE wildcards so user input is matched literally.
+ *
+ * Without this a lone "%" matches every row, because it is passed straight
+ * through to ILIKE as "match anything". Backslash goes first, or it would
+ * double-escape the escapes added after it.
+ */
+function escapeLike(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/[%_]/g, (m) => `\\${m}`);
+}
+
+/** Remove the characters that would break PostgREST's or() filter grammar. */
+function stripFilterGrammar(value: string): string {
+  return value.replace(/[,()]/g, " ").trim();
+}
+
+/**
+ * Free-text search across posts.
+ *
+ * Matches each term against title, excerpt AND author_name, plus tags — an
+ * author's name previously returned nothing, because only title and excerpt
+ * were searched.
+ *
+ * Multi-word queries are ANDed term by term rather than matched as one
+ * literal string, so "weekly cognisphere" finds the same posts as
+ * "cognisphere weekly". Chained .or() calls AND their groups together, which
+ * is what gives "all terms must appear, each in some field".
+ */
+export async function searchPosts(query: string, limit = 20): Promise<Post[]> {
+  const raw = query.trim();
+  if (!raw) return [];
+
+  const terms = raw
+    .split(/\s+/)
+    .map((t) => stripFilterGrammar(escapeLike(t)))
+    .filter(Boolean)
+    .slice(0, MAX_SEARCH_TERMS);
+  if (!terms.length) return [];
 
   const supabase = createPublicClient();
-  const { data, error } = await supabase
+  const now = new Date().toISOString();
+
+  let textQuery = supabase
     .from("posts")
     .select("*, category:categories(*)")
     .eq("status", "published")
-    .lte("published_at", new Date().toISOString())
-    .or(`title.ilike.%${safe}%,excerpt.ilike.%${safe}%`)
-    .order("published_at", { ascending: false })
-    .limit(20);
+    .lte("published_at", now);
 
-  if (error) return [];
-  return (data as Post[]) || [];
+  // One OR group per term; chaining ANDs the groups.
+  for (const term of terms) {
+    textQuery = textQuery.or(
+      SEARCH_TEXT_FIELDS.map((f) => `${f}.ilike.%${term}%`).join(","),
+    );
+  }
+
+  // Tags are an array column, so they cannot join the ilike OR group above.
+  // `contains` (not `overlaps`) keeps the AND semantics — with overlaps, a
+  // two-word query would match posts carrying only one of the words as a tag
+  // and quietly re-broaden the search.
+  const tagTerms = raw
+    .toLowerCase()
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-z0-9-]/g, ""))
+    .filter(Boolean)
+    .slice(0, MAX_SEARCH_TERMS);
+
+  const [textResult, tagResult] = await Promise.all([
+    textQuery.order("published_at", { ascending: false }).limit(limit),
+    tagTerms.length
+      ? supabase
+          .from("posts")
+          .select("*, category:categories(*)")
+          .eq("status", "published")
+          .lte("published_at", now)
+          .contains("tags", tagTerms)
+          .order("published_at", { ascending: false })
+          .limit(limit)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  if (textResult.error && tagResult.error) return [];
+
+  const merged = [
+    ...((textResult.data as Post[]) || []),
+    ...((tagResult.data as Post[]) || []),
+  ];
+
+  // Dedupe by id — a post matching both passes must appear once.
+  const seen = new Set<string>();
+  const unique = merged.filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+
+  unique.sort((a, b) => (b.published_at || "").localeCompare(a.published_at || ""));
+  return unique.slice(0, limit);
 }
 
 export async function getTrendingPosts(limit = 5): Promise<Post[]> {

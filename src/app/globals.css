@@ -986,3 +986,28 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   .ob-aeon-axis { animation: none; }
 }
+
+/* ── Orbiting medallion entrance ──────────────────────────────────────────
+   Each mark blooms in rather than snapping on, staggered by a delay set per
+   mark from the component so the nine arrive in sequence.
+
+   The keyframe ends on var(--ob-o), this ring's resting opacity, so the
+   entrance hands over to the correct steady state instead of finishing at
+   full strength and washing the ring out. `both` holds the from-state during
+   the delay, so nothing flashes at full opacity before its turn.
+
+   scale is the independent property, not transform: .ob-aeon-axis above owns
+   transform for the axial rotation, and the two compose rather than fight. */
+.ob-aeon {
+  opacity: 0;
+  animation: ob-appear 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes ob-appear {
+  from { opacity: 0; scale: 0.55; }
+  to   { opacity: var(--ob-o, 1); scale: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No bloom, but still land on the resting opacity rather than staying at 0. */
+  .ob-aeon { animation: none; opacity: var(--ob-o, 1); }
+}

@@ -69,12 +69,14 @@ function AeonOrbiter({
   opacity,
   spin,
   reverse,
+  appearDelay,
 }: {
   id: number;
   size: number;
   opacity: number;
   spin: number;
   reverse: boolean;
+  appearDelay: number;
 }) {
   return (
     <span
@@ -86,7 +88,18 @@ function AeonOrbiter({
         animationDirection: reverse ? "reverse" : "normal",
       }}
     >
-      <span className="ob-aeon" style={{ width: size, height: size, opacity }}>
+      <span
+        className="ob-aeon"
+        style={
+          {
+            width: size,
+            height: size,
+            // the fade lands exactly on this ring's resting opacity
+            ["--ob-o" as string]: opacity,
+            animationDelay: `${appearDelay}s`,
+          } as React.CSSProperties
+        }
+      >
         <Image src={markSrc(id)} alt="" width={size * 2} height={size * 2} sizes={`${size}px`} />
       </span>
     </span>
@@ -151,15 +164,17 @@ function ConcentricRings() {
           key={size}
           className="absolute rounded-full border border-gold-400/[0.1]"
           style={{ width: size, height: size }}
+          /* Rings resolve from the centre outward, each a beat after the one
+             inside it, so the field draws itself rather than appearing whole.
+             The looping pulse picks up once its ring has arrived. */
+          initial={{ opacity: 0, scale: 0.82 }}
           animate={{
-            scale: [1, 1.04, 1],
             opacity: [0.1, 0.2, 0.1],
+            scale: [1, 1.04, 1],
           }}
           transition={{
-            duration: 4 + i * 1.5,
-            delay: i * 0.8,
-            repeat: Infinity,
-            ease: "easeInOut",
+            opacity: { duration: 4 + i * 1.5, delay: 0.25 + i * 0.14, repeat: Infinity, ease: "easeInOut" },
+            scale: { duration: 4 + i * 1.5, delay: 0.25 + i * 0.14, repeat: Infinity, ease: "easeInOut" },
           }}
         />
       ))}
@@ -261,6 +276,12 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
     <motion.div
       className="fixed inset-0 overflow-hidden pointer-events-none"
       style={{ zIndex: 0, ...(reduce ? {} : { scale: breathScale }) }}
+      /* The whole field lifts in rather than snapping on at first paint.
+         Opacity here, scale left alone — the scroll-velocity breath already
+         owns `scale` through style, and animating it here would fight it. */
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
     >
       {/* Radial glow — warms/cools with the market, scales with scroll energy */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -302,6 +323,8 @@ export default function OrbitBackground({ glossaryTerms, showTerms = true }: { g
                   spin={spin.duration}
                   reverse={spin.reverse}
                   opacity={[0.72, 0.58, 0.46][ring]}
+                  // staggered so the nine arrive in sequence, after the rings
+                  appearDelay={0.55 + flat * 0.09}
                 />
               );
             })}

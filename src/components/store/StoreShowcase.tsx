@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { ArrowUpRight, BadgeCheck, Lock, Users } from "lucide-react";
+import AeonColophon from "@/components/aeon/AeonColophon";
 
 /* ─────────────────────────────────────────────────────────────────────────
    The SPX6900 storefront directory.
@@ -158,12 +159,14 @@ export default function StoreShowcase() {
         ))}
       </div>
 
+      <AeonColophon id={9} />
+
       <motion.p
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto mt-16 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
+        className="mx-auto mt-6 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
       >
         <span className="text-mag-light">SPX6900 Industries</span> is the official merch store: the
         rest are built by the community. Every thread, sticker, and artifact flies the same flag.

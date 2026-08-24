@@ -11,6 +11,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { ArrowUpRight, Play, Radio } from "lucide-react";
+import AeonColophon from "@/components/aeon/AeonColophon";
 
 /** Brand-accurate YouTube glyph (lucide has no Youtube icon in this version). */
 function YouTubeIcon({ className }: { className?: string }) {
@@ -183,12 +184,14 @@ export default function PodcastShowcase() {
         })}
       </div>
 
+      <AeonColophon id={21} />
+
       <motion.p
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto mt-16 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
+        className="mx-auto mt-6 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
       >
         The Cognisphere talks. Press play, hit subscribe, and let the Aeons do the yapping.
       </motion.p>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bookmark } from "lucide-react";
+import AeonMark from "@/components/aeon/AeonMark";
+import { AEON_REFERENCE } from "@/lib/aeon";
 import Link from "next/link";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { createClient } from "@/lib/supabase/client";
@@ -97,8 +98,12 @@ export default function BookmarksList() {
   if (bookmarkedSlugs.length === 0 || posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-full bg-mag-dark border border-mag-border flex items-center justify-center mb-6">
-          <Bookmark className="w-7 h-7 text-mag-muted" />
+        {/* An Aeon keeps the shelf rather than a grey icon. Same 64px
+            footprint the slot already had — this is the most restrained page
+            on the site and an oversized portrait would turn an accent into a
+            feature. One fixed frame, so the page looks the same each visit. */}
+        <div className="bm-empty-mark mb-6">
+          <AeonMark id={AEON_REFERENCE} size={64} opacity={0.7} />
         </div>
         <h2 className="font-display text-xl font-bold text-white mb-2">
           No saved articles yet
@@ -113,6 +118,17 @@ export default function BookmarksList() {
         >
           Browse Articles
         </Link>
+
+        <style>{`
+          /* A slow breathe, 4px on a 64px element. At 6px it reads as bobbing.
+             The blanket prefers-reduced-motion rule in globals.css already
+             flattens this, so no local guard is needed. */
+          .bm-empty-mark { animation: bmBreathe 7s ease-in-out infinite; }
+          @keyframes bmBreathe {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-4px); }
+          }
+        `}</style>
       </div>
     );
   }

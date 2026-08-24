@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Search } from "lucide-react";
 import { searchPosts } from "@/lib/queries/articles";
 import ArticleGrid from "@/components/content/ArticleGrid";
+import Link from "next/link";
 import ScrollReveal from "@/components/animations/ScrollReveal";
+import AeonMark from "@/components/aeon/AeonMark";
+import { AEON_REFERENCE } from "@/lib/aeon";
 
 export function generateMetadata(): Metadata {
   return {
@@ -59,12 +62,32 @@ export default async function SearchPage({
               <ArticleGrid posts={results} />
             ) : (
               <div className="text-center py-16">
+                {/* A dead end is the one place on a listing page with room for
+                    a face. There is no CTA competing here, so this state also
+                    carries the only link into the Project AEON feature. */}
+                <div className="sr-empty-mark mx-auto mb-6 w-fit">
+                  <AeonMark id={AEON_REFERENCE} size={64} opacity={0.7} />
+                </div>
                 <p className="text-mag-muted text-lg">
                   No results found for &ldquo;{query}&rdquo;
                 </p>
                 <p className="text-mag-muted text-sm mt-2">
                   Try different keywords or check your spelling.
                 </p>
+                <Link
+                  href="/learn/project-aeon"
+                  className="mt-6 inline-block text-xs uppercase tracking-[0.18em] text-mag-muted transition-colors hover:text-gold-300"
+                >
+                  Meet the 3,333 &rarr;
+                </Link>
+
+                <style>{`
+                  .sr-empty-mark { animation: srBreathe 7s ease-in-out infinite; }
+                  @keyframes srBreathe {
+                    0%, 100% { transform: translateY(0); }
+                    50%      { transform: translateY(-4px); }
+                  }
+                `}</style>
               </div>
             )
           ) : (

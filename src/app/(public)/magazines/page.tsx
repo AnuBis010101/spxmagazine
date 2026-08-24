@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ComingSoon from "@/components/layout/ComingSoon";
+import CoverPlates from "@/components/magazines/CoverPlates";
 
 export const metadata: Metadata = {
   title: "Magazines",
@@ -9,12 +10,15 @@ export const metadata: Metadata = {
 
 export default function MagazinesPage() {
   return (
-    <ComingSoon
-      section="Magazines"
-      headline="The print edition"
-      tagline="is coming Soon"
-      note="We're pressing something special: the SPX6900 print magazine. In the meantime, the digital edition is already live."
-      cta={{ label: "Read the digital edition", href: "/articles/magazine" }}
-    />
+    <>
+      <ComingSoon
+        section="Magazines"
+        headline="The print edition"
+        tagline="is coming Soon"
+        note="We're pressing something special: the SPX6900 print magazine. In the meantime, the digital edition is already live."
+        cta={{ label: "Read the digital edition", href: "/articles/magazine" }}
+      />
+      <CoverPlates />
+    </>
   );
 }

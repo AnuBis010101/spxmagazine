@@ -9,6 +9,7 @@ import ScrollReveal from "@/components/animations/ScrollReveal";
 import TypographicCover from "@/components/content/TypographicCover";
 import SectionHeading from "@/components/ui/SectionHeading";
 import type { Post } from "@/types/content";
+import AeonPlateCard from "@/components/home/AeonPlateCard";
 
 const contentTypePathMap: Record<string, string> = {
   news: "/news/",
@@ -98,6 +99,14 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
 
+  /* The track carries one more card than there are posts: an Aeon plate sits
+     after the last story. dragWidth is measured from the DOM and so already
+     counts it, which means every index calculation has to count it too —
+     dividing by posts.length - 1 here would send the final dot past the last
+     story and leave it unlit while post 6 is on screen. */
+  const showPlate = posts.length >= 3;
+  const slots = posts.length + (showPlate ? 1 : 0);
+
   // Recompute the drag range on mount, when posts change, and on resize (the
   // old ref-callback never updated on viewport changes).
   const measure = useCallback(() => {
@@ -110,14 +119,14 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [measure, posts.length]);
+  }, [measure, posts.length, showPlate]);
 
   // Map the drag offset onto an active dot; only re-render when it changes.
   useMotionValueEvent(x, "change", (latest) => {
     const idx =
-      dragWidth <= 0 || posts.length <= 1
+      dragWidth <= 0 || slots <= 1
         ? 0
-        : Math.round(Math.min(1, Math.max(0, -latest / dragWidth)) * (posts.length - 1));
+        : Math.round(Math.min(1, Math.max(0, -latest / dragWidth)) * (slots - 1));
     if (idx !== activeRef.current) {
       activeRef.current = idx;
       setActive(idx);
@@ -125,8 +134,8 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
   });
 
   const goTo = (i: number) => {
-    if (posts.length <= 1) return;
-    const target = -(i / (posts.length - 1)) * dragWidth;
+    if (slots <= 1) return;
+    const target = -(i / (slots - 1)) * dragWidth;
     animate(x, target, { type: "spring", stiffness: 300, damping: 40 });
   };
 
@@ -178,18 +187,23 @@ export default function FeaturedCarousel({ posts }: FeaturedCarouselProps) {
           {posts.map((post) => (
             <TiltCard key={post.id} post={post} />
           ))}
+          {showPlate && <AeonPlateCard />}
         </motion.div>
       </div>
 
       {/* Dot indicators — click to scroll, reflect the dragged position */}
-      {posts.length > 1 && (
+      {slots > 1 && (
         <div className="flex justify-center items-center gap-1 mt-8">
-          {posts.map((post, i) => (
+          {Array.from({ length: slots }).map((_, i) => (
             <button
-              key={post.id}
+              key={i}
               type="button"
               onClick={() => goTo(i)}
-              aria-label={`Go to featured story ${i + 1}`}
+              aria-label={
+                showPlate && i === slots - 1
+                  ? "Go to Project AEON"
+                  : `Go to featured story ${i + 1}`
+              }
               aria-current={i === active}
               className="flex h-8 w-8 items-center justify-center"
             >

@@ -89,7 +89,9 @@ export default function ArticleCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <TypographicCover title={post.title} seed={post.slug} size="lg" />
+            // seal only here: the sm variant is a 112px thumbnail, and this
+            // component's other consumers are the home page and video cards.
+            <TypographicCover title={post.title} seed={post.slug} size="lg" seal />
           )}
           {post.category && (
             <span className="absolute top-3 left-3 bg-gold-400 text-mag-black text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">

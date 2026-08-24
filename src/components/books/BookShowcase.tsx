@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { ArrowUpRight, BookOpen, Headphones, ShoppingCart, Sparkles } from "lucide-react";
+import AeonColophon from "@/components/aeon/AeonColophon";
 
 /* ─────────────────────────────────────────────────────────────────────────
    The SPX6900 Library.
@@ -144,12 +145,14 @@ export default function BookShowcase() {
         ))}
       </div>
 
+      <AeonColophon id={11} />
+
       <motion.p
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto mt-16 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
+        className="mx-auto mt-6 max-w-xl text-center text-sm leading-relaxed text-mag-muted"
       >
         The gospel of the pure belief asset, written by the community. Buy the paperbacks,
         download the e-books, press play on the audiobook: then go tell someone.

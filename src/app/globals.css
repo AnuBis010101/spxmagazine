@@ -873,25 +873,14 @@ h3 {
   75%  { transform: perspective(900px) rotateY(-4deg) rotateX(-5deg) translateY(6px); }
   100% { transform: perspective(900px) rotateY(-15deg) rotateX(5deg) translateY(0); }
 }
-/* The settled glitch. Mostly absent, with two short bursts per cycle — the
-   coin looks stable, then momentarily destabilises. Opacity only on this
-   wrapper; the layers underneath keep their own stepped keyframes. */
-.coin-glitch-burst {
-  /* linear, not steps(1): a single step has nowhere to advance to, so the
-     animation held its first keyframe and the glitch never fired. The
-     keyframes below are paired into plateaus, so linear still reads as hard
-     flicks — the gaps between them are ~90ms at this duration. */
-  animation: coin-burst 9s linear infinite;
-}
-@keyframes coin-burst {
-  0%, 6%    { opacity: 0.85; }
-  7%, 11%   { opacity: 0; }
-  12%, 15%  { opacity: 0.7; }
-  16%, 57%  { opacity: 0; }
-  58%, 61%  { opacity: 0.9; }
-  62%, 64%  { opacity: 0; }
-  65%, 67%  { opacity: 0.6; }
-  68%, 100% { opacity: 0; }
+/* The settled glitch answers scroll velocity, so its opacity is driven from
+   the component rather than a keyframe. All that is left for CSS is to park
+   the stepped chromatic/slice keyframes while the coin is at rest — they are
+   cheap, but there is no reason to run them against an invisible layer. */
+.coin-glitch-still .coin-glitch-red,
+.coin-glitch-still .coin-glitch-cyan,
+.coin-glitch-still .coin-glitch-slice {
+  animation-play-state: paused;
 }
 
 @keyframes coin-sweep     { to { transform: rotate(360deg); } }
@@ -902,5 +891,7 @@ h3 {
   .coin-stage.is-idle { animation: none; }
   .coin-specular,
   .coin-rim { animation: none; opacity: 0.5; }
-  .coin-glitch-burst { animation: none; opacity: 0; }
+  .coin-glitch-red,
+  .coin-glitch-cyan,
+  .coin-glitch-slice { animation: none; }
 }

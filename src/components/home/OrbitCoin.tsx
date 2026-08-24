@@ -8,6 +8,8 @@ import {
   useTransform,
   useReducedMotion,
   useMotionValueEvent,
+  useSpring,
+  useVelocity,
 } from "framer-motion";
 
 /**
@@ -63,6 +65,35 @@ export default function OrbitCoin() {
   });
   const idle = settled && !reduce;
 
+  /* Once settled, the glitch answers the reader's hand rather than a timer:
+     it destabilises while they scroll and resolves the moment they stop.
+
+     Driven by scroll velocity through a spring, so it ramps in immediately
+     but decays smoothly instead of snapping off at the end of a flick. The
+     spring is also what stops a trackpad's jittery per-event velocity from
+     making this strobe. */
+  const scrollVelocity = useVelocity(scrollY);
+  const smoothVelocity = useSpring(scrollVelocity, {
+    stiffness: 260,
+    damping: 34,
+    mass: 0.35,
+  });
+  /* Divisor sets the dynamic range. At 1500 almost any real scroll saturated
+     instantly, which threw away the part that makes this feel responsive; at
+     2800 a slow drag breaks the coin up gently and only a hard flick tears it
+     fully apart. */
+  const scrollGlitch = useTransform(smoothVelocity, (v) =>
+    Math.min(1, Math.abs(v) / 2800),
+  );
+
+  /* Pause the stepped keyframes underneath while the coin is at rest. They are
+     cheap, but there is no reason to run them against an invisible layer. */
+  const [moving, setMoving] = useState(false);
+  useMotionValueEvent(scrollGlitch, "change", (v) => {
+    const on = v > 0.04;
+    setMoving((prev) => (prev === on ? prev : on));
+  });
+
   return (
     <div
       aria-hidden="true"
@@ -102,14 +133,14 @@ export default function OrbitCoin() {
 
         {/* Glitch layers — chromatic RGB split + a datamosh slice.
             During the apparition these ride the scroll-driven `glitch` value.
-            Once settled they stay mounted but switch to intermittent bursts:
-            a coin that glitches continuously reads as broken rather than
-            expensive, and the stepped keyframes mean each burst repaints only
-            a handful of times. */}
+            Once settled they answer scroll velocity instead: the coin breaks
+            up under the reader's hand and resolves when they stop. */}
         {glitchEnabled && (glitching || idle) && (
           <motion.div
-            style={glitching ? { opacity: glitch } : undefined}
-            className={`absolute inset-0${!glitching && idle ? " coin-glitch-burst" : ""}`}
+            style={{ opacity: glitching ? glitch : scrollGlitch }}
+            className={`absolute inset-0${
+              !glitching && idle && !moving ? " coin-glitch-still" : ""
+            }`}
           >
             <Image
               src="/spx6900-coin.png"

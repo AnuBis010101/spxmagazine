@@ -792,11 +792,12 @@ h3 {
   border-radius: 9999px;
   background: radial-gradient(
     50% 50% at 50% 50%,
-    rgba(212, 175, 55, 0.34) 0%,
-    rgba(212, 175, 55, 0.12) 42%,
-    transparent 70%
+    rgba(255, 232, 150, 0.62) 0%,
+    rgba(212, 175, 55, 0.44) 30%,
+    rgba(212, 175, 55, 0.18) 52%,
+    transparent 74%
   );
-  opacity: 0.7;
+  opacity: 1;
 }
 .coin-halo.is-idle { animation: coin-breathe 7s ease-in-out infinite; }
 
@@ -834,14 +835,14 @@ h3 {
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    transparent 62deg,
-    rgba(255, 246, 216, 0.5) 84deg,
-    rgba(255, 255, 255, 0.82) 90deg,
-    rgba(255, 246, 216, 0.5) 96deg,
-    transparent 118deg,
+    transparent 52deg,
+    rgba(255, 246, 216, 0.72) 78deg,
+    rgba(255, 255, 255, 1) 90deg,
+    rgba(255, 246, 216, 0.72) 102deg,
+    transparent 128deg,
     transparent 360deg
   );
-  opacity: 0.75;
+  opacity: 1;
   animation: coin-sweep 9s linear infinite;
 }
 
@@ -850,20 +851,20 @@ h3 {
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
-    rgba(212, 175, 55, 0.55) 12deg,
-    transparent 30deg,
+    rgba(255, 226, 140, 0.85) 12deg,
+    transparent 32deg,
     transparent 180deg,
-    rgba(212, 175, 55, 0.42) 192deg,
-    transparent 210deg,
+    rgba(255, 226, 140, 0.68) 192deg,
+    transparent 212deg,
     transparent 360deg
   );
-  opacity: 0.55;
+  opacity: 0.85;
   animation: coin-sweep-rev 6.5s linear infinite;
 }
 
 @keyframes coin-breathe {
-  0%, 100% { opacity: 0.58; transform: translate(-50%, -50%) scale(1); }
-  50%      { opacity: 0.92; transform: translate(-50%, -50%) scale(1.06); }
+  0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.09); }
 }
 @keyframes coin-rock {
   0%   { transform: perspective(900px) rotateY(-15deg) rotateX(5deg) translateY(0); }
@@ -872,6 +873,27 @@ h3 {
   75%  { transform: perspective(900px) rotateY(-4deg) rotateX(-5deg) translateY(6px); }
   100% { transform: perspective(900px) rotateY(-15deg) rotateX(5deg) translateY(0); }
 }
+/* The settled glitch. Mostly absent, with two short bursts per cycle — the
+   coin looks stable, then momentarily destabilises. Opacity only on this
+   wrapper; the layers underneath keep their own stepped keyframes. */
+.coin-glitch-burst {
+  /* linear, not steps(1): a single step has nowhere to advance to, so the
+     animation held its first keyframe and the glitch never fired. The
+     keyframes below are paired into plateaus, so linear still reads as hard
+     flicks — the gaps between them are ~90ms at this duration. */
+  animation: coin-burst 9s linear infinite;
+}
+@keyframes coin-burst {
+  0%, 6%    { opacity: 0.85; }
+  7%, 11%   { opacity: 0; }
+  12%, 15%  { opacity: 0.7; }
+  16%, 57%  { opacity: 0; }
+  58%, 61%  { opacity: 0.9; }
+  62%, 64%  { opacity: 0; }
+  65%, 67%  { opacity: 0.6; }
+  68%, 100% { opacity: 0; }
+}
+
 @keyframes coin-sweep     { to { transform: rotate(360deg); } }
 @keyframes coin-sweep-rev { to { transform: rotate(-360deg); } }
 
@@ -879,5 +901,6 @@ h3 {
   .coin-halo.is-idle,
   .coin-stage.is-idle { animation: none; }
   .coin-specular,
-  .coin-rim { animation: none; opacity: 0.4; }
+  .coin-rim { animation: none; opacity: 0.5; }
+  .coin-glitch-burst { animation: none; opacity: 0; }
 }

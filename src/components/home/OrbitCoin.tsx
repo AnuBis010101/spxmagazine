@@ -100,9 +100,17 @@ export default function OrbitCoin() {
           )}
         </div>
 
-        {/* Glitch layers — chromatic RGB split + a datamosh slice, only while appearing */}
-        {glitchEnabled && glitching && (
-          <motion.div style={{ opacity: glitch }} className="absolute inset-0">
+        {/* Glitch layers — chromatic RGB split + a datamosh slice.
+            During the apparition these ride the scroll-driven `glitch` value.
+            Once settled they stay mounted but switch to intermittent bursts:
+            a coin that glitches continuously reads as broken rather than
+            expensive, and the stepped keyframes mean each burst repaints only
+            a handful of times. */}
+        {glitchEnabled && (glitching || idle) && (
+          <motion.div
+            style={glitching ? { opacity: glitch } : undefined}
+            className={`absolute inset-0${!glitching && idle ? " coin-glitch-burst" : ""}`}
+          >
             <Image
               src="/spx6900-coin.png"
               alt=""

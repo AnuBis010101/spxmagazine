@@ -126,6 +126,24 @@ const PODCASTS: Podcast[] = [
     accent2: "#FFA8CB",
   },
   {
+    id: "aeons",
+    name: "Aeons Online",
+    format: "Weekly live show",
+    tagline: "The week in SPX6900, every Thursday",
+    blurb:
+      "Veryhoodish and Jordan Riz go live each Thursday with the week's token news, community stories and Aeon updates. Thirty-plus episodes deep and still counting.",
+    channelUrl: "https://youtube.com/@AeonsOnline",
+    latestUrl: "https://youtube.com/watch?v=xw4K7jOAQeo",
+    platform: "youtube",
+    cover: { src: "/podcasts/aeons-latest.jpg", alt: "Aeons Online \u2014 latest episode" },
+    avatar: { src: "/podcasts/aeons-avatar.jpg", alt: "Aeons Online" },
+    chips: ["Thursdays", "2 hosts", "News + updates"],
+    // Cyan: the widest gap in the palette sits between Flip's green (146deg)
+    // and SPX_FM's violet (264deg); this lands ~50deg clear of every other card.
+    accent: "#22B8F0",
+    accent2: "#9FE2FA",
+  },
+  {
     id: "spxfm",
     name: "SPX_FM",
     format: "Live show",
@@ -152,12 +170,17 @@ export default function PodcastShowcase() {
     <section className="pc-page relative mx-auto w-full max-w-6xl px-4 pb-28 pt-14 sm:pt-20">
       <PodcastHero />
 
-      {/* Four shows: a balanced 2×2 at lg. A 3-up grid would strand the
-          fourth card alone on its own row. */}
+      {/* Two-up at lg. With an odd number of shows the last card would sit
+          alone in a half-width column, so it spans the full row instead. */}
       <div id="shows" className="mt-14 grid grid-cols-1 gap-6 scroll-mt-28 sm:mt-16 lg:grid-cols-2 lg:gap-7">
-        {PODCASTS.map((p, i) => (
-          <PodcastCard key={p.id} podcast={p} order={i} />
-        ))}
+        {PODCASTS.map((p, i) => {
+          const orphan = PODCASTS.length % 2 === 1 && i === PODCASTS.length - 1;
+          return (
+            <div key={p.id} className={orphan ? "lg:col-span-2" : undefined}>
+              <PodcastCard podcast={p} order={i} />
+            </div>
+          );
+        })}
       </div>
 
       <motion.p
@@ -281,7 +304,7 @@ function PodcastHero() {
         transition={{ duration: 0.6, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mt-8 flex flex-wrap items-center justify-center gap-2.5"
       >
-        {["4 shows", "Live on Twitch", "Video podcasts", "X Spaces"].map((s) => (
+        {["5 shows", "Live on Twitch", "Video podcasts", "X Spaces"].map((s) => (
           <span key={s} className="pc-stat">
             {s}
           </span>

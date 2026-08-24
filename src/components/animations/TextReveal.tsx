@@ -41,11 +41,14 @@ export default function TextReveal({
               key={`${word}-${i}`}
               className={wordClassName}
               variants={{
-                hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
+                /* No blur. This runs per word, so a headline animated one
+                   filtered layer per word simultaneously as it scrolled in —
+                   the most expensive version of the defect already removed
+                   from the hero and header. Travel plus fade reads the same. */
+                hidden: { opacity: 0, y: 22 },
                 visible: {
                   opacity: 1,
                   y: 0,
-                  filter: "blur(0px)",
                   transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
                 },
               }}

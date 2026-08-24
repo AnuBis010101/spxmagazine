@@ -81,8 +81,15 @@ const connectLinks = [
 ];
 
 export function Footer() {
+  /* No backdrop-filter here. The footer is one of the largest elements on the
+     page, so blurring what sits behind it re-rasterises that region as the
+     reader scrolls into it — and over a near-black page at this opacity the
+     blur was not visible anyway. Same trade the header already makes. */
   return (
-    <footer className="relative border-t border-mag-border" style={{ backgroundColor: "rgba(10, 10, 10, 0.65)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+    <footer
+      className="relative border-t border-mag-border"
+      style={{ backgroundColor: "rgb(9, 9, 10)" }}
+    >
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         {/* Top section */}
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">

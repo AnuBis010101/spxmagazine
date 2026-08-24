@@ -141,11 +141,12 @@ export default function ComingSoon({
                     className="cs-letter inline-block"
                     style={{ animationDelay: `${idx * -0.09}s` }}
                     variants={{
-                      hidden: { opacity: 0, y: "0.6em", filter: "blur(10px)" },
+                      // No filter here: animating blur re-rasterises the
+                      // subtree every frame. Travel + fade reads the same.
+                      hidden: { opacity: 0, y: "0.7em" },
                       show: {
                         opacity: 1,
                         y: 0,
-                        filter: "blur(0px)",
                         transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
                       },
                     }}

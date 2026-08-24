@@ -13,7 +13,19 @@ interface ScrollRevealProps {
   className?: string;
   /** Adds a subtle scale-up effect (e.g. 0.96 → 1) */
   scale?: boolean;
-  /** Adds a blur-to-sharp entrance (e.g. 8px → 0) */
+  /**
+   * Softer entrance. Retained for the ~46 call sites that pass it, but it no
+   * longer animates `filter: blur()`.
+   *
+   * A blur is not a compositor property: animating it re-rasterises the
+   * element's whole subtree every frame, and with this many reveals firing as
+   * the reader scrolls, the page visibly flashes. The same defect was already
+   * found and removed from the hero and the header — this was the last place
+   * it survived.
+   *
+   * The soft read is kept with a slightly deeper, slower opacity ramp and a
+   * touch more travel, both of which the compositor handles for free.
+   */
   blur?: boolean;
 }
 
@@ -38,20 +50,23 @@ export default function ScrollReveal({
   const isInView = useInView(ref, { once, margin: "-50px" });
   const offset = directionOffsets[direction];
 
+  // `blur` deepens the entrance instead of filtering it: a little extra travel
+  // and a slightly smaller start read as soft focus, using only transform and
+  // opacity.
+  const soften = blur ? 1.35 : 1;
+
   const hidden = {
     opacity: 0,
-    x: offset.x,
-    y: offset.y,
-    ...(scale && { scale: 0.96 }),
-    ...(blur && { filter: "blur(8px)" }),
+    x: offset.x * soften,
+    y: offset.y * soften,
+    ...((scale || blur) && { scale: blur && !scale ? 0.985 : 0.96 }),
   };
 
   const visible = {
     opacity: 1,
     x: 0,
     y: 0,
-    ...(scale && { scale: 1 }),
-    ...(blur && { filter: "blur(0px)" }),
+    ...((scale || blur) && { scale: 1 }),
   };
 
   return (

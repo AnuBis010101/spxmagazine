@@ -63,10 +63,16 @@ const softened = (img) => img.modulate({ saturation: 0.62 }).linear(1.06, -8);
 
 const TREATMENTS = { duotone, soft: softened };
 
+/* Only the curated pool is baked. src/lib/aeon.ts never picks outside it, so
+   baking all 24 just puts files in the repo that nothing can request. Widen
+   this if the pool widens. */
+const POOL = [3, 7, 9, 11, 15, 16, 17, 21];
+
 function sources() {
   return readdirSync(SRC)
     .filter((f) => /^aeon-\d+\.jpg$/.test(f))
     .map((f) => ({ n: Number(f.match(/\d+/)[0]), file: join(SRC, f) }))
+    .filter(({ n }) => POOL.includes(n))
     .sort((a, b) => a.n - b.n);
 }
 

@@ -117,18 +117,16 @@ function ConcentricRings() {
           }}
         />
       ))}
+      {/* One dashed ring, not two. The second sat at r=260, inside the middle
+          orbit's 257-293 band, so the 36px marks rode straight over it. This
+          one clears the nearest mark edge by 16px. */}
       <motion.div
         className="absolute rounded-full border border-dashed border-gold-400/[0.12]"
         style={{ width: 380, height: 380 }}
         animate={{ rotate: 360 }}
         transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
       />
-      <motion.div
-        className="absolute rounded-full border border-dashed border-gold-400/[0.09]"
-        style={{ width: 520, height: 520 }}
-        animate={{ rotate: -360 }}
-        transition={{ duration: 70, repeat: Infinity, ease: "linear" }}
-      />
+
     </div>
   );
 }

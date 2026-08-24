@@ -172,7 +172,7 @@ export function Header() {
                 alt="SPX Magazine"
                 width={120}
                 height={40}
-                className="h-10 w-auto"
+                className="h-[3.125rem] w-auto"
                 priority
               />
               <span aria-hidden className="brand-sweep" />

@@ -150,10 +150,17 @@ export function Header() {
         >
           {/* Logo.
 
-              The source artwork is a near-black wordmark on transparency, which
-              on a near-black header rendered as very nearly nothing. The light
-              variant is baked rather than inverted with a CSS filter, so there
-              is no filtered compositing layer in the header on every route.
+              The artwork is light-on-transparent, so it reads on the near-black
+              header without a CSS filter — no filtered compositing layer in
+              chrome that is on screen for every route.
+
+              /logomagazine.png is baked by scripts/bake-logo.mjs rather than
+              used as uploaded: the wordmark is centred on a SQUARE canvas at
+              the same height-to-canvas ratio the previous mark had. That is
+              what keeps `h-[3.125rem] w-auto` rendering it at its intended
+              size, and it is load-bearing for the sweep below — a non-square
+              canvas would shrink the mark here and pull the mask out of
+              register with it. Re-run that script if the artwork is replaced.
 
               Around it: a gold aura that breathes on opacity alone, and on
               hover a specular sweep masked to the glyph itself plus a few
@@ -168,7 +175,7 @@ export function Header() {
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
               <Image
-                src="/spxlogo-light.png"
+                src="/logomagazine.png"
                 alt="SPX Magazine"
                 width={120}
                 height={40}
@@ -321,8 +328,8 @@ export function Header() {
             color-mix(in oklab, #fff6d8 92%, transparent) 50%,
             transparent 62%
           );
-          -webkit-mask-image: url("/spxlogo-light.png");
-          mask-image: url("/spxlogo-light.png");
+          -webkit-mask-image: url("/logomagazine.png");
+          mask-image: url("/logomagazine.png");
           -webkit-mask-size: contain;
           mask-size: contain;
           -webkit-mask-repeat: no-repeat;

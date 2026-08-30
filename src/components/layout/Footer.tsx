@@ -104,7 +104,7 @@ export function Footer() {
                 className="h-9 w-9 object-contain"
               />
               <Image
-                src="/spxlogo-light.png"
+                src="/logomagazine.png"
                 alt="SPX Magazine"
                 width={120}
                 height={40}

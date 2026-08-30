@@ -75,7 +75,7 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
-        <link rel="preload" href="/spxlogo-light.png" as="image" />
+        <link rel="preload" href="/logomagazine.png" as="image" />
       </head>
       <body className="min-h-screen flex flex-col">
         <Preloader />

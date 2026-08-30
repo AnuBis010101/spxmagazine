@@ -115,7 +115,7 @@ export default function AdminLoginPage() {
         {/* Logo */}
         <div className="flex justify-center">
           <Image
-            src="/spxlogo-light.png"
+            src="/logomagazine.png"
             alt="SPX6900 Logo"
             width={60}
             height={60}

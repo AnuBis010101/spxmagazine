@@ -147,7 +147,7 @@ export default function Preloader() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/spxlogo-light.png"
+            src="/logomagazine.png"
             alt="Loading"
             width={120}
             height={120}

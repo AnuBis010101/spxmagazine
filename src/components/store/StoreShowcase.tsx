@@ -93,28 +93,6 @@ const STORES: Store[] = [
     cta: "Visit store",
   },
   {
-    id: "lilmissponzi",
-    kind: "community",
-    name: "LilMissPonzi",
-    tagline: "Believe in something",
-    blurb:
-      "Aeon streetwear minted on Solana. Pay in USDC, connect your wallet, and wear the thesis on your sleeve.",
-    href: "https://store.fun/spx6900",
-    accent: "#8A7BFF",
-    accent2: "#C6BEFF",
-    hero: {
-      src: "/stores/lmp-banner.webp",
-      alt: "SPX6900 × LilMissPonzi glitch banner",
-      position: "center",
-      tone: "dark",
-    },
-    product: { src: "/stores/lmp-tee1.webp", alt: "SPX6900 Aeon streetwear tee" },
-    mark: { kind: "text", text: "store.fun / SPX6900" },
-    meta: ["store.fun", "Solana · USDC", "Streetwear"],
-    status: "live",
-    cta: "Visit store",
-  },
-  {
     id: "jinpinglabs",
     kind: "community",
     name: "Jinping Labs",
@@ -149,14 +127,38 @@ const COINS = [
 ];
 
 export default function StoreShowcase() {
+  // The cover plate goes to the official store, read from the data rather than
+  // from array position. A fourth storefront would land in the contents column
+  // automatically — but this composition is authored for 1 + 2, so treat a
+  // fourth as a reason to re-derive the arrangement, not to append to it.
+  const flagship = STORES.find((s) => s.kind === "official") ?? STORES[0];
+  const community = STORES.filter((s) => s !== flagship);
+
   return (
     <section className="sc-page relative mx-auto w-full max-w-6xl px-4 pb-28 pt-14 sm:pt-20">
       <StoreHero />
 
-      <div className="mt-14 grid grid-cols-1 gap-6 sm:mt-16 lg:grid-cols-2 lg:gap-7">
-        {STORES.map((store, i) => (
-          <StoreCard key={store.id} store={store} order={i} />
-        ))}
+      {/* Cover + contents. Three cards in the old 2-col grid left a hole
+          exactly one card wide, and emptiness that is card-shaped reads as an
+          omission rather than as margin. So the flagship takes a full-height
+          portrait plate in the 7fr track and the two community stores stack in
+          the 5fr track beside it. The right column's natural height drives the
+          row and the plate's key art absorbs the slack (see .sc-gallery in
+          StoreStyles), so both columns end on the same pixel at every width.
+
+          The 1 + 2 split is read from the data, not from array position, so
+          the official store keeps the plate however STORES is ordered.
+
+          One column below lg on purpose: with three cards a 2-col tablet state
+          would just re-introduce the orphan this exists to delete. */}
+      <div className="sc-gallery mt-14 grid grid-cols-1 items-stretch gap-6 sm:mt-16 lg:mt-20 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-7">
+        <StoreCard store={flagship} order={0} />
+
+        <div className="flex flex-col gap-6 lg:gap-7">
+          {community.map((store, i) => (
+            <StoreCard key={store.id} store={store} order={i + 1} />
+          ))}
+        </div>
       </div>
 
       <AeonColophon id={9} />
@@ -230,7 +232,7 @@ function StoreHero() {
         transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 mx-auto mt-5 max-w-xl text-base leading-relaxed text-mag-muted sm:text-lg"
       >
-        One official store and three community storefronts. Pick yours and gear up
+        One official store and two community storefronts. Pick yours and gear up
         for the flippening.
       </motion.p>
 
@@ -242,8 +244,8 @@ function StoreHero() {
       >
         {[
           { label: "1 official", tone: "gold" as const },
-          { label: "3 community", tone: "plain" as const },
-          { label: "1 booting up", tone: "plain" as const },
+          { label: "2 community", tone: "plain" as const },
+          { label: "All live", tone: "plain" as const },
         ].map((s) => (
           <span key={s.label} className={`sc-stat ${s.tone === "gold" ? "is-gold" : ""}`}>
             {s.tone === "gold" && <BadgeCheck className="h-3.5 w-3.5" />}
@@ -339,7 +341,11 @@ function StoreCard({ store, order }: { store: Store; order: number }) {
               src={store.hero.src}
               alt={store.hero.alt}
               fill
-              sizes="(max-width: 1024px) 100vw, 560px"
+              // min-width-first so it agrees with the layout's own lg
+              // breakpoint (the old max-width:1024px and Tailwind's lg: both
+              // matched at exactly 1024px). Below lg the stage is the viewport
+              // less the page padding, the card border and the stage margins.
+              sizes="(min-width: 1024px) 620px, calc(100vw - 54px)"
               className="sc-hero-img object-cover"
               style={{ objectPosition: store.hero.position ?? "center" }}
             />
@@ -740,6 +746,122 @@ function StoreStyles() {
       .sc-card:hover .sc-cta-arrow { transform: translate(3px,-3px); }
       .sc-cta.is-soon { color: color-mix(in oklab, var(--accent) 88%, white); }
 
+      /* ── Cover plate ────────────────────────────────────────────────────
+         At lg the flagship takes the 7fr track as a full-height portrait plate
+         and the two community stores stack in the 5fr track. Nothing here
+         restyles a card: it is one card resolving its stage height a different
+         way, plus the proportional recalibrations that keeps honest. Below lg
+         none of this applies and every card renders exactly as before.
+
+         The flagship is addressed structurally rather than with a modifier
+         class — it is the only .sc-card-shell that is a DIRECT child of the
+         gallery, since the community pair sits one level deeper inside the
+         column wrapper. That is why StoreCard needs no new prop and no JS
+         here changed at all.
+
+         Why the stage must be FLEXIBLE rather than given a second fixed
+         ratio: card height is a fixed function of card width while the stage
+         is aspect-locked, so flushing one card against two solves as
+           0.625·W1 + 245 = 1.25·W2 + 600,  W1 + W2 = 1092  ->  W2 = 175px.
+         There is no width at which one aspect-locked card is as tall as two.
+         A hand-picked aspect-ratio would leave a ragged bottom edge, and go
+         ragged again the first time a blurb is edited. Do not "simplify"
+         .sc-stage back to a fixed ratio in here. */
+      @media (min-width: 1024px) {
+
+        /* Height chain: the grid row is sized by the right column, and each
+           of these hands that height down to the key art. All four are
+           load-bearing; none of them is styling. */
+        .sc-gallery > .sc-card-shell { display: flex; flex-direction: column; }
+        .sc-gallery > .sc-card-shell > .sc-card {
+          flex: 1 1 auto;
+          display: flex; flex-direction: column;
+        }
+        .sc-gallery > .sc-card-shell > .sc-card > .sc-card-tilt {
+          display: flex; flex-direction: column;
+          flex: 1 1 auto; min-height: 0;
+        }
+
+        /* The plate. No fixed ratio — it absorbs whatever the right column
+           leaves over, so the flagship's bottom edge lands flush with the
+           second community card at every viewport from 1024px up.
+
+           .sc-stage has ZERO in-flow children (hero, scrims, shine, glare,
+           badges and polaroid are every one of them position:absolute), so
+           its flex-basis resolves to 0 and its height is entirely flex-grow
+           plus this floor. Add a static child to the stage and the plate's
+           height changes. The floor only covers the degenerate case where the
+           right column ends up shorter than the plate's natural height; it is
+           not reached with the current copy. */
+        .sc-gallery > .sc-card-shell .sc-stage {
+          aspect-ratio: auto;
+          flex: 1 1 auto;
+          min-height: 460px;
+        }
+
+        /* Keep the body at its intrinsic height. Without this it could grow
+           and the plate would stop absorbing the slack, quietly killing the
+           flush baseline that is the whole point of the arrangement. */
+        .sc-gallery > .sc-card-shell .sc-body { flex: 0 0 auto; }
+
+        /* Guard the community pair against shrinking if the column ever runs
+           short. Their 16/10 stage is not at risk from stretch — in a flex
+           column the cross-axis is horizontal, so aspect-ratio is untouched. */
+        .sc-gallery > div > .sc-card-shell { flex: 0 0 auto; }
+
+        /* Tilt keystone. rotateX is ±6.5deg on both shapes, but the near edge
+           of the tall plate travels roughly twice as far toward the viewer as
+           a community card's does. At the shared perspective of 1300 that is
+           about a 4.8% width differential across the plate against 2.3% on
+           its neighbours — it would visibly wobble twice as hard, reading as
+           flapping paper rather than parallax. Matching the keystone needs
+           perspective alone to move, which is why TILT stays a single 6.5 for
+           every card and no JavaScript forked.
+
+           !important because perspective is an inline style on .sc-card, and
+           a stylesheet cannot beat an inline declaration without it. It is
+           the one !important here and it is the price of not forking the
+           component. Accepted consequence: the badges' translateZ pop
+           flattens on the plate, which is the correct read for an object
+           twice the size — the polaroid is scaled up below to compensate. */
+        .sc-gallery > .sc-card-shell > .sc-card { perspective: 2700px !important; }
+
+        /* The scrim was a percentage fade tuned for a short stage; stretched
+           over the plate it would swallow the lower third of the art.
+           Re-expressed from the bottom in absolute px, these stops reproduce
+           the community card's scrim exactly rather than approximating it. */
+        .sc-gallery > .sc-card-shell .sc-stage-scrim {
+          background: linear-gradient(0deg, #0a0a0b 0, rgba(6,6,7,0.5) 60px, transparent 162px);
+        }
+
+        /* A 60px inset vignette reads thin on a plate this wide. 96px holds it
+           at about the same share of the frame as on a community stage. */
+        .sc-gallery > .sc-card-shell .sc-stage-vignette {
+          box-shadow: inset 0 0 96px rgba(0,0,0,0.55);
+        }
+
+        /* The polaroid is an ornament pinned to a corner, so it scales with
+           the stage's WIDTH, not its height — it holds the same ~17% of the
+           frame it has on a community card. Border and hover lift go up with
+           it to keep the frame weight and travel proportional. (The
+           reduced-motion block's transform:none !important still overrides
+           the hover rule, so nothing needs adding there.) */
+        .sc-gallery > .sc-card-shell .sc-poly-inner {
+          width: 104px; height: 130px; border-width: 4px;
+        }
+        .sc-gallery > .sc-card-shell .sc-card:hover .sc-poly-inner {
+          transform: rotate(-3deg) translateY(-11px);
+        }
+
+        /* The plate's body sits on a much wider measure than a community
+           card's — around 85 characters at 14px, well past the readable 45-75
+           range, and a long line at a small size is the most reliable
+           cheap-looking tell in editorial layout. 62ch brings it back to ~64.
+           Safe as written: .sc-body's only direct <p> child is the blurb; the
+           tagline is nested inside the header row, so > p cannot reach it. */
+        .sc-gallery > .sc-card-shell .sc-body > p { max-width: 62ch; }
+      }
+
       @keyframes scRing { to { transform: rotate(360deg); } }
       @keyframes scShine { to { transform: translateX(320%) skewX(-16deg); } }
       @keyframes scKindShine { 0% { transform: translateX(-130%); } 45%, 100% { transform: translateX(320%); } }
@@ -757,6 +879,12 @@ function StoreStyles() {
         .sc-lock-badge, .sc-status-dot, .sc-kind-shine, .sc-kind-eyebrow.is-official { animation: none !important; }
         .sc-card:hover .sc-hero-img,
         .sc-card:hover .sc-poly-inner { transform: none !important; }
+        /* useReducedMotion() returns false during SSR, so the pre-hydration
+           HTML ships the reveal's translateY(34px) to a reader who asked for
+           no motion, and framer then animates it out. Pin the shell instead —
+           safe because the shell carries no transform outside that reveal
+           (the tilt lives on .sc-card-tilt). Pre-existing, fixed here. */
+        .sc-card-shell { transform: none !important; }
         .sc-title, .sc-kind-eyebrow.is-official { background-position: 0 center; }
         .sc-coin { display: none; }
       }
